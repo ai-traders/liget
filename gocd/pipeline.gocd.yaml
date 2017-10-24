@@ -1,0 +1,40 @@
+pipelines:
+  liget:
+    group: stcdev
+    label_template: "${git[:8]}"
+    materials:
+      git:
+        type: configrepo
+    stages:
+      - build:
+          clean_workspace: true
+          jobs:
+            build:
+              elastic_profile_id: w.c2.m2048.e10
+              artifacts:
+                - build:
+                    source: src/LiGet.App/bin/Release/netcoreapp2.0/publish/**/*
+                    destination: bin
+                - build:
+                    source: tests/LiGet.Tests/bin/Release/netcoreapp2.0/publish/**/*
+                    destination: tests/LiGet.Tests/bin/Release/netcoreapp2.0/publish
+              tasks:
+               - exec:
+                  command: ide
+                  arguments:
+                    - "./tasks.sh build"
+      - unit:
+          clean_workspace: true
+          jobs:
+            build:
+              elastic_profile_id: w.c2.m2048.e10
+              tasks:
+               - fetch:
+                  stage: build
+                  job: build
+                  source: tests
+                  destination:
+               - exec:
+                  command: ide
+                  arguments:
+                    - "./tasks.sh test"
