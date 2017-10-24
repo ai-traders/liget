@@ -19,6 +19,25 @@ This project aims at following:
  * easy to develop on linux in VS Code, not only in VS on windows.
  * if possible, implement caching mode for public packages from nuget.org
 
+# Development
+
+All building and tests are done with [IDE](https://github.com/ai-traders/ide) and docker.
+
+### Build
+
+```
+dotnet restore
+dotnet build
+```
+
+### Run unit tests
+
+```
+dotnet restore
+cd tests/LiGet.Tests/
+dotnet xunit
+```
+
 # License and authors
 
 Firsly, this project is using lots of code from other nuget servers,
