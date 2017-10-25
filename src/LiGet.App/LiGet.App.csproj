@@ -9,4 +9,13 @@
       <Name>LiGet</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>   
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
+    <PackageReference Include="Nancy.Bootstrappers.Autofac" Version="2.0.0-clinteastwood" />
+    <PackageReference Include="Autofac" Version="4.6.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Owin" Version="2.0.0" />
+  </ItemGroup>
 </Project>
