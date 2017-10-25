@@ -27,6 +27,10 @@ namespace LiGet
         protected override void ConfigureApplicationContainer(ILifetimeScope existingContainer)
         {
             // Perform registration that should have an application lifetime
+            existingContainer.Update(builder => {
+                if(additionalSetup != null)
+                    additionalSetup(builder);
+            });
         }
     }
 }
