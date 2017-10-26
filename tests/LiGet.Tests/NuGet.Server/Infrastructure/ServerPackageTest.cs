@@ -3,11 +3,12 @@
 
 using System.Linq;
 using System.Runtime.Versioning;
+using LiGet.NuGet.Server.Infrastructure;
 using Moq;
-using NuGet.Server.Infrastructure;
+using NuGet;
 using Xunit;
 
-namespace NuGet.Server.Tests
+namespace LiGet.NuGet.Server.Tests
 {
     public class ServerPackageTest
     {

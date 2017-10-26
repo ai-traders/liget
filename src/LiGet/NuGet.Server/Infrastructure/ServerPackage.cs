@@ -8,8 +8,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 using Newtonsoft.Json;
+using NuGet;
 
-namespace NuGet.Server.Infrastructure
+namespace LiGet.NuGet.Server.Infrastructure
 {
     public class ServerPackage
         : IPackage

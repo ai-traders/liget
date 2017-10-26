@@ -3,7 +3,7 @@
 
 using System;
 
-namespace NuGet.Server.Infrastructure
+namespace LiGet.NuGet.Server.Infrastructure
 {
     public class PackageDerivedData
     {

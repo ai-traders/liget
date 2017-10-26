@@ -4,11 +4,12 @@
 using System;
 using System.IO;
 using System.Text;
+using LiGet.NuGet.Server.Infrastructure;
 using Newtonsoft.Json;
-using NuGet.Server.Infrastructure;
+using NuGet;
 using Xunit;
 
-namespace NuGet.Server.Tests
+namespace LiGet.NuGet.Server.Tests
 {
     public class SemanticVersionJsonConverterTests
     {

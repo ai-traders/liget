@@ -14,7 +14,7 @@ namespace LiGet.Util
             // if (lucenePackage != null)
             //     return new ODataPackage(lucenePackage);
 
-            var dataServicePackage = package as NuGet.DataServicePackage;
+            var dataServicePackage = package as DataServicePackage;
 
             if (dataServicePackage != null)
                 return new ODataPackage(dataServicePackage);
