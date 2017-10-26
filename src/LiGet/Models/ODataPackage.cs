@@ -1,5 +1,6 @@
 
 using System;
+using NuGet;
 
 namespace LiGet.Models
 {
@@ -13,6 +14,57 @@ namespace LiGet.Models
     // [HasStream]
     public class ODataPackage : IEquatable<ODataPackage>
     {
+        public ODataPackage() {}
+
+        public ODataPackage(DataServicePackage package)
+        {
+            Version = package.Version;
+            NormalizedVersion = new SemanticVersion(package.Version).ToNormalizedString();
+
+            Authors = package.Authors;
+            Owners = package.Owners;
+            IconUrl = UriToString(package.IconUrl);
+            LicenseUrl = UriToString(package.LicenseUrl);
+            ProjectUrl = UriToString(package.ProjectUrl);
+            Dependencies = package.Dependencies;
+
+            Id = package.Id;
+            Title = package.Title;
+            RequireLicenseAcceptance = package.RequireLicenseAcceptance;
+            Description = package.Description;
+            Summary = package.Summary;
+            ReleaseNotes = package.ReleaseNotes;
+            Language = package.Language;
+            Tags = package.Tags;
+            PackageHash = package.PackageHash;
+            PackageHashAlgorithm = package.PackageHashAlgorithm;
+            LastUpdated = package.LastUpdated.UtcDateTime;
+            Published = package.Published.GetValueOrDefault().UtcDateTime;
+            IsAbsoluteLatestVersion = package.IsAbsoluteLatestVersion;
+            IsLatestVersion = package.IsLatestVersion;
+            IsPrerelease = !package.IsReleaseVersion();
+            Listed = package.Listed;
+            DownloadCount = package.DownloadCount;
+
+            //PackageSize = package.PackageSize;
+            //Created = package.Created.UtcDateTime;
+            //VersionDownloadCount = package.VersionDownloadCount;
+        }
+
+        private string UriToString(Uri uri)
+        {
+            if (uri == null) return null;
+
+            try
+            {
+                return uri.GetComponents(UriComponents.HttpRequestUrl, UriFormat.Unescaped);
+            }
+            catch (InvalidOperationException)
+            {
+                return null;
+            }
+        }
+
         public string Id { get; set; }
 
         public string Version { get; set; }

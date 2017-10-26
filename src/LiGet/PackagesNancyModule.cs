@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using LiGet.OData;
+using LiGet.Util;
+using Microsoft.OData.Edm;
 using Microsoft.OData.UriParser;
 using Nancy;
 
@@ -14,19 +16,14 @@ namespace LiGet
 
         static readonly string basePath = "/api/v2";
 
-        public PackagesNancyModule()
+        public PackagesNancyModule(IPackageRepository repository, IEdmModel odataModel)
             :base(basePath)
         {
             this.OnError.AddItemToEndOfPipeline(HandleError);
 
-            //FIXME move to DI
-            var odataModelBuilder = new NuGetWebApiODataModelBuilder();
-            odataModelBuilder.Build();
-            var odataModel = odataModelBuilder.Model;
-
             base.Get("FindPackagesById()", args => {
                 string query = base.Request.Url.Query;
-                var serviceUrl = new Uri(new Uri(base.Request.Url).GetComponents(UriComponents.SchemeAndServer, UriFormat.SafeUnescaped) + basePath);//FIXME actual url
+                var serviceUrl = new Uri(new Uri(base.Request.Url).GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped) + basePath);//FIXME actual url
                 var uriParser = new ODataUriParser(odataModel,serviceUrl,base.Request.Url);
                 var path = uriParser.ParsePath();
                 //path.FirstSegment.Identifier=="FindPackagesById"
@@ -36,7 +33,11 @@ namespace LiGet
                 else
                 {
                     string id = idOrNull;
-                    return "find packages " + id;
+                    _log.DebugFormat("Request to FindPackagesById id={0}",id);
+                    var found = 
+                        repository.FindPackagesById(id)
+                        .Select(p => p.ToODataPackage());
+                    return found;
                 }
             });
 

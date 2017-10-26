@@ -1,5 +1,7 @@
 using System;
 using Autofac;
+using LiGet.OData;
+using Nancy;
 using Nancy.Bootstrapper;
 using Nancy.Bootstrappers.Autofac;
 
@@ -11,9 +13,11 @@ namespace LiGet
         private Action<ContainerBuilder> additionalSetup;
 
         public ProgramBootstrapper()
-        {            
+        {   
         }
+
         public ProgramBootstrapper(Action<ContainerBuilder> additionalSetup)
+            :this()
         {            
             this.additionalSetup = additionalSetup;
         }
@@ -28,6 +32,7 @@ namespace LiGet
         {
             // Perform registration that should have an application lifetime
             existingContainer.Update(builder => {
+                builder.RegisterModule(new ODataAutofacModule());
                 if(additionalSetup != null)
                     additionalSetup(builder);
             });
