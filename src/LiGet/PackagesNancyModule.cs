@@ -1,6 +1,9 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
+using LiGet.OData;
+using Microsoft.OData.UriParser;
 using Nancy;
 
 namespace LiGet
@@ -9,10 +12,33 @@ namespace LiGet
     {
         private static readonly log4net.ILog _log = log4net.LogManager.GetLogger(typeof(PackagesNancyModule));
 
+        static readonly string basePath = "/api/v2";
+
         public PackagesNancyModule()
-            :base("/api/v2")
+            :base(basePath)
         {
             this.OnError.AddItemToEndOfPipeline(HandleError);
+
+            //FIXME move to DI
+            var odataModelBuilder = new NuGetWebApiODataModelBuilder();
+            odataModelBuilder.Build();
+            var odataModel = odataModelBuilder.Model;
+
+            base.Get("FindPackagesById()", args => {
+                string query = base.Request.Url.Query;
+                var serviceUrl = new Uri(new Uri(base.Request.Url).GetComponents(UriComponents.SchemeAndServer, UriFormat.SafeUnescaped) + basePath);//FIXME actual url
+                var uriParser = new ODataUriParser(odataModel,serviceUrl,base.Request.Url);
+                var path = uriParser.ParsePath();
+                //path.FirstSegment.Identifier=="FindPackagesById"
+                var idOrNull = uriParser.CustomQueryOptions.FirstOrDefault(o => o.Key.ToLowerInvariant() == "id").Value;
+                if(idOrNull == null)
+                    throw new ArgumentException();//TODO nice bad request
+                else
+                {
+                    string id = idOrNull;
+                    return "find packages " + id;
+                }
+            });
 
             base.Get<object>(@"^(.*)$", new Func<dynamic,object>(ThrowNotSupported));
             base.Head<object>(@"^(.*)$", new Func<dynamic,object>(ThrowNotSupported));
