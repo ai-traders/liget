@@ -8,13 +8,14 @@ using System.Runtime.Serialization;
 using System.Text;
 using Newtonsoft.Json;
 using NuGet;
+using NuGet.Versioning;
 
 namespace LiGet.NuGet.Server.Infrastructure
 {
     public class JsonNetPackagesSerializer
         : IPackagesSerializer
     {
-        private static readonly SemanticVersion CurrentSchemaVersion = new SemanticVersion("3.0.0");
+        private static readonly SemanticVersion CurrentSchemaVersion = SemanticVersion.Parse("3.0.0");
 
         private readonly JsonSerializer _serializer = new JsonSerializer
         {

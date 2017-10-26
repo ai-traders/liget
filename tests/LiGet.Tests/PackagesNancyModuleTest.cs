@@ -5,6 +5,7 @@ using Moq;
 using Nancy;
 using Nancy.Testing;
 using NuGet;
+using NuGet.Protocol;
 using Xunit;
 
 namespace LiGet.Tests
@@ -12,10 +13,10 @@ namespace LiGet.Tests
     public class PackagesNancyModuleTest
     {
         private Browser browser;
-        Mock<IPackageRepository> packageRepo;
+        Mock<IPackageService> packageRepo;
 
         public PackagesNancyModuleTest() {
-            packageRepo = new Mock<IPackageRepository>(MockBehavior.Strict);
+            packageRepo = new Mock<IPackageService>(MockBehavior.Strict);
             var bootstrapper = new TestBootstrapper(b => {
                 b.RegisterInstance(packageRepo.Object).As<IPackageRepository>();
             });

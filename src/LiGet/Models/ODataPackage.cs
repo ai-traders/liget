@@ -1,17 +1,11 @@
 
 using System;
 using NuGet;
+using NuGet.Versioning;
 
 namespace LiGet.Models
 {
-    // official nuget server had
-    // [DataServiceKey("Id", "Version")]
-    // [EntityPropertyMapping("Id", SyndicationItemProperty.Title, SyndicationTextContentKind.Plaintext, keepInContent: false)]
-    // [EntityPropertyMapping("Authors", SyndicationItemProperty.AuthorName, SyndicationTextContentKind.Plaintext, keepInContent: false)]
-    // [EntityPropertyMapping("Published", SyndicationItemProperty.Published, SyndicationTextContentKind.Plaintext, keepInContent: true)]
-    // [EntityPropertyMapping("LastUpdated", SyndicationItemProperty.Updated, SyndicationTextContentKind.Plaintext, keepInContent: false)]
-    // [EntityPropertyMapping("Summary", SyndicationItemProperty.Summary, SyndicationTextContentKind.Plaintext, keepInContent: false)]
-    // [HasStream]
+    //TODO rather use V2FeedPackageInfo https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Protocol/LegacyFeed/V2FeedPackageInfo.cs
     public class ODataPackage : IEquatable<ODataPackage>
     {
         public ODataPackage() {}
@@ -19,7 +13,7 @@ namespace LiGet.Models
         public ODataPackage(DataServicePackage package)
         {
             Version = package.Version;
-            NormalizedVersion = new SemanticVersion(package.Version).ToNormalizedString();
+            NormalizedVersion = SemanticVersion.Parse(package.Version).ToNormalizedString();
 
             Authors = package.Authors;
             Owners = package.Owners;

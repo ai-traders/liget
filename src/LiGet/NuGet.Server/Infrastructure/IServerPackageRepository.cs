@@ -4,11 +4,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using NuGet;
+using NuGet.Protocol;
+using NuGet.Versioning;
 
 namespace LiGet.NuGet.Server.Infrastructure
 {
-    public interface IServerPackageRepository 
-        : IServiceBasedRepository
+    public interface IServerPackageRepository : IServiceBasedRepository
     {
         void ClearCache();
 
@@ -18,7 +19,7 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         IEnumerable<ServerPackage> FindPackagesById(string packageId, ClientCompatibility compatibility);
 
-        IQueryable<IPackage> Search(
+        IQueryable<LocalPackageInfo> Search(
             string searchTerm,
             IEnumerable<string> targetFrameworks,
             bool allowPrereleaseVersions,

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
 using NuGet;
+using NuGet.Versioning;
 
 namespace LiGet.NuGet.Server.Infrastructure
 {
@@ -17,7 +18,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             bool includePrerelease,
             bool includeAllVersions,
             IEnumerable<FrameworkName> targetFramework,
-            IEnumerable<IVersionSpec> versionConstraints,
+            IEnumerable<VersionRange> versionConstraints,
             ClientCompatibility compatibility)
         {
             List<IPackageName> packageList = packages.ToList();
@@ -27,10 +28,10 @@ namespace LiGet.NuGet.Server.Infrastructure
                 return Enumerable.Empty<IPackage>();
             }
 
-            IList<IVersionSpec> versionConstraintList;
+            IList<VersionRange> versionConstraintList;
             if (versionConstraints == null)
             {
-                versionConstraintList = new IVersionSpec[packageList.Count];
+                versionConstraintList = new VersionRange[packageList.Count];
             }
             else
             {
@@ -75,8 +76,9 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         private static bool SupportsTargetFrameworks(IEnumerable<FrameworkName> targetFramework, IPackage package)
         {
-            return targetFramework.IsEmpty() ||
-                   targetFramework.Any(t => VersionUtility.IsCompatible(t, package.GetSupportedFrameworks()));
+            throw new NotImplementedException("supports target framework");
+            // return targetFramework.IsEmpty() ||
+            //        targetFramework.Any(t => VersionUtility.IsCompatible(t, package.GetSupportedFrameworks()));
         }
 
         /// <summary>

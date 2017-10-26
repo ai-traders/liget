@@ -6,6 +6,10 @@ using System.Runtime.Versioning;
 using LiGet.NuGet.Server.Infrastructure;
 using Moq;
 using NuGet;
+using NuGet.Frameworks;
+using NuGet.Packaging;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using Xunit;
 
 namespace LiGet.NuGet.Server.Tests
@@ -23,7 +27,7 @@ namespace LiGet.NuGet.Server.Tests
         {
             // Arrange
             var package = new Mock<IPackage>();
-            package.Setup(x => x.Version).Returns(new SemanticVersion(version));
+            package.Setup(x => x.Version).Returns(SemanticVersion.Parse(version));
             var packageDerivedData = new PackageDerivedData();
 
             // Act
@@ -48,16 +52,16 @@ namespace LiGet.NuGet.Server.Tests
             var package = new Mock<IPackage>();
             package
                 .Setup(x => x.Version)
-                .Returns(new SemanticVersion("1.0.0"));
+                .Returns(SemanticVersion.Parse("1.0.0"));
             package
                 .Setup(x => x.DependencySets)
                 .Returns(new[]
                 {
-                    new PackageDependencySet(
-                        new FrameworkName(".NETFramework,Version=v4.5"),
+                    new PackageDependencyGroup(
+                        new NuGetFramework(".NETFramework,Version=v4.5"),
                         new[]
                         {
-                            new PackageDependency("OtherPackage", VersionUtility.ParseVersionSpec(versionRange))
+                            new PackageDependency("OtherPackage", VersionRange.Parse(versionRange))
                         })
                 }.AsEnumerable());
             var packageDerivedData = new PackageDerivedData();

@@ -9,23 +9,29 @@ using System.Linq;
 using System.Runtime.Versioning;
 using Newtonsoft.Json;
 using NuGet;
+using NuGet.Frameworks;
+using NuGet.Packaging;
+using NuGet.Packaging.Core;
+using NuGet.Protocol;
+using NuGet.Versioning;
 
 namespace LiGet.NuGet.Server.Infrastructure
 {
-    public class ServerPackage
-        : IPackage
+    //TODO !!! for parsing deps use - https://github.com/NuGet/NuGet.Client/blob/c282092fc575891b30186d7baa1962ce3fb1d4b4/src/NuGet.Core/NuGet.Protocol/LegacyFeed/V2FeedPackageInfo.cs#L228
+    public class ServerPackage : IPackage
     {
         public ServerPackage()
         {
         }
 
+        [Obsolete("Do not use IPackage")]
         public ServerPackage(IPackage package, PackageDerivedData packageDerivedData)
         {
             Id = package.Id;
             Version = package.Version;
             Title = package.Title;
-            Authors = package.Authors;
-            Owners = package.Owners;
+            Authors = string.Join(",", package.Authors);
+            Owners = string.Join(",",package.Owners);
             IconUrl = package.IconUrl;
             LicenseUrl = package.LicenseUrl;
             ProjectUrl = package.ProjectUrl;
@@ -53,7 +59,53 @@ namespace LiGet.NuGet.Server.Infrastructure
             Dependencies = DependencySetsAsString(package.DependencySets);
 
             _supportedFrameworks = package.GetSupportedFrameworks().ToList();
-            SupportedFrameworks = string.Join("|", package.GetSupportedFrameworks().Select(VersionUtility.GetFrameworkString));
+            SupportedFrameworks = string.Join("|", package.GetSupportedFrameworks().Select(f => f.GetFrameworkString()));
+
+            PackageSize = packageDerivedData.PackageSize;
+            PackageHash = packageDerivedData.PackageHash;
+            PackageHashAlgorithm = packageDerivedData.PackageHashAlgorithm;
+            LastUpdated = packageDerivedData.LastUpdated;
+            Created = packageDerivedData.Created;
+            Path = packageDerivedData.Path;
+            FullPath = packageDerivedData.FullPath;
+        }
+
+        public ServerPackage(LocalPackageInfo localPackage, PackageDerivedData packageDerivedData)
+        {
+            var package = localPackage.Nuspec;
+            Id = package.GetId();
+            Version = package.GetVersion();
+            Title = package.GetTitle();
+            Authors = package.GetAuthors();
+            Owners = package.GetOwners();
+            IconUrl = new Uri(package.GetIconUrl());
+            LicenseUrl = new Uri(package.GetLicenseUrl());
+            ProjectUrl = new Uri(package.GetProjectUrl());
+            RequireLicenseAcceptance = package.GetRequireLicenseAcceptance();
+            DevelopmentDependency = package.GetDevelopmentDependency();
+            Description = package.GetDescription();
+            Summary = package.GetSummary();
+            ReleaseNotes = package.GetReleaseNotes();
+            Language = package.GetLanguage();
+            Tags = package.GetTags();
+            Copyright = package.GetCopyright();
+            MinClientVersion = package.GetMinClientVersion();
+            ReportAbuseUrl = null;
+            DownloadCount = 0;
+            SemVer1IsAbsoluteLatest = false;
+            SemVer1IsLatest = false;
+            SemVer2IsAbsoluteLatest = false;
+            SemVer2IsLatest = false;
+            //FIXME is this OK?
+            Listed = true; 
+
+            IsSemVer2 = true; //TODO IsPackageSemVer2(package);
+    
+             _dependencySets = package.GetDependencyGroups().ToList();
+            Dependencies = DependencySetsAsString(_dependencySets);
+
+            _supportedFrameworks = package.GetFrameworkReferenceGroups().Select(f => f.TargetFramework).ToList();
+            SupportedFrameworks = string.Join("|", _supportedFrameworks.Select(f => f.GetFrameworkString()));
 
             PackageSize = packageDerivedData.PackageSize;
             PackageHash = packageDerivedData.PackageHash;
@@ -72,9 +124,9 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         public string Title { get; set; }
 
-        public IEnumerable<string> Authors { get; set; }
+        public string Authors { get; set; }
 
-        public IEnumerable<string> Owners { get; set; }
+        public string Owners { get; set; }
 
         public Uri IconUrl { get; set; }
 
@@ -100,16 +152,16 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         public string Dependencies { get; set; }
 
-        private List<PackageDependencySet> _dependencySets;
+        private List<PackageDependencyGroup> _dependencySets;
 
         [JsonIgnore]
-        public IEnumerable<PackageDependencySet> DependencySets
+        public IEnumerable<PackageDependencyGroup> DependencySets
         {
             get
             {
                 if (String.IsNullOrEmpty(Dependencies))
                 {
-                    return Enumerable.Empty<PackageDependencySet>();
+                    return Enumerable.Empty<PackageDependencyGroup>();
                 }
 
                 if (_dependencySets == null)
@@ -122,7 +174,7 @@ namespace LiGet.NuGet.Server.Infrastructure
         }
 
         [JsonConverter(typeof(SemanticVersionJsonConverter))]
-        public Version MinClientVersion { get; set; }
+        public NuGetVersion MinClientVersion { get; set; }
 
         public Uri ReportAbuseUrl { get; set; }
 
@@ -130,12 +182,12 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         public string SupportedFrameworks { get; set; }
 
-        private List<FrameworkName> _supportedFrameworks;
-        public IEnumerable<FrameworkName> GetSupportedFrameworks()
+        private List<NuGetFramework> _supportedFrameworks;
+        public IEnumerable<NuGetFramework> GetSupportedFrameworks()
         {
             if (String.IsNullOrEmpty(SupportedFrameworks))
             {
-                return Enumerable.Empty<FrameworkName>();
+                return Enumerable.Empty<NuGetFramework>();
             }
 
             if (_supportedFrameworks == null)
@@ -143,7 +195,7 @@ namespace LiGet.NuGet.Server.Infrastructure
                 var supportedFrameworksAsStrings = SupportedFrameworks.Split('|').ToList();
 
                 _supportedFrameworks = supportedFrameworksAsStrings
-                    .Select(VersionUtility.ParseFrameworkName)
+                    .Select(NuGetFramework.Parse)
                     .ToList();
             }
 
@@ -182,7 +234,7 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         public string FullPath { get; set; }
 
-        private static string DependencySetsAsString(IEnumerable<PackageDependencySet> dependencySets)
+        private static string DependencySetsAsString(IEnumerable<PackageDependencyGroup> dependencySets)
         {
             if (dependencySets == null)
             {
@@ -192,15 +244,16 @@ namespace LiGet.NuGet.Server.Infrastructure
             var dependencies = new List<string>();
             foreach (var dependencySet in dependencySets)
             {
-                if (dependencySet.Dependencies.Count == 0)
+                if (!dependencySet.Packages.Any())
                 {
-                    dependencies.Add(string.Format(CultureInfo.InvariantCulture, "{0}:{1}:{2}", null, null, dependencySet.TargetFramework.ToShortNameOrNull()));
+                    dependencies.Add(string.Format(CultureInfo.InvariantCulture, "{0}:{1}:{2}", null, null, dependencySet.TargetFramework.GetFrameworkString()));
                 }
                 else
                 {
-                    foreach (var dependency in dependencySet.Dependencies.Select(d => new { d.Id, d.VersionSpec, dependencySet.TargetFramework }))
+                    foreach (var dependency in dependencySet.Packages.Select(d => new { d.Id, d.VersionRange, dependencySet.TargetFramework }))
                     {
-                        dependencies.Add(string.Format(CultureInfo.InvariantCulture, "{0}:{1}:{2}", dependency.Id, dependency.VersionSpec == null ? null : dependency.VersionSpec.ToString(), dependencySet.TargetFramework.ToShortNameOrNull()));
+                        dependencies.Add(string.Format(CultureInfo.InvariantCulture, "{0}:{1}:{2}", 
+                            dependency.Id, dependency.VersionRange == null ? null : dependency.VersionRange.ToNormalizedString(), dependencySet.TargetFramework.GetFrameworkString()));
                     }
                 }
             }
@@ -208,9 +261,9 @@ namespace LiGet.NuGet.Server.Infrastructure
             return string.Join("|", dependencies);
         }
 
-        private static List<PackageDependencySet> ParseDependencySet(string value)
+        private static List<PackageDependencyGroup> ParseDependencySet(string value)
         {
-            var dependencySets = new List<PackageDependencySet>();
+            var dependencySets = new List<PackageDependencyGroup>();
 
             var dependencies = value.Split('|').Select(ParseDependency).ToList();
 
@@ -218,7 +271,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             var groups = dependencies.GroupBy(d => d.Item3);
 
             dependencySets.AddRange(
-                groups.Select(g => new PackageDependencySet(
+                groups.Select(g => new PackageDependencyGroup(
                     g.Key,   // target framework
                     g.Where(pair => !String.IsNullOrEmpty(pair.Item1))                   // the Id is empty when a group is empty.
                      .Select(pair => new PackageDependency(pair.Item1, pair.Item2)))));  // dependencies by that target framework
@@ -229,7 +282,7 @@ namespace LiGet.NuGet.Server.Infrastructure
         /// Parses a dependency from the feed in the format:
         ///     id or id:versionSpec, or id:versionSpec:targetFramework
         /// </summary>
-        private static Tuple<string, IVersionSpec, FrameworkName> ParseDependency(string value)
+        private static Tuple<string, VersionRange, NuGetFramework> ParseDependency(string value)
         {
             if (String.IsNullOrWhiteSpace(value))
             {
@@ -249,15 +302,15 @@ namespace LiGet.NuGet.Server.Infrastructure
             // Trim the id
             string id = tokens[0].Trim();
 
-            IVersionSpec versionSpec = null;
+            VersionRange versionSpec = null;
             if (tokens.Length > 1)
             {
                 // Attempt to parse the version
-                VersionUtility.TryParseVersionSpec(tokens[1], out versionSpec);
+                VersionRange.TryParse(tokens[1], out versionSpec);
             }
 
             var targetFramework = (tokens.Length > 2 && !String.IsNullOrEmpty(tokens[2]))
-                                    ? VersionUtility.ParseFrameworkName(tokens[2])
+                                    ? NuGetFramework.Parse(tokens[2])
                                     : null;
 
             return Tuple.Create(id, versionSpec, targetFramework);
@@ -274,9 +327,9 @@ namespace LiGet.NuGet.Server.Infrastructure
             {
                 foreach (var dependencySet in package.DependencySets)
                 {
-                    foreach (var dependency in dependencySet.Dependencies)
+                    foreach (var dependency in dependencySet.Packages)
                     {
-                        var range = dependency.VersionSpec;
+                        var range = dependency.VersionRange;
                         if (range == null)
                         {
                             continue;

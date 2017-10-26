@@ -7,6 +7,7 @@ using System.Text;
 using LiGet.NuGet.Server.Infrastructure;
 using Newtonsoft.Json;
 using NuGet;
+using NuGet.Versioning;
 using Xunit;
 
 namespace LiGet.NuGet.Server.Tests

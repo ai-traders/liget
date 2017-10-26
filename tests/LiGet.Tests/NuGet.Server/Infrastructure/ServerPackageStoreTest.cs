@@ -7,6 +7,7 @@ using System.Text;
 using LiGet.NuGet.Server.Infrastructure;
 using Moq;
 using NuGet;
+using NuGet.Versioning;
 using Xunit;
 
 namespace LiGet.NuGet.Server.Tests
@@ -17,7 +18,7 @@ namespace LiGet.NuGet.Server.Tests
         private const string PackageVersionString = "3.5.0";
         private const string CacheFileName = "store.json";
         private const string SemVer2VersionString = "3.5.0-rc.1+githash";
-        private static readonly SemanticVersion SemVer2Version = new SemanticVersion(SemVer2VersionString);
+        private static readonly SemanticVersion SemVer2Version = SemanticVersion.Parse(SemVer2VersionString);
 
         [Theory]
         [InlineData("[")]
@@ -95,7 +96,7 @@ namespace LiGet.NuGet.Server.Tests
             // Assert
             Assert.Equal(1, actual.GetAll().Count());
             var package = actual.GetAll().First();
-            Assert.Equal(SemVer2Version.ToOriginalString(), package.Version.ToOriginalString());
+            Assert.Equal(SemVer2Version.ToString(), package.Version.ToString());
             Assert.Equal(SemVer2Version.ToFullString(), package.Version.ToFullString());
             Assert.Equal(SemVer2Version.ToNormalizedString(), package.Version.ToNormalizedString());
         }

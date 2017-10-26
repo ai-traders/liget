@@ -3,6 +3,7 @@
 
 using System;
 using NuGet;
+using NuGet.Versioning;
 
 namespace LiGet.NuGet.Server.Infrastructure
 {
@@ -12,13 +13,13 @@ namespace LiGet.NuGet.Server.Infrastructure
         /// A set of client compatibilities with yielding the maximum set of packages.
         /// </summary>
         public static readonly ClientCompatibility Max = new ClientCompatibility(
-            semVerLevel: new SemanticVersion("2.0.0"));
+            semVerLevel: SemanticVersion.Parse("2.0.0"));
 
         /// <summary>
         /// A set of client compatibilities with yielding the minimum set of packages.
         /// </summary>
         public static readonly ClientCompatibility Default = new ClientCompatibility(
-            semVerLevel: new SemanticVersion("1.0.0"));
+            semVerLevel: SemanticVersion.Parse("1.0.0"));
 
         public ClientCompatibility(SemanticVersion semVerLevel)
         {
@@ -28,7 +29,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             }
 
             SemVerLevel = semVerLevel;
-            AllowSemVer2 = semVerLevel.Version.Major >= 2;
+            AllowSemVer2 = semVerLevel.Major >= 2;
         }
 
         public SemanticVersion SemVerLevel { get; }

@@ -16,7 +16,7 @@ namespace LiGet
 
         static readonly string basePath = "/api/v2";
 
-        public PackagesNancyModule(IPackageRepository repository, IEdmModel odataModel)
+        public PackagesNancyModule(IPackageService repository, IEdmModel odataModel)
             :base(basePath)
         {
             this.OnError.AddItemToEndOfPipeline(HandleError);
@@ -34,9 +34,7 @@ namespace LiGet
                 {
                     string id = idOrNull;
                     _log.DebugFormat("Request to FindPackagesById id={0}",id);
-                    var found = 
-                        repository.FindPackagesById(id)
-                        .Select(p => p.ToODataPackage());
+                    var found = repository.FindPackagesById(id);
                     return found;
                 }
             });

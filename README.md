@@ -43,6 +43,7 @@ dotnet xunit
 Firsly, this project is using lots of code from other nuget servers,
 either as reference or actually porting pieces of code.
  * [TanukiSharp/MinimalNugetServer as minimal dotnet core setup](https://github.com/TanukiSharp/MinimalNugetServer)
+ * [emresenturk/NetCoreNugetServer another minimal dotnet core server](https://github.com/emresenturk/NetCoreNugetServer)
  * [official NuGet.Server](https://github.com/NuGet/NuGet.Server)
  * [NuGet.Lucene](https://github.com/themotleyfool/NuGet.Lucene/tree/master/source) which is part of klondike
 

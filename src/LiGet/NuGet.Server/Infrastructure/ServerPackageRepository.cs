@@ -9,7 +9,13 @@ using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
+using LiGet.Models;
 using NuGet;
+using NuGet.Common;
+using NuGet.Frameworks;
+using NuGet.Packaging.Core;
+using NuGet.Protocol;
+using NuGet.Versioning;
 
 namespace LiGet.NuGet.Server.Infrastructure
 {
@@ -18,8 +24,7 @@ namespace LiGet.NuGet.Server.Infrastructure
     /// to correctly determine attributes such as IsAbsoluteLatestVersion. Adding, removing, or making changes to packages on disk 
     /// will clear the cache.
     /// </summary>
-    public class ServerPackageRepository
-        : PackageRepositoryBase, IServerPackageRepository, IPackageLookup, IDisposable
+    public class ServerPackageRepository : IPackageService, IDisposable
     {
         private static readonly log4net.ILog _logger = log4net.LogManager.GetLogger(typeof(ServerPackageRepository));
         private const string TemplateNupkgFilename = "{0}\\{1}\\{0}.{1}.nupkg";
@@ -28,6 +33,10 @@ namespace LiGet.NuGet.Server.Infrastructure
         private readonly object _syncLock = new object();
         private readonly IServerPackageRepositoryConfig _config;
         private readonly IFileSystem _fileSystem;
+
+        // from nuget core docs:
+        // Represents a NuGet v3 style expanded repository. Packages in this repository are 
+        // stored in the format {id}/{version}/{unzipped-contents}
         private readonly ExpandedPackageRepository _expandedPackageRepository;
         private readonly IServerPackageStore _serverPackageStore;
 
@@ -39,7 +48,9 @@ namespace LiGet.NuGet.Server.Infrastructure
         private Timer _persistenceTimer;
         private Timer _rebuildTimer;
 
-        public ServerPackageRepository(string path, IHashProvider hashProvider,IServerPackageRepositoryConfig serverConfig)
+        private PackageSaveModes _packageSave = PackageSaveModes.Nupkg;
+
+        public ServerPackageRepository(string path, CryptoHashProvider hashProvider,IServerPackageRepositoryConfig serverConfig)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -103,7 +114,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             _logger.Info("Finished registering background jobs.");
         }
 
-        public override IQueryable<IPackage> GetPackages()
+        public IQueryable<IPackage> GetPackages()
         {
             return GetPackages(ClientCompatibility.Default);
         }
@@ -142,7 +153,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             return FindPackagesById(packageId, ClientCompatibility.Default);
         }
         
-        public IQueryable<IPackage> Search(
+        public IQueryable<ServerPackage> Search(
             string searchTerm,
             IEnumerable<string> targetFrameworks,
             bool allowPrereleaseVersions)
@@ -150,7 +161,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             return Search(searchTerm, targetFrameworks, allowPrereleaseVersions, ClientCompatibility.Default);
         }
 
-        public IQueryable<IPackage> Search(
+        public IQueryable<ServerPackage> Search(
             string searchTerm,
             IEnumerable<string> targetFrameworks,
             bool allowPrereleaseVersions,
@@ -168,36 +179,51 @@ namespace LiGet.NuGet.Server.Infrastructure
 
             if (EnableFrameworkFiltering && targetFrameworks.Any())
             {
-                // Get the list of framework names
-                var frameworkNames = targetFrameworks
-                    .Select(frameworkName => VersionUtility.ParseFrameworkName(frameworkName));
+                throw new NotImplementedException("filter target frameworks");
+                // // Get the list of framework names
+                // var frameworkNames = targetFrameworks
+                //     .Select(frameworkName => NuGetFramework.Parse(frameworkName));
 
-                packages = packages
-                    .Where(package => frameworkNames
-                        .Any(frameworkName => VersionUtility
-                            .IsCompatible(frameworkName, package.GetSupportedFrameworks())));
+                // packages = packages
+                //     .Where(package => frameworkNames
+                //         .Any(frameworkName => VersionUtility
+                //             .IsCompatible(frameworkName, package.GetSupportedFrameworks())));
             }
 
             return packages.AsQueryable();
         }
 
-        public IEnumerable<IPackage> GetUpdates(
-            IEnumerable<IPackageName> packages,
-            bool includePrerelease,
-            bool includeAllVersions,
-            IEnumerable<FrameworkName> targetFrameworks,
-            IEnumerable<IVersionSpec> versionConstraints)
+        // public IEnumerable<IPackage> GetUpdates(
+        //     IEnumerable<IPackageName> packages,
+        //     bool includePrerelease,
+        //     bool includeAllVersions,
+        //     IEnumerable<FrameworkName> targetFrameworks,
+        //     IEnumerable<VersionRange> versionConstraints)
+        // {
+        //     return this.GetUpdatesCore(
+        //         packages,
+        //         includePrerelease,
+        //         includeAllVersions,
+        //         targetFrameworks,
+        //         versionConstraints,
+        //         ClientCompatibility.Default);
+        // }
+
+        public PackageSaveModes PackageSaveMode 
         {
-            return this.GetUpdatesCore(
-                packages,
-                includePrerelease,
-                includeAllVersions,
-                targetFrameworks,
-                versionConstraints,
-                ClientCompatibility.Default);
+            get { return _packageSave; }
+            set
+            {
+                if (value == PackageSaveModes.None)
+                {
+                    throw new ArgumentException("PackageSave cannot be set to None");
+                }
+
+                _packageSave = value;
+            }
         }
 
-        public override string Source
+        public string Source
         {
             get
             {
@@ -205,7 +231,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             }
         }
 
-        public override bool SupportsPrereleasePackages
+        public bool SupportsPrereleasePackages
         {
             get
             {
@@ -221,27 +247,29 @@ namespace LiGet.NuGet.Server.Infrastructure
             {
                 try
                 {
-                    var serverPackages = new HashSet<ServerPackage>(PackageEqualityComparer.IdAndVersion);
+                    //TODO replace logger by log4net adapter
+                    var localPackages = LocalFolderUtility.GetPackagesV2(_fileSystem.Root, new NullLogger());
 
-                    foreach (var packageFile in _fileSystem.GetFiles(_fileSystem.Root, "*.nupkg", false))
+                    //FIXME PackageEqualityComparer.IdAndVersion
+                    var serverPackages = new HashSet<ServerPackage>();
+
+                    foreach (var package in localPackages)
                     {
                         try
                         {
-                            // Create package
-                            var package = new OptimizedZipPackage(_fileSystem, packageFile);
+                            //TODO ignoring symbols packages
+                            // // Is it a symbols package?
+                            // if (IgnoreSymbolsPackages && package.IsSymbolsPackage())
+                            // {
+                            //     var message = string.Format("Package {0} is a symbols package (it contains .pdb files and a /src folder). The server is configured to ignore symbols packages.", package);
 
-                            // Is it a symbols package?
-                            if (IgnoreSymbolsPackages && package.IsSymbolsPackage())
-                            {
-                                var message = string.Format("Package {0} is a symbols package (it contains .pdb files and a /src folder). The server is configured to ignore symbols packages.", package);
+                            //     _logger.Error(message);
 
-                                _logger.Error(message);
-
-                                continue;
-                            }
+                            //     continue;
+                            // }
 
                             // Allow overwriting package? If not, skip this one.
-                            if (!AllowOverrideExistingPackageOnPush && _expandedPackageRepository.Exists(package.Id, package.Version))
+                            if (!AllowOverrideExistingPackageOnPush && _expandedPackageRepository.Exists(package.Identity.Id, package.Identity.Version))
                             {
                                 var message = string.Format("Package {0} already exists. The server is configured to not allow overwriting packages that already exist.", package);
 
@@ -252,7 +280,7 @@ namespace LiGet.NuGet.Server.Infrastructure
 
                             // Copy to correct filesystem location
                             _expandedPackageRepository.AddPackage(package);
-                            _fileSystem.DeleteFile(packageFile);
+                            _fileSystem.DeleteFile(package.Path);
 
                             // Mark for addition to metadata store
                             serverPackages.Add(CreateServerPackage(package, EnableDelisting));
@@ -260,12 +288,12 @@ namespace LiGet.NuGet.Server.Infrastructure
                         catch (UnauthorizedAccessException ex)
                         {
                             // The file may be in use (still being copied) - ignore the error
-                            _logger.ErrorFormat("Error adding package file {0} from drop folder: {1}", packageFile, ex.Message);
+                            _logger.ErrorFormat("Error adding package file {0} from drop folder: {1}", package.Path, ex.Message);
                         }
                         catch (IOException ex)
                         {
                             // The file may be in use (still being copied) - ignore the error
-                            _logger.ErrorFormat("Error adding package file {0} from drop folder: {1}", packageFile, ex.Message);
+                            _logger.ErrorFormat("Error adding package file {0} from drop folder: {1}", package.Path, ex.Message);
                         }
                     }
 
@@ -277,7 +305,7 @@ namespace LiGet.NuGet.Server.Infrastructure
                 }
                 finally
                 {
-                    OptimizedZipPackage.PurgeCache();
+                    //OptimizedZipPackage.PurgeCache();
                 }
             }
         }
@@ -285,19 +313,19 @@ namespace LiGet.NuGet.Server.Infrastructure
         /// <summary>
         /// Add a file to the repository.
         /// </summary>
-        public override void AddPackage(IPackage package)
+        public void AddPackage(LocalPackageInfo package)
         {
-            _logger.InfoFormat("Start adding package {0} {1}.", package.Id, package.Version);
+            _logger.InfoFormat("Start adding package {0} {1}.", package.Identity.Id, package.Identity.Version);
 
-            if (IgnoreSymbolsPackages && package.IsSymbolsPackage())
-            {
-                var message = string.Format("Package {0} is a symbols package (it contains .pdb files and a /src folder). The server is configured to ignore symbols packages.", package);
+            // if (IgnoreSymbolsPackages && package.IsSymbolsPackage())
+            // {
+            //     var message = string.Format("Package {0} is a symbols package (it contains .pdb files and a /src folder). The server is configured to ignore symbols packages.", package);
 
-                _logger.Error(message);
-                throw new InvalidOperationException(message);
-            }
+            //     _logger.Error(message);
+            //     throw new InvalidOperationException(message);
+            // }
 
-            if (!AllowOverrideExistingPackageOnPush && Exists(package.Id, package.Version))
+            if (!AllowOverrideExistingPackageOnPush && Exists(package.Identity.Id, package.Identity.Version))
             {
                 var message = string.Format("Package {0} already exists. The server is configured to not allow overwriting packages that already exist.", package);
 
@@ -313,14 +341,14 @@ namespace LiGet.NuGet.Server.Infrastructure
                 // Add to metadata store
                 _serverPackageStore.Store(CreateServerPackage(package, EnableDelisting));
 
-                _logger.InfoFormat("Finished adding package {0} {1}.", package.Id, package.Version);
+                _logger.InfoFormat("Finished adding package {0} {1}.", package.Identity.Id, package.Identity.Version);
             }
         }
 
         /// <summary>
         /// Unlist or delete a package.
         /// </summary>
-        public override void RemovePackage(IPackage package)
+        public void RemovePackage(PackageIdentity package)
         {
             if (package == null)
             {
@@ -383,9 +411,10 @@ namespace LiGet.NuGet.Server.Infrastructure
         /// </summary>
         public void RemovePackage(string packageId, SemanticVersion version)
         {
-            var package = FindPackage(packageId, version);
+            throw new NotImplementedException("remove package");
+            // var package = FindPackage(packageId, version);
 
-            RemovePackage(package);
+            // RemovePackage(package);
         }
 
         public void Dispose()
@@ -504,7 +533,7 @@ namespace LiGet.NuGet.Server.Infrastructure
                         // Add the package to the cache, it should not exist already
                         if (cachedPackages.Contains(serverPackage))
                         {
-                            _logger.WarnFormat("Duplicate package found - {0} {1}", package.Id, package.Version);
+                            _logger.WarnFormat("Duplicate package found - {0} {1}", package.Identity.Id, package.Identity.Version);
                         }
                         else
                         {
@@ -513,7 +542,8 @@ namespace LiGet.NuGet.Server.Infrastructure
                     });
 
                     _logger.Info("Finished reading packages from disk.");
-                    return new HashSet<ServerPackage>(cachedPackages, PackageEqualityComparer.IdAndVersion);
+                    // FIXME  PackageEqualityComparer.IdAndVersion
+                    return new HashSet<ServerPackage>(cachedPackages);
                 }
                 catch (Exception ex)
                 {
@@ -523,11 +553,11 @@ namespace LiGet.NuGet.Server.Infrastructure
             }
         }
 
-        private ServerPackage CreateServerPackage(IPackage package, bool enableDelisting)
+        private ServerPackage CreateServerPackage(LocalPackageInfo package, bool enableDelisting)
         {
             // File names
-            var packageFileName = GetPackageFileName(package.Id, package.Version);
-            var hashFileName = GetHashFileName(package.Id, package.Version);
+            var packageFileName = GetPackageFileName(package.Identity.Id, package.Identity.Version);
+            var hashFileName = GetHashFileName(package.Identity.Id, package.Identity.Version);
 
             // File system
             var physicalFileSystem = _fileSystem as PhysicalFileSystem;
@@ -542,7 +572,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             }
 
             // Read package info
-            var localPackage = package as LocalPackage;
+            var localPackage = package as LocalPackageInfo;
             if (physicalFileSystem != null)
             {
                 // Read package info from file system
@@ -554,22 +584,23 @@ namespace LiGet.NuGet.Server.Infrastructure
                 packageDerivedData.Path = packageFileName;
                 packageDerivedData.FullPath = _fileSystem.GetFullPath(packageFileName);
 
-                if (enableDelisting && localPackage != null)
-                {
-                    // hidden packages are considered delisted
-                    localPackage.Listed = !fileInfo.Attributes.HasFlag(FileAttributes.Hidden);
-                }
+                // if (enableDelisting && localPackage != null)
+                // {
+                //     // hidden packages are considered delisted
+                //     localPackage.Listed = !fileInfo.Attributes.HasFlag(FileAttributes.Hidden);
+                // }
             }
             else
             {
-                // Read package info from package (slower)
-                using (var stream = package.GetStream())
-                {
-                    packageDerivedData.PackageSize = stream.Length;
-                }
+                throw new NotSupportedException("Read package info from package (slower)");
+                // FIXME Read package info from package (slower)
+                // using (var stream = package.GetStream())
+                // {
+                //     packageDerivedData.PackageSize = stream.Length;
+                // }
 
-                packageDerivedData.LastUpdated = DateTime.MinValue;
-                packageDerivedData.Created = DateTime.MinValue;
+                // packageDerivedData.LastUpdated = DateTime.MinValue;
+                // packageDerivedData.Created = DateTime.MinValue;
             }
 
             // TODO: frameworks?
@@ -586,7 +617,7 @@ namespace LiGet.NuGet.Server.Infrastructure
         {
             using (LockAndSuppressFileSystemWatcher())
             {
-                OptimizedZipPackage.PurgeCache();
+                // OptimizedZipPackage.PurgeCache();
 
                 _serverPackageStore.Clear();
                 _serverPackageStore.Persist();
@@ -743,12 +774,17 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         private string GetHashFileName(string packageId, SemanticVersion version)
         {
-            return string.Format(TemplateHashFilename, packageId, version.ToNormalizedString(), global::NuGet.Constants.HashFileExtension);
+            return string.Format(TemplateHashFilename, packageId, version.ToNormalizedString(), PackagingCoreConstants.HashFileExtension);
         }
         
         private IDisposable LockAndSuppressFileSystemWatcher()
         {
             return new SupressedFileSystemWatcher(this);
+        }
+
+        IEnumerable<ODataPackage> IPackageService.FindPackagesById(string id)
+        {
+            throw new NotImplementedException();
         }
 
         private class SupressedFileSystemWatcher : IDisposable

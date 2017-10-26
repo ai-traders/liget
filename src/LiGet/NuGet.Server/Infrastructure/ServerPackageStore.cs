@@ -10,11 +10,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NuGet;
+using NuGet.Packaging;
+using NuGet.Versioning;
 
 namespace LiGet.NuGet.Server.Infrastructure
 {
-    public class ServerPackageStore
-        : IServerPackageStore
+    public class ServerPackageStore : IServerPackageStore
     {
         private readonly IPackagesSerializer _packagesSerializer = new JsonNetPackagesSerializer();
         

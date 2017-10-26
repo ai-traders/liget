@@ -4,6 +4,7 @@
 using System;
 using Newtonsoft.Json;
 using NuGet;
+using NuGet.Versioning;
 
 namespace LiGet.NuGet.Server.Infrastructure
 {
@@ -33,6 +34,11 @@ namespace LiGet.NuGet.Server.Infrastructure
                 {
                     return Version.Parse(value);
                 }
+
+                if (objectType == typeof(NuGetVersion))
+                {
+                    return NuGetVersion.Parse(value);
+                }
             }
 
             return null;
@@ -43,11 +49,18 @@ namespace LiGet.NuGet.Server.Infrastructure
             var semanticVersion = value as SemanticVersion;
             if (semanticVersion != null)
             {
-                _serializer.Serialize(writer, semanticVersion.ToOriginalString());
+                _serializer.Serialize(writer, semanticVersion.ToFullString());
             }
             else
             {
-                _serializer.Serialize(writer, value.ToString());
+                var nversion = value as NuGetVersion;
+                if(nversion != null)
+                {
+                    _serializer.Serialize(writer, nversion.OriginalVersion);
+                }
+                else {
+                    _serializer.Serialize(writer, value.ToString());
+                }
             }
         }
     }

@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using NuGet;
+using NuGet.Versioning;
 
 namespace LiGet.NuGet.Server.Infrastructure
 {
