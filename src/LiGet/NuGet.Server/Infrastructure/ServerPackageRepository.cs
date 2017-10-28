@@ -557,7 +557,7 @@ namespace LiGet.NuGet.Server.Infrastructure
         public ServerPackage CreateServerPackage(LocalPackageInfo package, bool enableDelisting)
         {
             // File names
-            var packageFileName = package.Path;// GetPackageFileName(package.Identity.Id, package.Identity.Version);
+            var packageFileName = package.Path;
             var hashFileName = Path.ChangeExtension(packageFileName, PackagingCoreConstants.HashFileExtension);
 
             // File system
@@ -607,8 +607,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             // TODO: frameworks?
 
             // Build entry
-            // TODO use the extracted nuspec and pass nuspec reader there.
-            var serverPackage = new ServerPackage(package, packageDerivedData);
+            var serverPackage = new ServerPackage(package.Nuspec, packageDerivedData);
             return serverPackage;
         }
 
@@ -774,8 +773,9 @@ namespace LiGet.NuGet.Server.Infrastructure
             return new SupressedFileSystemWatcher(this);
         }
 
-        IEnumerable<ODataPackage> IPackageService.FindPackagesById(string id)
+        IEnumerable<HostedPackage> IPackageService.FindPackagesById(string id, ClientCompatibility compatibility)
         {
+            var found = this.FindPackagesById(id, compatibility);
             throw new NotImplementedException();
         }
 

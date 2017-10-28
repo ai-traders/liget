@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using LiGet.NuGet.Server.Infrastructure;
 using LiGet.OData;
 using LiGet.Util;
 using Microsoft.OData.Edm;
@@ -28,13 +29,15 @@ namespace LiGet
                 var path = uriParser.ParsePath();
                 //path.FirstSegment.Identifier=="FindPackagesById"
                 var idOrNull = uriParser.CustomQueryOptions.FirstOrDefault(o => o.Key.ToLowerInvariant() == "id").Value;
+                //TODO semVer
+                var semVer = ClientCompatibility.Max;
                 if(idOrNull == null)
                     throw new ArgumentException();//TODO nice bad request
                 else
                 {
                     string id = idOrNull;
                     _log.DebugFormat("Request to FindPackagesById id={0}",id);
-                    var found = repository.FindPackagesById(id);
+                    var found = repository.FindPackagesById(id,semVer);
                     return found;
                 }
             });

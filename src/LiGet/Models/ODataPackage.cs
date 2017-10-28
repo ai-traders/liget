@@ -1,11 +1,11 @@
 
 using System;
 using NuGet;
+using NuGet.Protocol;
 using NuGet.Versioning;
 
 namespace LiGet.Models
 {
-    //TODO rather use V2FeedPackageInfo https://github.com/NuGet/NuGet.Client/blob/dev/src/NuGet.Core/NuGet.Protocol/LegacyFeed/V2FeedPackageInfo.cs
     public class ODataPackage : IEquatable<ODataPackage>
     {
         public ODataPackage() {}

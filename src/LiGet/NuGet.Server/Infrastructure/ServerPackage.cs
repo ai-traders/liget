@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
+using LiGet.Util;
 using Newtonsoft.Json;
 using NuGet;
 using NuGet.Frameworks;
@@ -18,7 +19,10 @@ using NuGet.Versioning;
 namespace LiGet.NuGet.Server.Infrastructure
 {
     //TODO !!! for parsing deps use - https://github.com/NuGet/NuGet.Client/blob/c282092fc575891b30186d7baa1962ce3fb1d4b4/src/NuGet.Core/NuGet.Protocol/LegacyFeed/V2FeedPackageInfo.cs#L228
-    //Package stored locally in server's folder-based data store. Already accepted, hashed, with extracted nuspec.
+    
+    /// <summary>
+    /// Package stored locally in server's folder-based data store. Already accepted, hashed, with extracted nuspec.
+    /// </summary>
     public class ServerPackage :  IPackage
     {
         public ServerPackage()
@@ -57,7 +61,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             IsSemVer2 = IsPackageSemVer2(package);
 
             _dependencySets = package.DependencySets.ToList();
-            Dependencies = DependencySetsAsString(package.DependencySets);
+            Dependencies = package.DependencySets.DependencySetsAsString();
 
             _supportedFrameworks = package.GetSupportedFrameworks().ToList();
             SupportedFrameworks = string.Join("|", package.GetSupportedFrameworks().Select(f => f.GetFrameworkString()));
@@ -71,9 +75,8 @@ namespace LiGet.NuGet.Server.Infrastructure
             FullPath = packageDerivedData.FullPath;
         }
 
-        public ServerPackage(LocalPackageInfo localPackage, PackageDerivedData packageDerivedData)
+        public ServerPackage(NuspecReader package, PackageDerivedData packageDerivedData)
         {
-            var package = localPackage.Nuspec;
             Id = package.GetId();
             Version = package.GetVersion();
             Title = package.GetTitle();
@@ -103,7 +106,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             IsSemVer2 = IsPackageSemVer2(package);
     
              _dependencySets = package.GetDependencyGroups().ToList();
-            Dependencies = DependencySetsAsString(_dependencySets);
+            Dependencies = _dependencySets.DependencySetsAsString();
 
             _supportedFrameworks = package.GetFrameworkReferenceGroups().Select(f => f.TargetFramework).ToList();
             SupportedFrameworks = string.Join("|", _supportedFrameworks.Select(f => f.GetFrameworkString()));
@@ -121,7 +124,7 @@ namespace LiGet.NuGet.Server.Infrastructure
         public string Id { get; set; }
 
         [JsonRequired, JsonConverter(typeof(SemanticVersionJsonConverter))]
-        public SemanticVersion Version { get; set; }
+        public SemanticVersion Version { get; set; } // TODO probably nuget version
 
         public string Title { get; set; }
 
@@ -235,32 +238,7 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         public string FullPath { get; set; }
 
-        private static string DependencySetsAsString(IEnumerable<PackageDependencyGroup> dependencySets)
-        {
-            if (dependencySets == null)
-            {
-                return null;
-            }
-
-            var dependencies = new List<string>();
-            foreach (var dependencySet in dependencySets)
-            {
-                if (!dependencySet.Packages.Any())
-                {
-                    dependencies.Add(string.Format(CultureInfo.InvariantCulture, "{0}:{1}:{2}", null, null, dependencySet.TargetFramework.GetFrameworkString()));
-                }
-                else
-                {
-                    foreach (var dependency in dependencySet.Packages.Select(d => new { d.Id, d.VersionRange, dependencySet.TargetFramework }))
-                    {
-                        dependencies.Add(string.Format(CultureInfo.InvariantCulture, "{0}:{1}:{2}", 
-                            dependency.Id, dependency.VersionRange == null ? null : dependency.VersionRange.ToNormalizedString(), dependencySet.TargetFramework.GetFrameworkString()));
-                    }
-                }
-            }
-
-            return string.Join("|", dependencies);
-        }
+        
 
         private static List<PackageDependencyGroup> ParseDependencySet(string value)
         {
