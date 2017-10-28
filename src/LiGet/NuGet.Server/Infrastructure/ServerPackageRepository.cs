@@ -13,6 +13,7 @@ using LiGet.Models;
 using NuGet;
 using NuGet.Common;
 using NuGet.Frameworks;
+using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Protocol;
 using NuGet.Versioning;
@@ -27,8 +28,7 @@ namespace LiGet.NuGet.Server.Infrastructure
     public class ServerPackageRepository : IPackageService, IDisposable
     {
         private static readonly log4net.ILog _logger = log4net.LogManager.GetLogger(typeof(ServerPackageRepository));
-        private const string TemplateNupkgFilename = "{0}\\{1}\\{0}.{1}.nupkg";
-        private const string TemplateHashFilename = "{0}\\{1}\\{0}.{1}{2}";
+        private static readonly ILogger _logAdapter = new Log4NetLoggerAdapter(_logger);
 
         private readonly object _syncLock = new object();
         private readonly IServerPackageRepositoryConfig _config;
@@ -247,8 +247,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             {
                 try
                 {
-                    //TODO replace logger by log4net adapter
-                    var localPackages = LocalFolderUtility.GetPackagesV2(_fileSystem.Root, new NullLogger());
+                    var localPackages = LocalFolderUtility.GetPackagesV2(_fileSystem.Root, _logAdapter);
 
                     //FIXME PackageEqualityComparer.IdAndVersion
                     var serverPackages = new HashSet<ServerPackage>();
@@ -336,7 +335,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             using (LockAndSuppressFileSystemWatcher())
             {
                 // Copy to correct filesystem location
-                _expandedPackageRepository.AddPackage(package);
+                package = _expandedPackageRepository.AddPackage(package);
 
                 // Add to metadata store
                 _serverPackageStore.Store(CreateServerPackage(package, EnableDelisting));
@@ -364,8 +363,10 @@ namespace LiGet.NuGet.Server.Infrastructure
                     var physicalFileSystem = _fileSystem as PhysicalFileSystem;
                     if (physicalFileSystem != null)
                     {
-                        var fileName = physicalFileSystem.GetFullPath(
-                            GetPackageFileName(package.Id, package.Version));
+                        var fileName = "";
+                        throw new NotImplementedException("package remove");
+                        // physicalFileSystem.GetFullPath(
+                        //    GetPackageFileName(package.Id, package.Version));
 
                         if (File.Exists(fileName))
                         {
@@ -525,7 +526,8 @@ namespace LiGet.NuGet.Server.Infrastructure
 
                     var packages = _expandedPackageRepository.GetPackages().ToList();
 
-                    Parallel.ForEach(packages, package =>
+                    //Parallel.ForEach(packages, package =>
+                    foreach(var package in packages)
                     {
                         // Create server package
                         var serverPackage = CreateServerPackage(package, enableDelisting);
@@ -539,11 +541,10 @@ namespace LiGet.NuGet.Server.Infrastructure
                         {
                             cachedPackages.Add(serverPackage);
                         }
-                    });
+                    };
 
                     _logger.Info("Finished reading packages from disk.");
-                    // FIXME  PackageEqualityComparer.IdAndVersion
-                    return new HashSet<ServerPackage>(cachedPackages);
+                    return new HashSet<ServerPackage>(cachedPackages, PackageEqualityComparer.IdAndVersion);
                 }
                 catch (Exception ex)
                 {
@@ -553,11 +554,11 @@ namespace LiGet.NuGet.Server.Infrastructure
             }
         }
 
-        private ServerPackage CreateServerPackage(LocalPackageInfo package, bool enableDelisting)
+        public ServerPackage CreateServerPackage(LocalPackageInfo package, bool enableDelisting)
         {
             // File names
-            var packageFileName = GetPackageFileName(package.Identity.Id, package.Identity.Version);
-            var hashFileName = GetHashFileName(package.Identity.Id, package.Identity.Version);
+            var packageFileName = package.Path;// GetPackageFileName(package.Identity.Id, package.Identity.Version);
+            var hashFileName = Path.ChangeExtension(packageFileName, PackagingCoreConstants.HashFileExtension);
 
             // File system
             var physicalFileSystem = _fileSystem as PhysicalFileSystem;
@@ -572,17 +573,17 @@ namespace LiGet.NuGet.Server.Infrastructure
             }
 
             // Read package info
-            var localPackage = package as LocalPackageInfo;
+            var localPackage = package;
             if (physicalFileSystem != null)
             {
                 // Read package info from file system
-                var fileInfo = new FileInfo(_fileSystem.GetFullPath(packageFileName));
+                var fileInfo = new FileInfo(packageFileName);
                 packageDerivedData.PackageSize = fileInfo.Length;
 
                 packageDerivedData.LastUpdated = _fileSystem.GetLastModified(packageFileName);
                 packageDerivedData.Created = _fileSystem.GetCreated(packageFileName);
                 packageDerivedData.Path = packageFileName;
-                packageDerivedData.FullPath = _fileSystem.GetFullPath(packageFileName);
+                packageDerivedData.FullPath = fileInfo.FullName;
 
                 // if (enableDelisting && localPackage != null)
                 // {
@@ -606,6 +607,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             // TODO: frameworks?
 
             // Build entry
+            // TODO use the extracted nuspec and pass nuspec reader there.
             var serverPackage = new ServerPackage(package, packageDerivedData);
             return serverPackage;
         }
@@ -765,16 +767,6 @@ namespace LiGet.NuGet.Server.Infrastructure
                 // If the setting is misconfigured, treat it as on (backwards compatibility).
                 return _config.EnableFileSystemMonitoring;
             }
-        }
-
-        private string GetPackageFileName(string packageId, SemanticVersion version)
-        {
-            return string.Format(TemplateNupkgFilename, packageId, version.ToNormalizedString());
-        }
-
-        private string GetHashFileName(string packageId, SemanticVersion version)
-        {
-            return string.Format(TemplateHashFilename, packageId, version.ToNormalizedString(), PackagingCoreConstants.HashFileExtension);
         }
         
         private IDisposable LockAndSuppressFileSystemWatcher()

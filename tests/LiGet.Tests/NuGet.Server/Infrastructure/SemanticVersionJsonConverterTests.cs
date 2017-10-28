@@ -25,6 +25,16 @@ namespace LiGet.NuGet.Server.Tests
         }
 
         [Fact]
+        public void CanConvertNuGetVersion()
+        {
+            // Arrange
+            var converter = new SemanticVersionJsonConverter();
+
+            // Act and assert
+            Assert.True(converter.CanConvert(typeof(NuGetVersion)));
+        }
+
+        [Fact]
         public void CanConvertVersion()
         {
             // Arrange
@@ -50,7 +60,7 @@ namespace LiGet.NuGet.Server.Tests
                 var converter = new SemanticVersionJsonConverter();
 
                 // Act
-                converter.WriteJson(writer, SemanticVersion.Parse(version), new JsonSerializer());
+                converter.WriteJson(writer, NuGetVersion.Parse(version), new JsonSerializer());
 
                 // Assert
                 Assert.Equal("\"" + expected + "\"", json.ToString());
@@ -78,11 +88,15 @@ namespace LiGet.NuGet.Server.Tests
 
         [Theory]
         [InlineData("1.0.0", typeof(SemanticVersion), "1.0.0")]
-        [InlineData("2.0.0.0", typeof(SemanticVersion), "2.0.0.0")]
+        [InlineData("2.0.0.0", typeof(NuGetVersion), "2.0.0.0")]
         [InlineData("3.0.0-alpha", typeof(SemanticVersion), "3.0.0-alpha")]
         [InlineData("4.0.0-0test.zero", typeof(SemanticVersion), "4.0.0-0test.zero")]
         [InlineData("4.0.0-0test.zero+tagParses", typeof(SemanticVersion), "4.0.0-0test.zero")]
         [InlineData("4.0.0-test.more.parts+tagsHash", typeof(SemanticVersion), "4.0.0-test.more.parts")]
+        [InlineData("3.0.0-alpha", typeof(NuGetVersion), "3.0.0-alpha")]
+        [InlineData("4.0.0-0test.zero", typeof(NuGetVersion), "4.0.0-0test.zero")]
+        [InlineData("4.0.0-0test.zero+tagParses", typeof(NuGetVersion), "4.0.0-0test.zero")]
+        [InlineData("4.0.0-test.more.parts+tagsHash", typeof(NuGetVersion), "4.0.0-test.more.parts")]
         [InlineData("4.0.0+tagsOnly", typeof(SemanticVersion), "4.0.0")]
         [InlineData("1.0.0", typeof(Version), "1.0.0")]
         [InlineData("2.0.0.0", typeof(Version), "2.0.0.0")]

@@ -13,7 +13,7 @@ namespace LiGet.Tests
 
         public TemporaryDirectory()
         {
-            var tempPath = System.IO.Path.GetTempPath();
+            var tempPath = System.IO.Path.Combine(Environment.CurrentDirectory, "test-data");
             Path = System.IO.Path.Combine(tempPath, GetType().Assembly.GetName().Name, Guid.NewGuid().ToString());
 
             Directory.CreateDirectory(Path);

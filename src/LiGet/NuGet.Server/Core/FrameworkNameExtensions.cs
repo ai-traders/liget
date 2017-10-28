@@ -6,16 +6,16 @@ using NuGet;
 
 namespace LiGet.NuGet.Server
 {
-    internal static class FrameworkNameExtensions
-    {
-        public static string ToShortNameOrNull(this FrameworkName current)
-        {
-            if (current == null)
-            {
-                return string.Empty;
-            }
+    // internal static class FrameworkNameExtensions
+    // {
+    //     public static string ToShortNameOrNull(this FrameworkName current)
+    //     {
+    //         if (current == null)
+    //         {
+    //             return string.Empty;
+    //         }
 
-            return VersionUtility.GetShortFrameworkName(current);
-        }
-    }
+    //         return VersionUtility.GetShortFrameworkName(current);
+    //     }
+    // }
 }

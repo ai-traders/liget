@@ -8,7 +8,7 @@ namespace NuGet
     public static class VersionExtensions
     {
         public static bool IsSemVer2(this SemanticVersion v) {
-            return v.Major == 2;
+            return NuGetVersion.Parse(v.ToFullString()).IsSemVer2;
         }
 
         public static Func<IPackage, bool> ToDelegate(this VersionRange versionInfo)

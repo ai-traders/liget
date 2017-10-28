@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml;
+using LiGet;
 using NuGet.Common;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
@@ -17,8 +18,11 @@ namespace NuGet
     /// Represents a NuGet v3 style expanded repository. Packages in this repository are 
     /// stored in the format {id}/{version}/{unzipped-contents}
     /// </summary>
-    public class ExpandedPackageRepository : IPackageLookup
+    public class ExpandedPackageRepository
     {
+        private static readonly log4net.ILog _log = log4net.LogManager.GetLogger(typeof(ExpandedPackageRepository));
+        private static readonly ILogger _logAdapter = new Log4NetLoggerAdapter(_log);
+
         private readonly IFileSystem _fileSystem;
         private readonly CryptoHashProvider _hashProvider;
 
@@ -49,10 +53,29 @@ namespace NuGet
             get { return true; }
         }
 
-        public void AddPackage(LocalPackageInfo package)
+        public LocalPackageInfo AddPackage(LocalPackageInfo package)
         {
-            //TODO perhaps use LocalPackageArchiveDownloader
-            // var packagePath = _pathResolver.GetPackageDirectory(package.Identity.Id, package.Identity.Version);
+            var ct = CancellationToken.None;
+            var destPackageDir = _pathResolver.GetPackageDirectory(package.Identity.Id, package.Identity.Version);
+            var destPackagePath = _pathResolver.GetPackageFilePath(package.Identity.Id, package.Identity.Version);
+            _fileSystem.MakeDirectoryForFile(destPackagePath);
+            var downloader = new LocalPackageArchiveDownloader(package.Path, package.Identity, _logAdapter);
+            downloader.CopyNupkgFileToAsync(destPackagePath, ct).Wait();
+            var hashFilePath = Path.ChangeExtension(destPackagePath, PackagingCoreConstants.HashFileExtension);
+            var hash = downloader.GetPackageHashAsync("SHA512", ct).Result;
+            var hashBytes = Encoding.UTF8.GetBytes(hash);
+            _fileSystem.AddFile(hashFilePath, hashFileStream => { hashFileStream.Write(hashBytes, 0, hashBytes.Length); });
+
+            var nuspecPath = _pathResolver.GetManifestFilePath(package.Identity.Id, package.Identity.Version);
+            using(var nuspecStream = File.OpenWrite(nuspecPath)) {
+                downloader.CoreReader.GetNuspecAsync(ct).Result.CopyTo(nuspecStream);                
+            }
+            _log.DebugFormat("Saved manifest {0}",nuspecPath);
+            Lazy<NuspecReader> nuspecReader = new Lazy<NuspecReader>(() => new NuspecReader(nuspecPath));
+            var packageReader = new Func<PackageReaderBase>(() => new PackageArchiveReader(File.OpenRead(destPackagePath)));
+            return new LocalPackageInfo(package.Identity,destPackagePath,package.LastWriteTimeUtc,nuspecReader,packageReader);
+
+            // 
             // var nupkgPath = _pathResolver.GetPackageFilePath(package.Identity.Id, package.Identity.Version);
             // // was
             // //var nupkgPath = Path.Combine(packagePath, package.Id + "." + package.Version.ToNormalizedString() + Constants.PackageExtension);
@@ -76,7 +99,6 @@ namespace NuGet
             //         _fileSystem.AddFile(manifestPath, manifestStream);
             //     }
             // }
-            throw new NotImplementedException();
         }
 
         public void RemovePackage(PackageIdentity package)
@@ -108,7 +130,10 @@ namespace NuGet
 
         public IEnumerable<LocalPackageInfo> FindPackagesById(string packageId)
         {
-            throw new NotImplementedException();
+            //TODO resign from IFileSystem
+            var physicalFs = (PhysicalFileSystem)_fileSystem;
+            string root = physicalFs.Root;
+            return LocalFolderUtility.GetPackagesV3(root, packageId, _logAdapter);
             // foreach (var versionDirectory in _fileSystem.GetDirectoriesSafe(packageId))
             // {
             //     var versionDirectoryName = Path.GetFileName(versionDirectory);
@@ -146,14 +171,11 @@ namespace NuGet
             // }
         }
 
-        public IQueryable<LocalPackageInfo> GetPackages()
+        public IEnumerable<LocalPackageInfo> GetPackages()
         {
-            return _fileSystem.GetDirectoriesSafe(path: string.Empty)
-                .SelectMany(packageDirectory =>
-                {
-                    var packageId = Path.GetFileName(packageDirectory);
-                    return FindPackagesById(packageId);
-                }).AsQueryable();
+            var physicalFs = (PhysicalFileSystem)_fileSystem;
+            string root = physicalFs.Root;
+            return LocalFolderUtility.GetPackagesV3(root, _logAdapter); 
         }
 
         private static string GetPackageRoot(string packageId, SemanticVersion version)

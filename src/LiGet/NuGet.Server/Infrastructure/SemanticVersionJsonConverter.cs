@@ -16,6 +16,7 @@ namespace LiGet.NuGet.Server.Infrastructure
         public override bool CanConvert(Type objectType)
         {
             return objectType == typeof(SemanticVersion)
+                || objectType == typeof(NuGetVersion)
                 || objectType == typeof(Version);
         }
 
@@ -46,19 +47,19 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var semanticVersion = value as SemanticVersion;
-            if (semanticVersion != null)
+            var nversion = value as NuGetVersion;
+            if(nversion != null)
             {
-                _serializer.Serialize(writer, semanticVersion.ToFullString());
+                _serializer.Serialize(writer, nversion.OriginalVersion);
             }
-            else
-            {
-                var nversion = value as NuGetVersion;
-                if(nversion != null)
+            else {
+                var semanticVersion = value as SemanticVersion;
+                if (semanticVersion != null)
                 {
-                    _serializer.Serialize(writer, nversion.OriginalVersion);
+                    _serializer.Serialize(writer, semanticVersion.ToFullString());
                 }
-                else {
+                else
+                {
                     _serializer.Serialize(writer, value.ToString());
                 }
             }

@@ -20,7 +20,7 @@ using Xunit;
 
 namespace LiGet.NuGet.Server.Tests
 {
-    public class ServerPackageRepositoryTest
+    public class ServerPackageRepositoryTest : IDisposable
     {
         ServerPackageRepositoryConfig config = new ServerPackageRepositoryConfig() {
             // defaults from original impl
@@ -30,6 +30,17 @@ namespace LiGet.NuGet.Server.Tests
             IgnoreSymbolsPackages = false,
             AllowOverrideExistingPackageOnPush = true
         };
+
+        private TemporaryDirectory tmpDir;
+
+        public ServerPackageRepositoryTest() {
+            TestBootstrapper.ConfigureLogging();
+            tmpDir = new TemporaryDirectory();
+        }
+
+        public void Dispose() {
+            tmpDir.Dispose();
+        }
 
         public ServerPackageRepository CreateServerPackageRepository(
             string path,
@@ -64,6 +75,32 @@ namespace LiGet.NuGet.Server.Tests
         }
 
         [Fact]
+        public void ServerPackageRepository_CreateServerPackage()
+        {
+            using (var temporaryDirectory = new TemporaryDirectory())
+            {
+                var serverRepository = CreateServerPackageRepository(temporaryDirectory.Path,config);
+                var pkg = CreatePackage("test", "1.11", builder => {
+                    builder.Description = "Description";
+                    builder.Authors.Add("Test Author" );
+                    //TODO assign all properties and assert
+                    var mockFile = new Mock<IPackageFile>();
+                    mockFile.Setup(m => m.Path).Returns("foo");
+                    mockFile.Setup(m => m.GetStream()).Returns(new MemoryStream());
+                    builder.Files.Add(mockFile.Object);
+                });
+                string hashPath = Path.ChangeExtension(pkg.Path, ".nupkg.sha512");
+                File.WriteAllText(hashPath,"123");
+                string nuspecPath = Path.ChangeExtension(pkg.Path, ".nuspec");
+                using(var nuspecFs = File.OpenWrite(nuspecPath)) {
+                    pkg.GetReader().GetNuspec().CopyTo(nuspecFs);
+                }
+                var srvPkg = serverRepository.CreateServerPackage(pkg,false);
+                Assert.Equal("Description", srvPkg.Description);
+            }
+        }
+
+        [Fact]
         public void ServerPackageRepositoryAddsPackagesFromDropFolderOnStart()
         {
             using (var temporaryDirectory = new TemporaryDirectory())
@@ -81,7 +118,7 @@ namespace LiGet.NuGet.Server.Tests
                 foreach (var packageToAddToDropFolder in packagesToAddToDropFolder)
                 {
                     string dest = Path.Combine(temporaryDirectory.Path, packageToAddToDropFolder.Key);
-                    packageToAddToDropFolder.Value.GetReader().CopyNupkgAsync(dest,CancellationToken.None).Wait();
+                    File.Copy(packageToAddToDropFolder.Value.Path, dest);
                 }
 
                 var serverRepository = CreateServerPackageRepository(temporaryDirectory.Path,config);
@@ -602,45 +639,44 @@ namespace LiGet.NuGet.Server.Tests
             return package.Object;
         }
 
-        private LocalPackageInfo CreatePackage(string id, string version)
-        {
+        private LocalPackageInfo CreatePackage(string id, string version, Action<PackageBuilder> builderSteps) {
             var parsedVersion = NuGetVersion.Parse(version);
             var packageBuilder = new PackageBuilder
             {
                 Id = id,
-                Version = parsedVersion,
-                Description = "Description",
-                Authors = { "Test Author" }
+                Version = parsedVersion
             };
+            if(builderSteps != null)
+                builderSteps(packageBuilder);
 
-            var mockFile = new Mock<IPackageFile>();
-            mockFile.Setup(m => m.Path).Returns("foo");
-            mockFile.Setup(m => m.GetStream()).Returns(new MemoryStream());
-            packageBuilder.Files.Add(mockFile.Object);
+            string outputDirectory = Path.Combine(tmpDir.Path,"test-input");
+            new DirectoryInfo(outputDirectory).Create();
+            VersionFolderPathResolver pathResolver = new VersionFolderPathResolver(outputDirectory);
+            var packageFileName = Path.Combine(outputDirectory, pathResolver.GetPackageFileName(id,NuGetVersion.Parse(version)));
+            using (var stream = new FileStream(packageFileName, FileMode.CreateNew))
+            {
+                packageBuilder.Save(stream);
+            }
 
-            var packageStream = new MemoryStream();
-            packageBuilder.Save(packageStream);
+            using (var package = new PackageArchiveReader(File.OpenRead(packageFileName)))
+            {
+                var nuspec = package.NuspecReader;
+                var packageHelper = new Func<PackageReaderBase>(() => new PackageArchiveReader(File.OpenRead(packageFileName)));
+                var nuspecHelper = new Lazy<NuspecReader>(() => nuspec);
+                return new LocalPackageInfo(new PackageIdentity(id,NuGetVersion.Parse(version)), packageFileName, DateTime.UtcNow, nuspecHelper, packageHelper);
+            };
+        }
 
-            // probably not needed
-            // NuGet.Core package builder strips SemVer2 metadata when saving the output package. Fix up the version
-            // in the actual manifest.
-            // packageStream.Seek(0, SeekOrigin.Begin);
-            // using (var zipArchive = new ZipArchive(packageStream, ZipArchiveMode.Update, leaveOpen: true))
-            // {
-            //     var manifestFile = zipArchive
-            //         .Entries
-            //         .First(f => Path.GetExtension(f.FullName) == global::NuGet.Constants.ManifestExtension);
-                
-            //     using (var manifestStream = manifestFile.Open())
-            //     {
-            //         var manifest = Manifest.ReadFrom(manifestStream, validateSchema: false);
-            //         manifest.Metadata.Version = version;
-
-            //         manifestStream.SetLength(0);
-            //         manifest.Save(manifestStream);
-            //     }
-            // }
-            return GetPackageFromNupkgBytes(packageStream.ToArray());
+        private LocalPackageInfo CreatePackage(string id, string version)
+        {
+            return CreatePackage(id, version, builder => {
+                builder.Description = "Description";
+                builder.Authors.Add("Test Author" );
+                var mockFile = new Mock<IPackageFile>();
+                mockFile.Setup(m => m.Path).Returns("foo");
+                mockFile.Setup(m => m.GetStream()).Returns(new MemoryStream());
+                builder.Files.Add(mockFile.Object);
+            });
         }
 
         public static LocalPackageInfo GetPackageFromNupkgBytes(byte[] nupkgBytes)

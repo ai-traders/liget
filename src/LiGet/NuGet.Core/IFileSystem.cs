@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using NuGet.Packaging;
 
 namespace NuGet
@@ -48,6 +49,16 @@ namespace NuGet
             }
 
             return Enumerable.Empty<string>();
+        }
+
+        // for tests
+        public static void AddFile(this IFileSystem fileSystem, string path, string content) {
+            fileSystem.AddFile(path,new MemoryStream(Encoding.UTF8.GetBytes(content)));
+        }
+
+        public static string ReadAllText(this IFileSystem fileSystem, string path)
+        {
+            return new StreamReader(fileSystem.OpenFile(path)).ReadToEnd();
         }
     }
 }

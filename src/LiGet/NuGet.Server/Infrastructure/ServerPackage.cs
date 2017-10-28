@@ -18,7 +18,8 @@ using NuGet.Versioning;
 namespace LiGet.NuGet.Server.Infrastructure
 {
     //TODO !!! for parsing deps use - https://github.com/NuGet/NuGet.Client/blob/c282092fc575891b30186d7baa1962ce3fb1d4b4/src/NuGet.Core/NuGet.Protocol/LegacyFeed/V2FeedPackageInfo.cs#L228
-    public class ServerPackage : IPackage
+    //Package stored locally in server's folder-based data store. Already accepted, hashed, with extracted nuspec.
+    public class ServerPackage :  IPackage
     {
         public ServerPackage()
         {
@@ -78,9 +79,9 @@ namespace LiGet.NuGet.Server.Infrastructure
             Title = package.GetTitle();
             Authors = package.GetAuthors();
             Owners = package.GetOwners();
-            IconUrl = new Uri(package.GetIconUrl());
-            LicenseUrl = new Uri(package.GetLicenseUrl());
-            ProjectUrl = new Uri(package.GetProjectUrl());
+            IconUrl = package.GetIconUrl();
+            LicenseUrl = package.GetLicenseUrl();
+            ProjectUrl = package.GetProjectUrl();
             RequireLicenseAcceptance = package.GetRequireLicenseAcceptance();
             DevelopmentDependency = package.GetDevelopmentDependency();
             Description = package.GetDescription();
@@ -99,7 +100,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             //FIXME is this OK?
             Listed = true; 
 
-            IsSemVer2 = true; //TODO IsPackageSemVer2(package);
+            IsSemVer2 = IsPackageSemVer2(package);
     
              _dependencySets = package.GetDependencyGroups().ToList();
             Dependencies = DependencySetsAsString(_dependencySets);
@@ -128,11 +129,11 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         public string Owners { get; set; }
 
-        public Uri IconUrl { get; set; }
+        public string IconUrl { get; set; }
 
-        public Uri LicenseUrl { get; set; }
+        public string LicenseUrl { get; set; }
 
-        public Uri ProjectUrl { get; set; }
+        public string ProjectUrl { get; set; }
 
         public bool RequireLicenseAcceptance { get; set; }
 
@@ -326,6 +327,42 @@ namespace LiGet.NuGet.Server.Infrastructure
             if (package.DependencySets != null)
             {
                 foreach (var dependencySet in package.DependencySets)
+                {
+                    foreach (var dependency in dependencySet.Packages)
+                    {
+                        var range = dependency.VersionRange;
+                        if (range == null)
+                        {
+                            continue;
+                        }
+
+                        if (range.MinVersion != null && range.MinVersion.IsSemVer2())
+                        {
+                            return true;
+                        }
+
+                        if (range.MaxVersion != null && range.MaxVersion.IsSemVer2())
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+
+            return false;
+        }
+
+        private static bool IsPackageSemVer2(NuspecReader package)
+        {
+            if (package.GetVersion().IsSemVer2())
+            {
+                return true;
+            }
+
+            if (package.GetDependencyGroups() != null)
+            {
+                foreach (var dependencySet in package.GetDependencyGroups())
                 {
                     foreach (var dependency in dependencySet.Packages)
                     {

@@ -10,9 +10,9 @@ namespace NuGet
         string Title { get; }
         string Authors { get; }
         string Owners { get; }
-        Uri IconUrl { get; }
-        Uri LicenseUrl { get; }
-        Uri ProjectUrl { get; }
+        string IconUrl { get; }
+        string LicenseUrl { get; }
+        string ProjectUrl { get; }
         bool RequireLicenseAcceptance { get; }
         bool DevelopmentDependency { get; }
         string Description { get; }

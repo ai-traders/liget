@@ -53,19 +53,19 @@ namespace NuGet
             set;
         }
 
-        public Uri IconUrl
+        public string IconUrl
         {
             get;
             set;
         }
 
-        public Uri LicenseUrl
+        public string LicenseUrl
         {
             get;
             set;
         }
 
-        public Uri ProjectUrl
+        public string ProjectUrl
         {
             get;
             set;

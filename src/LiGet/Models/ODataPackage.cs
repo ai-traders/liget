@@ -17,9 +17,9 @@ namespace LiGet.Models
 
             Authors = package.Authors;
             Owners = package.Owners;
-            IconUrl = UriToString(package.IconUrl);
-            LicenseUrl = UriToString(package.LicenseUrl);
-            ProjectUrl = UriToString(package.ProjectUrl);
+            IconUrl = package.IconUrl;
+            LicenseUrl = package.LicenseUrl;
+            ProjectUrl = package.ProjectUrl;
             Dependencies = package.Dependencies;
 
             Id = package.Id;

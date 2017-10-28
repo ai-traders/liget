@@ -291,7 +291,7 @@ namespace NuGet
 
         public void MakeDirectoryForFile(string nupkgPath)
         {
-            throw new NotImplementedException();
+            new FileInfo(nupkgPath).Directory.Create();            
         }
     }
 }
