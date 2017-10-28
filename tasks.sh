@@ -15,7 +15,7 @@ case "${command}" in
     cd tools && nuget install xunit.runner.console -Version 2.3.0 && cd ..
     test_assembly='tests/LiGet.Tests/bin/Release/netcoreapp2.0/publish/LiGet.Tests.dll'
     shift
-    dotnet tools/xunit.runner.console.2.3.0/tools/netcoreapp2.0/xunit.console.dll $test_assembly $@
+    dotnet tools/xunit.runner.console.2.3.0/tools/netcoreapp2.0/xunit.console.dll $test_assembly -parallel none -maxthreads 1 -verbose
     ;;
   qtest)
     dotnet publish -c Release tests/LiGet.Tests/LiGet.Tests.csproj
