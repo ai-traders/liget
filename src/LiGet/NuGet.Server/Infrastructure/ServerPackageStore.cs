@@ -17,6 +17,8 @@ namespace LiGet.NuGet.Server.Infrastructure
 {
     public class ServerPackageStore : IServerPackageStore
     {
+        private static readonly log4net.ILog _log = log4net.LogManager.GetLogger(typeof(ServerPackageStore));
+
         private readonly IPackagesSerializer _packagesSerializer = new JsonNetPackagesSerializer();
         
         private readonly ReaderWriterLockSlim _syncLock = new ReaderWriterLockSlim();
@@ -58,6 +60,7 @@ namespace LiGet.NuGet.Server.Infrastructure
                     }
                     catch (Exception ex)
                     {
+                        _log.Error("Error reading package file", ex);
                         if (ex is JsonException || ex is SerializationException)
                         {
                             // In case this happens, remove the file

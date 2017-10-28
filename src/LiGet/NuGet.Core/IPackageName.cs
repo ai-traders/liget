@@ -6,6 +6,6 @@ namespace NuGet
     public interface IPackageName //TODO use PackageIdentity
     {
         string Id { get; }
-        SemanticVersion Version { get; }
+        NuGetVersion Version { get; }
     }
 }

@@ -131,12 +131,12 @@ namespace LiGet.NuGet.Server.Infrastructure
             return cache;
         }
 
-        public bool Exists(string packageId, SemanticVersion version)
+        public bool Exists(string packageId, NuGetVersion version)
         {
             return FindPackage(packageId, version) != null;
         }
 
-        public IPackage FindPackage(string packageId, SemanticVersion version)
+        public IPackage FindPackage(string packageId, NuGetVersion version)
         {
             return FindPackagesById(packageId, ClientCompatibility.Max)
                 .FirstOrDefault(p => p.Version.Equals(version));
@@ -249,8 +249,8 @@ namespace LiGet.NuGet.Server.Infrastructure
                 {
                     var localPackages = LocalFolderUtility.GetPackagesV2(_fileSystem.Root, _logAdapter);
 
-                    //FIXME PackageEqualityComparer.IdAndVersion
-                    var serverPackages = new HashSet<ServerPackage>();
+                    
+                    var serverPackages = new HashSet<ServerPackage>(PackageEqualityComparer.IdAndVersion);
 
                     foreach (var package in localPackages)
                     {
@@ -326,7 +326,7 @@ namespace LiGet.NuGet.Server.Infrastructure
 
             if (!AllowOverrideExistingPackageOnPush && Exists(package.Identity.Id, package.Identity.Version))
             {
-                var message = string.Format("Package {0} already exists. The server is configured to not allow overwriting packages that already exist.", package);
+                var message = string.Format("Package {0} already exists. The server is configured to not allow overwriting packages that already exist.", package.Identity);
 
                 _logger.Error(message);
                 throw new InvalidOperationException(message);
@@ -543,7 +543,7 @@ namespace LiGet.NuGet.Server.Infrastructure
                         }
                     };
 
-                    _logger.Info("Finished reading packages from disk.");
+                    _logger.InfoFormat("Finished reading {0} packages from disk.", cachedPackages.Count);
                     return new HashSet<ServerPackage>(cachedPackages, PackageEqualityComparer.IdAndVersion);
                 }
                 catch (Exception ex)

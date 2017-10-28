@@ -18,7 +18,7 @@ namespace LiGet.NuGet.Server.Tests
         private const string PackageVersionString = "3.5.0";
         private const string CacheFileName = "store.json";
         private const string SemVer2VersionString = "3.5.0-rc.1+githash";
-        private static readonly SemanticVersion SemVer2Version = SemanticVersion.Parse(SemVer2VersionString);
+        private static readonly NuGetVersion SemVer2Version = NuGetVersion.Parse(SemVer2VersionString);
 
         [Theory]
         [InlineData("[")]

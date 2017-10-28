@@ -27,7 +27,7 @@ namespace LiGet.NuGet.Server.Tests
         {
             // Arrange
             var package = new Mock<IPackage>();
-            package.Setup(x => x.Version).Returns(SemanticVersion.Parse(version));
+            package.Setup(x => x.Version).Returns(NuGetVersion.Parse(version));
             var packageDerivedData = new PackageDerivedData();
 
             // Act
@@ -52,7 +52,7 @@ namespace LiGet.NuGet.Server.Tests
             var package = new Mock<IPackage>();
             package
                 .Setup(x => x.Version)
-                .Returns(SemanticVersion.Parse("1.0.0"));
+                .Returns(NuGetVersion.Parse("1.0.0"));
             package
                 .Setup(x => x.DependencySets)
                 .Returns(new[]

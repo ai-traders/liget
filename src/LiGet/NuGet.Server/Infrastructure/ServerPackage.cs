@@ -33,7 +33,7 @@ namespace LiGet.NuGet.Server.Infrastructure
         public ServerPackage(IPackage package, PackageDerivedData packageDerivedData)
         {
             Id = package.Id;
-            Version = package.Version;
+            Version = new NuGetVersion(package.Version.ToFullString());
             Title = package.Title;
             Authors = string.Join(",", package.Authors);
             Owners = string.Join(",",package.Owners);
@@ -124,7 +124,7 @@ namespace LiGet.NuGet.Server.Infrastructure
         public string Id { get; set; }
 
         [JsonRequired, JsonConverter(typeof(SemanticVersionJsonConverter))]
-        public SemanticVersion Version { get; set; } // TODO probably nuget version
+        public NuGetVersion Version { get; set; }
 
         public string Title { get; set; }
 
