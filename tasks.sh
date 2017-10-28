@@ -3,11 +3,10 @@ set -e
 # PATCH currently failing private caching server
 rm -f ~/.nuget/NuGet/NuGet.Config
 
-dotnet restore
-
 command="$1"
 case "${command}" in
   build)
+    dotnet restore
     dotnet publish -c Release src/LiGet.App/LiGet.App.csproj
     dotnet publish -c Release tests/LiGet.Tests/LiGet.Tests.csproj
     ;;
