@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using LiGet.Models;
 using LiGet.NuGet.Server.Infrastructure;
 using NuGet.Protocol;
+using NuGet.Versioning;
 
 namespace LiGet
 {
@@ -11,6 +12,8 @@ namespace LiGet
         public HostedPackage(ODataPackage packageInfo) {
             _packageInfo = packageInfo;
         }
+
+        public ODataPackage PackageInfo { get => _packageInfo; }
     }
 
     /// <summary>
@@ -19,5 +22,7 @@ namespace LiGet
     public interface IPackageService
     {
         IEnumerable<HostedPackage> FindPackagesById(string id, ClientCompatibility compatibility);
+
+        HostedPackage FindPackage(string packageId, NuGetVersion version);
     }
 }

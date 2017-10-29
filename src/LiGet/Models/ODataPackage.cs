@@ -101,7 +101,7 @@ namespace LiGet.Models
 
         public string PackageHashAlgorithm { get; set; }
 
-        public long PackageSize { get; set; }
+        public int PackageSize { get; set; }
 
         public string Copyright { get; set; }
 

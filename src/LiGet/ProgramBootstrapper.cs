@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Autofac;
 using LiGet.OData;
 using Nancy;
@@ -37,5 +38,22 @@ namespace LiGet
                     additionalSetup(builder);
             });
         }
+
+        protected override Func<ITypeCatalog, NancyInternalConfiguration> InternalConfiguration
+        {
+            get
+            {
+                return new Func<ITypeCatalog, NancyInternalConfiguration>(tc => {
+                    var processors = new List<Type>()
+                    {
+                        typeof(ODataResponseProcessor)
+                    };
+
+                    return NancyInternalConfiguration.WithOverrides(config => {
+                        config.ResponseProcessors = processors;
+                    })(tc);
+                });
+            }
+        } 
     }
 }

@@ -779,6 +779,11 @@ namespace LiGet.NuGet.Server.Infrastructure
             throw new NotImplementedException();
         }
 
+        HostedPackage IPackageService.FindPackage(string packageId, NuGetVersion version)
+        {
+            throw new NotImplementedException();
+        }
+
         private class SupressedFileSystemWatcher : IDisposable
         {
             private readonly ServerPackageRepository _repository;
