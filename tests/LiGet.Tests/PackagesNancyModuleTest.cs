@@ -69,6 +69,23 @@ namespace LiGet.Tests
             Assert.Equal(HttpStatusCode.BadRequest, result.StatusCode);
         }
 
+        [Theory]
+        [InlineData("/api/v2")]
+        [InlineData("/api/v2/")]
+        public void GetRootPath(string path) {
+            var result = browser.Get(path, with =>
+            {
+                with.HttpRequest();
+            }).Result;
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            Assert.Equal("application/xml; charset=utf-8", result.ContentType);
+            string response = result.Body.AsString();
+            Assert.Equal(@"<?xml version=""1.0"" encoding=""utf-8""?>
+<service xml:base=""http://testhost/api/v2"" xmlns=""http://www.w3.org/2007/app"" xmlns:atom=""http://www.w3.org/2005/Atom""><workspace>
+   <atom:title type=""text"">Default</atom:title><collection href=""Packages""><atom:title type=""text"">Packages</atom:title></collection></workspace>
+</service>", response);
+        }
+
         [Fact]
         public void GetPackagesSpecifiedIdAndVersionEmptyRepository() {
             packageRepo.Setup(r => r.FindPackage(It.IsAny<string>(),It.IsAny<NuGetVersion>())).Returns(null as HostedPackage).Verifiable();

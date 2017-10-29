@@ -23,6 +23,23 @@ namespace LiGet
         {
             this.OnError.AddItemToEndOfPipeline(HandleError);
 
+            base.Get<Response>("/", args => {
+                var serviceUrl = GetServiceUrl();
+                return new Response() {
+                    StatusCode = HttpStatusCode.OK,
+                    ContentType = "application/xml; charset=utf-8",
+                    Contents = stream => {
+                        string text = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<service xml:base=""{serviceUrl}"" xmlns=""http://www.w3.org/2007/app"" xmlns:atom=""http://www.w3.org/2005/Atom""><workspace>
+   <atom:title type=""text"">Default</atom:title><collection href=""Packages""><atom:title type=""text"">Packages</atom:title></collection></workspace>
+</service>";
+                        var writer = new StreamWriter(stream, new UTF8Encoding(false));                        
+                        writer.Write(text);
+                        writer.Flush();
+                    }
+                };
+            });
+
             base.Get<object>(@"^(.*)$", args => {
                 try {
                     var serviceUrl = GetServiceUrl();
