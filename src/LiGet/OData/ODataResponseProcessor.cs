@@ -32,7 +32,7 @@ namespace LiGet.OData
         {
             var match = new ProcessorMatch();
 
-            var odataPackage = model as ODataPackage;
+            var odataPackage = model as ODataPackageResponse;
             if (odataPackage != null)
             {
                 match.ModelResult = MatchResult.ExactMatch;
@@ -44,7 +44,7 @@ namespace LiGet.OData
 
         public Response Process(MediaRange requestedMediaRange, dynamic model, NancyContext context)
         {
-            var odataPackage = model as ODataPackage;
+            var odataPackage = model as ODataPackageResponse;
             if (odataPackage != null)
             {
                 var response = context.Response;
@@ -55,7 +55,8 @@ namespace LiGet.OData
                 response.StatusCode = HttpStatusCode.OK;
                 response.Contents = netStream =>
                 {
-                    serializer.Serialize(netStream, odataPackage, "fixme", "fixme", "fixme");
+                    serializer.Serialize(netStream, odataPackage.Package, 
+                        odataPackage.Urls.ServiceBaseUrl, odataPackage.Urls.ResourceIdUrl, odataPackage.Urls.PackageContentUrl);
                 };
                 return response;
             }

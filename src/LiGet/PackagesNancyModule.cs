@@ -85,8 +85,12 @@ namespace LiGet
                             var found = repository.FindPackage(id, NuGetVersion.Parse(version));
                             if(found == null)
                                 return NoPackage404();
-                            //TODO this also has to return URL to contents and to this package resource
-                            return found.PackageInfo;
+                            id = found.PackageInfo.Id;
+                            version = found.PackageInfo.Version;
+                            PackageUrls urls = new PackageUrls(serviceUrl.AbsoluteUri, 
+                                $"{serviceUrl}/Packages(Id='{id}',Version='{found.PackageInfo.Version}')",
+                                $"{serviceUrl}/contents/{id.ToLowerInvariant()}/{version.ToLowerInvariant()}");
+                            return new ODataPackageResponse(found.PackageInfo, urls);
                         }
                         else
                             throw new ArgumentException("Bad or not supported query");//TODO nice bad request

@@ -2,7 +2,7 @@ load '/opt/bats-support/load.bash'
 load '/opt/bats-assert/load.bash'
 
 @test "push log4net" {
-  run /bin/bash -c "cd e2e/input/log4net.2.0.8 && nuget push log4net.2.0.8.nupkg -src http://liget:9011/api/v2"
+  run /bin/bash -c "cd ../input/log4net.2.0.8 && nuget push log4net.2.0.8.nupkg -src http://liget:9011/api/v2"
   assert_output --partial "http://liget:9011/api/v2"
   assert_equal "$status" 0
 }

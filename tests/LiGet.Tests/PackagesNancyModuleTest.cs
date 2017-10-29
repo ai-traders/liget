@@ -23,6 +23,7 @@ namespace LiGet.Tests
         Mock<IPackageService> packageRepo;
 
         HostedPackage dummy1_0_0 = new HostedPackage(new ODataPackage() {
+            Id = "Dummy",
             Title = "Dummy",
             Version = "1.0.0.0",
             NormalizedVersion = "1.0.0",
@@ -40,6 +41,7 @@ namespace LiGet.Tests
         private void AssertDummyEntry(V2FeedPackageInfo dummyEntry)
         {
             Assert.Equal(dummy1_0_0.PackageInfo.Title, dummyEntry.Title);
+            Assert.Equal(dummy1_0_0.PackageInfo.Id, dummyEntry.Id);
             Assert.Equal(dummy1_0_0.PackageInfo.Version, dummyEntry.Version.OriginalVersion);
             Assert.Equal(dummy1_0_0.PackageInfo.Authors, Assert.Single(dummyEntry.Authors));
             Assert.Equal(dummy1_0_0.PackageInfo.LicenseUrl, dummyEntry.LicenseUrl);
