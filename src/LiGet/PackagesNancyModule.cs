@@ -39,6 +39,23 @@ namespace LiGet
                     }
                 };
             });
+            base.Put<Response>("/", args => {
+                // client for reference - https://github.com/NuGet/NuGet.Client/blob/4eed67e7e159796ae486d2cca406b283e23b6ac8/src/NuGet.Core/NuGet.Protocol/Resources/PackageUpdateResource.cs#L273
+                if(this.Request.Files.Count() != 1) {
+                    _log.ErrorFormat("Bad request, tried to push {0} files {1}",
+                        this.Request.Files.Count(), string.Join(",",this.Request.Files.Select(f => f.Key)));
+                    return HttpStatusCode.BadRequest;
+                }                    
+                var file = this.Request.Files.FirstOrDefault();
+                try {
+                    repository.PushPackage(file.Value);
+                    return HttpStatusCode.Created;
+                }
+                catch(PackageDuplicateException dup) {
+                    _log.Error("Tried to push a package which already exists", dup);
+                    return HttpStatusCode.Conflict;
+                }
+            });
 
             base.Get<object>(@"^(.*)$", args => {
                 try {

@@ -112,7 +112,54 @@ namespace LiGet.Tests
             AssertDummyEntry(dummyEntry);
         }
 
-        
+        [Theory]
+        [InlineData("/api/v2")]
+        [InlineData("/api/v2/")]
+        public void PutPackageWhenEmpty(string path) {
+            packageRepo.Setup(r => r.PushPackage(It.IsAny<Stream>())).Verifiable();
+            var result = browser.Put(path, with =>
+            {
+                with.MultiPartFormData(new BrowserContextMultipartFormData(c => {
+                    c.AddFile("package","ignored", "application/octet-stream", new MemoryStream());
+                }));
+                with.HttpRequest();
+            }).Result;
+            packageRepo.Verify(r => r.PushPackage(It.IsAny<Stream>()), Times.Once());
+            Assert.Equal(HttpStatusCode.Created, result.StatusCode);
+        }
+
+        [Theory]
+        [InlineData("/api/v2")]
+        [InlineData("/api/v2/")]
+        public void PutPackageWhenDuplicate(string path) {
+            packageRepo.Setup(r => r.PushPackage(It.IsAny<Stream>())).Throws<PackageDuplicateException>();
+            var result = browser.Put(path, with =>
+            {
+                with.MultiPartFormData(new BrowserContextMultipartFormData(c => {
+                    c.AddFile("package","ignored", "application/octet-stream", new MemoryStream());
+                }));
+                with.HttpRequest();
+            }).Result;
+            packageRepo.Verify(r => r.PushPackage(It.IsAny<Stream>()), Times.Once());
+            Assert.Equal(HttpStatusCode.Conflict, result.StatusCode);
+        }
+
+        [Theory]
+        [InlineData("/api/v2")]
+        [InlineData("/api/v2/")]
+        public void PutPackageWithBadPayload_2Files(string path) {
+            packageRepo.Setup(r => r.PushPackage(It.IsAny<Stream>())).Throws<PackageDuplicateException>();
+            var result = browser.Put(path, with =>
+            {
+                with.MultiPartFormData(new BrowserContextMultipartFormData(c => {
+                    c.AddFile("package","ignored", "application/octet-stream", new MemoryStream());
+                    c.AddFile("bugus","ignored", "application/octet-stream", new MemoryStream());
+                }));
+                with.HttpRequest();
+            }).Result;
+            packageRepo.Verify(r => r.PushPackage(It.IsAny<Stream>()), Times.Never());
+            Assert.Equal(HttpStatusCode.BadRequest, result.StatusCode);
+        }
 
         // [Fact]
         // public void FindPackageByIdWhenEmptyRepository() {

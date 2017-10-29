@@ -767,6 +767,20 @@ namespace LiGet.NuGet.Server.Infrastructure
             return new HostedPackage(new ODataPackage(serverPackage));
         }
 
+        public void PushPackage(Stream pkgStream)
+        {
+            using (LockAndSuppressFileSystemWatcher())
+            {
+                // Copy to correct filesystem location
+                var package = _expandedPackageRepository.AddPackage(pkgStream, this.AllowOverrideExistingPackageOnPush);
+
+                // Add to metadata store
+                _serverPackageStore.Store(CreateServerPackage(package, EnableDelisting));
+
+                _logger.InfoFormat("Finished adding package {0} {1}.", package.Identity.Id, package.Identity.Version);
+            }
+        }
+
         private class SupressedFileSystemWatcher : IDisposable
         {
             private readonly ServerPackageRepository _repository;

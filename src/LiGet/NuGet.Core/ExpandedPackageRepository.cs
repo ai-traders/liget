@@ -65,46 +65,62 @@ namespace NuGet
             var destPackageDir = _pathResolver.GetPackageDirectory(package.Identity.Id, package.Identity.Version);
             var destPackagePath = _pathResolver.GetPackageFilePath(package.Identity.Id, package.Identity.Version);
             _fileSystem.MakeDirectoryForFile(destPackagePath);
-            var downloader = new LocalPackageArchiveDownloader(package.Path, package.Identity, _logAdapter);
-            downloader.CopyNupkgFileToAsync(destPackagePath, ct).Wait();
-            var hashFilePath = Path.ChangeExtension(destPackagePath, PackagingCoreConstants.HashFileExtension);
-            var hash = downloader.GetPackageHashAsync("SHA512", ct).Result;
-            var hashBytes = Encoding.UTF8.GetBytes(hash);
-            _fileSystem.AddFile(hashFilePath, hashFileStream => { hashFileStream.Write(hashBytes, 0, hashBytes.Length); });
+            using(var downloader = new LocalPackageArchiveDownloader(package.Path, package.Identity, _logAdapter)) {
+                downloader.CopyNupkgFileToAsync(destPackagePath, ct).Wait();
+                var hashFilePath = Path.ChangeExtension(destPackagePath, PackagingCoreConstants.HashFileExtension);
+                var hash = downloader.GetPackageHashAsync("SHA512", ct).Result;
+                var hashBytes = Encoding.UTF8.GetBytes(hash);
+                _fileSystem.AddFile(hashFilePath, hashFileStream => { hashFileStream.Write(hashBytes, 0, hashBytes.Length); });
 
-            var nuspecPath = _pathResolver.GetManifestFilePath(package.Identity.Id, package.Identity.Version);
-            using(var nuspecStream = File.OpenWrite(nuspecPath)) {
-                downloader.CoreReader.GetNuspecAsync(ct).Result.CopyTo(nuspecStream);                
+                var nuspecPath = _pathResolver.GetManifestFilePath(package.Identity.Id, package.Identity.Version);
+                using(var nuspecStream = File.OpenWrite(nuspecPath)) {
+                    downloader.CoreReader.GetNuspecAsync(ct).Result.CopyTo(nuspecStream);                
+                }
+                _log.DebugFormat("Saved manifest {0}",nuspecPath);
+                Lazy<NuspecReader> nuspecReader = new Lazy<NuspecReader>(() => new NuspecReader(nuspecPath));
+                var packageReader = new Func<PackageReaderBase>(() => new PackageArchiveReader(File.OpenRead(destPackagePath)));
+                return new LocalPackageInfo(package.Identity,destPackagePath,package.LastWriteTimeUtc,nuspecReader,packageReader);
             }
-            _log.DebugFormat("Saved manifest {0}",nuspecPath);
-            Lazy<NuspecReader> nuspecReader = new Lazy<NuspecReader>(() => new NuspecReader(nuspecPath));
-            var packageReader = new Func<PackageReaderBase>(() => new PackageArchiveReader(File.OpenRead(destPackagePath)));
-            return new LocalPackageInfo(package.Identity,destPackagePath,package.LastWriteTimeUtc,nuspecReader,packageReader);
+        }
 
-            // 
-            // var nupkgPath = _pathResolver.GetPackageFilePath(package.Identity.Id, package.Identity.Version);
-            // // was
-            // //var nupkgPath = Path.Combine(packagePath, package.Id + "." + package.Version.ToNormalizedString() + Constants.PackageExtension);
+        public LocalPackageInfo AddPackage(Stream packageStream, bool allowOverwrite)
+        {
+            string tempFilePath = Path.Combine(this.Source, Path.GetRandomFileName() + PackagingCoreConstants.PackageDownloadMarkerFileExtension);
+            using(var dest = File.OpenWrite(tempFilePath)) {
+                packageStream.CopyTo(dest);
+            }
+            PackageIdentity identity;
+            string destPackagePath;
+            using(var archive = new PackageArchiveReader(File.OpenRead(tempFilePath))){
+                var id = archive.NuspecReader.GetId();
+                var version = archive.NuspecReader.GetVersion();
+                identity = new PackageIdentity(id, version);
+                destPackagePath = _pathResolver.GetPackageFilePath(id, version);
+                _fileSystem.MakeDirectoryForFile(destPackagePath);
+            }
+            var hashFilePath = Path.ChangeExtension(destPackagePath, PackagingCoreConstants.HashFileExtension);
+            if(!allowOverwrite && File.Exists(hashFilePath))
+                throw new PackageDuplicateException($"Package {identity} already exists");
+            if(File.Exists(destPackagePath))
+                File.Delete(destPackagePath);
+            File.Move(tempFilePath, destPackagePath);
+            var ct = CancellationToken.None;
+            using(var downloader = new LocalPackageArchiveDownloader(destPackagePath, identity, _logAdapter)) {
+                var hash = downloader.GetPackageHashAsync("SHA512", ct).Result;
+                var hashBytes = Encoding.UTF8.GetBytes(hash);
+                File.WriteAllBytes(hashFilePath, hashBytes);
 
-            // _fileSystem.MakeDirectoryForFile(nupkgPath);
-            // using (var stream = package.GetReader())
-            // {                
-            //     stream.CopyNupkgAsync(nupkgPath, CancellationToken.None).Wait();
-            //     //was _fileSystem.AddFile(nupkgPath, stream);
-            // }
-
-            // var hashBytes = Encoding.UTF8.GetBytes(package.GetHash(_hashProvider));
-            // var hashFilePath = Path.ChangeExtension(nupkgPath, Constants.HashFileExtension);
-            // _fileSystem.AddFile(hashFilePath, hashFileStream => { hashFileStream.Write(hashBytes, 0, hashBytes.Length); });
-
-            // using (var stream = package.GetStream())
-            // {
-            //     using (var manifestStream = PackageHelper.GetManifestStream(stream))
-            //     {
-            //         var manifestPath = Path.Combine(packagePath, package.Id + Constants.ManifestExtension);
-            //         _fileSystem.AddFile(manifestPath, manifestStream);
-            //     }
-            // }
+                var nuspecPath = _pathResolver.GetManifestFilePath(identity.Id, identity.Version);
+                using(var nuspecStream = File.OpenWrite(nuspecPath)) {
+                    using(var stream = downloader.CoreReader.GetNuspecAsync(ct).Result){
+                        stream.CopyTo(nuspecStream);                
+                    }
+                }
+                _log.DebugFormat("Saved manifest {0}",nuspecPath);
+                Lazy<NuspecReader> nuspecReader = new Lazy<NuspecReader>(() => new NuspecReader(nuspecPath));
+                var packageReader = new Func<PackageReaderBase>(() => new PackageArchiveReader(File.OpenRead(destPackagePath)));
+                return new LocalPackageInfo(identity,destPackagePath,DateTime.UtcNow,nuspecReader,packageReader);
+            }
         }
 
         public void RemovePackage(PackageIdentity package)

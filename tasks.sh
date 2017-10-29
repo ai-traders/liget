@@ -21,7 +21,7 @@ case "${command}" in
     dotnet publish -c Release tests/LiGet.Tests/LiGet.Tests.csproj
     test_assembly='tests/LiGet.Tests/bin/Release/netcoreapp2.0/publish/LiGet.Tests.dll'
     shift
-    dotnet tools/xunit.runner.console.2.3.0/tools/netcoreapp2.0/xunit.console.dll $test_assembly $@
+    dotnet tools/xunit.runner.console.2.3.0/tools/netcoreapp2.0/xunit.console.dll $test_assembly -parallel none -maxthreads 1 -verbose $@
     ;;
   prep_qe2e)
     dotnet publish -c Release src/LiGet.App/LiGet.App.csproj

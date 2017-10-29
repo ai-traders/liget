@@ -327,13 +327,10 @@ namespace LiGet.Tests.NuGet.Server.Infrastructure
 
         */
 
-        [Fact]
-        public void AddPackage_AddsExpandedPackageToThePackageDirectory()
+        private LocalPackageInfo CreateMyPackage()
         {
-            // Arrange
-            var fileSystem = new PhysicalFileSystem(tmpDir.Path);
-            var repository = new ExpandedPackageRepository(fileSystem);
-            var package = PackageCreator.CreatePackage("MyPackage","1.0.0-beta2",tmpDir.Path,packageBuilder => {
+            return PackageCreator.CreatePackage("MyPackage", "1.0.0-beta2", tmpDir.Path, packageBuilder =>
+            {
                 packageBuilder.Authors.Add("test");
                 packageBuilder.Files.Add(
                     CreateMockedPackageFile(@"content\net40\App_Code", "PreapplicationStartCode.cs", content: "Preapplication content").Object);
@@ -342,23 +339,95 @@ namespace LiGet.Tests.NuGet.Server.Infrastructure
                 packageBuilder.Files.Add(
                     CreateMockedPackageFile(@"lib\net40", "MyPackage.dll", "lib contents").Object);
             });
+        }
+
+        [Fact]
+        public void AddPackage_AddsExpandedPackageToThePackageDirectory()
+        {
+            // Arrange
+            var fileSystem = new PhysicalFileSystem(tmpDir.Path);
+            var repository = new ExpandedPackageRepository(fileSystem);
+            var package = CreateMyPackage();
 
             // Act
             var addedPackage = repository.AddPackage(package);
+            AssertMyPackage(fileSystem, package, addedPackage);
+        }
+
+        private static void AssertMyPackage(PhysicalFileSystem fileSystem, LocalPackageInfo package, LocalPackageInfo addedPackage)
+        {
             string expectedPath = Path.Combine(fileSystem.Root, "mypackage", "1.0.0-beta2", "mypackage.1.0.0-beta2.nupkg");
             Assert.Equal(expectedPath, addedPackage.Path);
 
             // Assert
-            var reader = Manifest.ReadFrom(fileSystem.OpenFile(Path.Combine("mypackage", "1.0.0-beta2", "mypackage.nuspec")), validateSchema: true);
-            Assert.Equal("MyPackage", reader.Metadata.Id);
-            Assert.Equal(NuGetVersion.Parse("1.0.0-beta2"), reader.Metadata.Version);
-            using(var file = File.OpenRead(package.Path)) {
-                Assert.True(file.ContentEquals(fileSystem.OpenFile(Path.Combine("mypackage", "1.0.0-beta2", "mypackage.1.0.0-beta2.nupkg"))));
-                file.Seek(0, SeekOrigin.Begin);
+            using(var fs = fileSystem.OpenFile(Path.Combine("mypackage", "1.0.0-beta2", "mypackage.nuspec"))){
+                var reader = Manifest.ReadFrom(fs, validateSchema: true);
+                Assert.Equal("MyPackage", reader.Metadata.Id);
+                Assert.Equal(NuGetVersion.Parse("1.0.0-beta2"), reader.Metadata.Version);
+                using (var file = File.OpenRead(package.Path))
+                {
+                    Assert.True(file.ContentEquals(fileSystem.OpenFile(Path.Combine("mypackage", "1.0.0-beta2", "mypackage.1.0.0-beta2.nupkg"))));
+                    file.Seek(0, SeekOrigin.Begin);
+                }
+                using(var downloader = new LocalPackageArchiveDownloader(package.Path, package.Identity, NullLogger.Instance)) {
+                    var sha = downloader.GetPackageHashAsync("SHA512", CancellationToken.None).Result;
+                    Assert.Equal(sha, fileSystem.ReadAllText(Path.Combine("mypackage", "1.0.0-beta2", "mypackage.1.0.0-beta2.nupkg.sha512")));                
+                }
             }
-            var downloader = new LocalPackageArchiveDownloader(package.Path, package.Identity, NullLogger.Instance);
-            var sha = downloader.GetPackageHashAsync("SHA512",CancellationToken.None).Result;
-            Assert.Equal(sha, fileSystem.ReadAllText(Path.Combine("mypackage", "1.0.0-beta2", "mypackage.1.0.0-beta2.nupkg.sha512")));
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void AddPackageFromStream_AddsExpandedPackageToThePackageDirectory(bool allowOverwrite)
+        {
+            // Arrange
+            var fileSystem = new PhysicalFileSystem(tmpDir.Path);
+            var repository = new ExpandedPackageRepository(fileSystem);
+            var package = CreateMyPackage();
+
+            using(var packageStream = File.OpenRead(package.Path)) {
+                // Act
+                var addedPackage = repository.AddPackage(packageStream,allowOverwrite);
+                AssertMyPackage(fileSystem, package, addedPackage);
+            }
+        }
+
+        [Fact]
+        public void AddPackageFromStream_WhenDuplicateAndOverwriteDisabled()
+        {
+            // Arrange
+            var fileSystem = new PhysicalFileSystem(tmpDir.Path);
+            var repository = new ExpandedPackageRepository(fileSystem);
+            var package = CreateMyPackage();
+
+            using(var packageStream = File.OpenRead(package.Path)) {                
+                var addedPackage = repository.AddPackage(packageStream, false);
+                AssertMyPackage(fileSystem, package, addedPackage);                
+            }
+            // add again
+            using(var packageStream = File.OpenRead(package.Path)) {                
+                Assert.Throws<PackageDuplicateException>(() =>
+                    repository.AddPackage(packageStream, false));
+            }
+        }
+
+        [Fact]
+        public void AddPackageFromStream_WhenDuplicateAndOverwriteEnabled()
+        {
+            // Arrange
+            var fileSystem = new PhysicalFileSystem(tmpDir.Path);
+            var repository = new ExpandedPackageRepository(fileSystem);
+            var package = CreateMyPackage();
+
+            using(var packageStream = File.OpenRead(package.Path)) {                
+                var addedPackage = repository.AddPackage(packageStream, true);
+                AssertMyPackage(fileSystem, package, addedPackage);                
+            }
+            using(var packageStream = File.OpenRead(package.Path)) {                
+                var addedPackage = repository.AddPackage(packageStream, true);
+                AssertMyPackage(fileSystem, package, addedPackage);                
+            }
         }
     }
 }

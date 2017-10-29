@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using LiGet.Models;
 using LiGet.NuGet.Server.Infrastructure;
 using NuGet.Protocol;
@@ -24,5 +25,7 @@ namespace LiGet
         IEnumerable<HostedPackage> FindPackagesById(string id, ClientCompatibility compatibility);
 
         HostedPackage FindPackage(string packageId, NuGetVersion version);
+        
+        void PushPackage(Stream value);
     }
 }
