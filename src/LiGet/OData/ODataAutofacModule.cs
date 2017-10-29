@@ -9,6 +9,7 @@ namespace LiGet.OData
             var odataModelBuilder = new NuGetWebApiODataModelBuilder();
             odataModelBuilder.Build();
             builder.RegisterInstance(odataModelBuilder.Model).As<IEdmModel>();
+            builder.RegisterType<ODataPackageSerializer>().As<IODataPackageSerializer>().SingleInstance();
         }
     }
 }

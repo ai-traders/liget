@@ -26,5 +26,7 @@ namespace LiGet.NuGet.Server.Infrastructure
         {
             get;
         }
+        string RootPath { get; }
+        bool RunBackgroundTasks { get; }
     }
 }

@@ -1,5 +1,6 @@
 
 using System;
+using LiGet.NuGet.Server.Infrastructure;
 using NuGet;
 using NuGet.Protocol;
 using NuGet.Versioning;
@@ -10,10 +11,17 @@ namespace LiGet.Models
     {
         public ODataPackage() {}
 
-        public ODataPackage(DataServicePackage package)
+        public ODataPackage(ServerPackage package)
         {
-            Version = package.Version;
-            NormalizedVersion = SemanticVersion.Parse(package.Version).ToNormalizedString();
+            if (package == null)
+            {
+                throw new ArgumentNullException(nameof(package));
+            }
+
+            if(package.Version == null)
+                throw new ArgumentException("server package version is null");
+            Version = package.Version.OriginalVersion;
+            NormalizedVersion = package.Version.ToNormalizedString();
 
             Authors = package.Authors;
             Owners = package.Owners;
@@ -39,24 +47,12 @@ namespace LiGet.Models
             IsPrerelease = !package.IsReleaseVersion();
             Listed = package.Listed;
             DownloadCount = package.DownloadCount;
+            if(package.MinClientVersion != null)
+                MinClientVersion = package.MinClientVersion.ToNormalizedString();
 
             //PackageSize = package.PackageSize;
             //Created = package.Created.UtcDateTime;
             //VersionDownloadCount = package.VersionDownloadCount;
-        }
-
-        private string UriToString(Uri uri)
-        {
-            if (uri == null) return null;
-
-            try
-            {
-                return uri.GetComponents(UriComponents.HttpRequestUrl, UriFormat.Unescaped);
-            }
-            catch (InvalidOperationException)
-            {
-                return null;
-            }
         }
 
         public string Id { get; set; }

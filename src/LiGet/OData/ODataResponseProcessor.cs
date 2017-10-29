@@ -13,12 +13,11 @@ namespace LiGet.OData
     public class ODataResponseProcessor : IResponseProcessor
     {
         static readonly MediaRange atomXmlContentType = new MediaRange("application/atom+xml");
-        private readonly IEdmModel edmModel;
-        ODataPackageSerializer serializer = new ODataPackageSerializer();
+        private readonly IODataPackageSerializer serializer;
 
-        public ODataResponseProcessor(IEdmModel edmModel)
+        public ODataResponseProcessor(IODataPackageSerializer serializer)
         {
-            this.edmModel = edmModel;
+            this.serializer = serializer;
         }
 
         public IEnumerable<Tuple<string, MediaRange>> ExtensionMappings
@@ -51,12 +50,12 @@ namespace LiGet.OData
                 var response = context.Response;
                 if (response == null)
                     context.Response = response = new Response();
-                
+
                 response.ContentType = atomXmlContentType;
                 response.StatusCode = HttpStatusCode.OK;
                 response.Contents = netStream =>
                 {
-                    serializer.Serialize(netStream,odataPackage,"fixme","fixme");
+                    serializer.Serialize(netStream, odataPackage, "fixme", "fixme");
                 };
                 return response;
             }

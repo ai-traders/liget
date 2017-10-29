@@ -49,46 +49,19 @@ namespace LiGet.NuGet.Server.Infrastructure
         private Timer _rebuildTimer;
 
         private PackageSaveModes _packageSave = PackageSaveModes.Nupkg;
-
-        public ServerPackageRepository(string path, CryptoHashProvider hashProvider,IServerPackageRepositoryConfig serverConfig)
-        {
-            if (string.IsNullOrEmpty(path))
-            {
-                throw new ArgumentNullException("path");
-            }
-
-            if (hashProvider == null)
-            {
-                throw new ArgumentNullException("hashProvider");
-            }
-            _config = serverConfig;
-
-            _fileSystem = new PhysicalFileSystem(path);
-            _runBackgroundTasks = true;
-            _expandedPackageRepository = new ExpandedPackageRepository(_fileSystem, hashProvider);
-
-            _serverPackageStore = new ServerPackageStore(_fileSystem, Environment.MachineName.ToLowerInvariant() + ".cache.bin");
-        }
         
         public ServerPackageRepository(
-            IFileSystem fileSystem,
-            bool runBackgroundTasks,
             ExpandedPackageRepository innerRepository,
             IServerPackageRepositoryConfig serverConfig)
         {
-            if (fileSystem == null)
-            {
-                throw new ArgumentNullException("fileSystem");
-            }
-
             if (innerRepository == null)
             {
                 throw new ArgumentNullException("innerRepository");
             }
             _config = serverConfig;
 
-            _fileSystem = fileSystem;
-            _runBackgroundTasks = runBackgroundTasks;
+            _fileSystem = new PhysicalFileSystem(serverConfig.RootPath);
+            _runBackgroundTasks = serverConfig.RunBackgroundTasks;
             _expandedPackageRepository = innerRepository;
 
             _serverPackageStore = new ServerPackageStore(_fileSystem, Environment.MachineName.ToLowerInvariant() + ".cache.bin");
@@ -136,7 +109,7 @@ namespace LiGet.NuGet.Server.Infrastructure
             return FindPackage(packageId, version) != null;
         }
 
-        public IPackage FindPackage(string packageId, NuGetVersion version)
+        public ServerPackage FindPackage(string packageId, NuGetVersion version)
         {
             return FindPackagesById(packageId, ClientCompatibility.Max)
                 .FirstOrDefault(p => p.Version.Equals(version));
@@ -278,11 +251,11 @@ namespace LiGet.NuGet.Server.Infrastructure
                             }
 
                             // Copy to correct filesystem location
-                            _expandedPackageRepository.AddPackage(package);
+                            var added = _expandedPackageRepository.AddPackage(package);
                             _fileSystem.DeleteFile(package.Path);
 
                             // Mark for addition to metadata store
-                            serverPackages.Add(CreateServerPackage(package, EnableDelisting));
+                            serverPackages.Add(CreateServerPackage(added, EnableDelisting));
                         }
                         catch (UnauthorizedAccessException ex)
                         {
@@ -781,7 +754,15 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         HostedPackage IPackageService.FindPackage(string packageId, NuGetVersion version)
         {
-            throw new NotImplementedException();
+            ServerPackage serverPackage = this.FindPackage(packageId, version);
+            return ToHostedPackage(serverPackage);
+        }
+
+        public HostedPackage ToHostedPackage(ServerPackage serverPackage)
+        {
+            if(serverPackage == null)
+                return null;
+            return new HostedPackage(new ODataPackage(serverPackage));
         }
 
         private class SupressedFileSystemWatcher : IDisposable

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Xml;
 using LiGet;
+using LiGet.NuGet.Server.Infrastructure;
 using NuGet.Common;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
@@ -27,6 +28,11 @@ namespace NuGet
         private readonly CryptoHashProvider _hashProvider;
 
         private readonly VersionFolderPathResolver _pathResolver;
+
+        public ExpandedPackageRepository(IServerPackageRepositoryConfig serverConfig) 
+            : this(new PhysicalFileSystem(serverConfig.RootPath)) {
+                
+            }
 
         public ExpandedPackageRepository(IFileSystem fileSystem)
             : this(fileSystem, new CryptoHashProvider())

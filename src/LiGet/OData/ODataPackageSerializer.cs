@@ -64,7 +64,7 @@ namespace LiGet.OData
         
     }
 
-    public class ODataPackageSerializer //: IODataPackageSerializer
+    public class ODataPackageSerializer : IODataPackageSerializer
     {
         public void Serialize(Stream outputStream, ODataPackage package, string resourceIdUrl, string packageContentUrl) {
             var doc = new XElement(XmlElements.entry,

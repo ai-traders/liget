@@ -28,7 +28,8 @@ namespace LiGet.NuGet.Server.Tests
             EnableFrameworkFiltering = false,
             EnableFileSystemMonitoring = true,
             IgnoreSymbolsPackages = false,
-            AllowOverrideExistingPackageOnPush = true
+            AllowOverrideExistingPackageOnPush = true,
+            RunBackgroundTasks = false
         };
 
         private TemporaryDirectory tmpDir;
@@ -44,17 +45,15 @@ namespace LiGet.NuGet.Server.Tests
 
         public ServerPackageRepository CreateServerPackageRepository(
             string path,
-            IServerPackageRepositoryConfig config,
+            ServerPackageRepositoryConfig config,
             Action<ExpandedPackageRepository> setupRepository = null)
         {
-            var fileSystem = new PhysicalFileSystem(path);
-            var expandedPackageRepository = new ExpandedPackageRepository(fileSystem);
+            config.RootPath = path;
+            var expandedPackageRepository = new ExpandedPackageRepository(config);
 
             setupRepository?.Invoke(expandedPackageRepository);
 
             var serverRepository = new ServerPackageRepository(
-                fileSystem,
-                runBackgroundTasks: false,
                 innerRepository: expandedPackageRepository,
                 serverConfig: config);
 
@@ -645,43 +644,12 @@ namespace LiGet.NuGet.Server.Tests
         }
 
         private LocalPackageInfo CreatePackage(string id, string version, Action<PackageBuilder> builderSteps) {
-            var parsedVersion = NuGetVersion.Parse(version);
-            var packageBuilder = new PackageBuilder
-            {
-                Id = id,
-                Version = parsedVersion
-            };
-            if(builderSteps != null)
-                builderSteps(packageBuilder);
-
-            string outputDirectory = Path.Combine(tmpDir.Path,"test-input");
-            new DirectoryInfo(outputDirectory).Create();
-            VersionFolderPathResolver pathResolver = new VersionFolderPathResolver(outputDirectory);
-            var packageFileName = Path.Combine(outputDirectory, pathResolver.GetPackageFileName(id,NuGetVersion.Parse(version)));
-            using (var stream = new FileStream(packageFileName, FileMode.CreateNew))
-            {
-                packageBuilder.Save(stream);
-            }
-
-            using (var package = new PackageArchiveReader(File.OpenRead(packageFileName)))
-            {
-                var nuspec = package.NuspecReader;
-                var packageHelper = new Func<PackageReaderBase>(() => new PackageArchiveReader(File.OpenRead(packageFileName)));
-                var nuspecHelper = new Lazy<NuspecReader>(() => nuspec);
-                return new LocalPackageInfo(new PackageIdentity(id,NuGetVersion.Parse(version)), packageFileName, DateTime.UtcNow, nuspecHelper, packageHelper);
-            };
+            return LiGet.Tests.PackageHelper.CreatePackage(Path.Combine(tmpDir.Path,"test-input"), id, version, builderSteps);
         }
 
         private LocalPackageInfo CreatePackage(string id, string version)
         {
-            return CreatePackage(id, version, builder => {
-                builder.Description = "Description";
-                builder.Authors.Add("Test Author" );
-                var mockFile = new Mock<IPackageFile>();
-                mockFile.Setup(m => m.Path).Returns("foo");
-                mockFile.Setup(m => m.GetStream()).Returns(new MemoryStream());
-                builder.Files.Add(mockFile.Object);
-            });
+            return LiGet.Tests.PackageHelper.CreatePackage(Path.Combine(tmpDir.Path,"test-input"), id, version);
         }
 
         public static LocalPackageInfo GetPackageFromNupkgBytes(byte[] nupkgBytes)

@@ -47,10 +47,11 @@ namespace LiGet
                             KeySegment queryParams = (KeySegment)path.LastSegment;
                             string id = queryParams.Keys.First(k => k.Key == "Id").Value as string;
                             string version = queryParams.Keys.First(k => k.Key == "Version").Value as string;
-                            _log.DebugFormat("Request to find package by id={0} and version {1}", id, version);
+                            _log.DebugFormat("Request to find package by id={0} and version={1}", id, version);
                             var found = repository.FindPackage(id, NuGetVersion.Parse(version));
                             if(found == null)
                                 return NoPackage404();
+                            //TODO this also has to return URL to contents and to this package resource
                             return found.PackageInfo;
                         }
                         else
