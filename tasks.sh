@@ -23,6 +23,16 @@ case "${command}" in
     shift
     dotnet tools/xunit.runner.console.2.3.0/tools/netcoreapp2.0/xunit.console.dll $test_assembly $@
     ;;
+  prep_qe2e)
+    dotnet publish -c Release src/LiGet.App/LiGet.App.csproj
+    cd e2e/input &&\
+      nuget install log4net -Version 2.0.8 &&\
+    cd ../..
+    ;;
+  qe2e)
+    ide "./tasks.sh prep_qe2e"
+    ide --idefile Idefile.e2e "./e2e/run.sh"
+    ;;
     *)
       echo "Invalid command: '${command}'"
       exit 1
