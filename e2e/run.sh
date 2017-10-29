@@ -6,6 +6,7 @@ cat << EOF > /home/ide/.nuget/NuGet/NuGet.Config
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
+    <add key="nuget.org" value="https://www.nuget.org/api/v2" protocolVersion="2" />
     <add key="liget" value="http://liget:9011/api/v2" protocolVersion="2" />
   </packageSources>
 </configuration>

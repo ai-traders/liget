@@ -3,6 +3,7 @@
 /tools/
 /e2e/input
 /e2e/**/*.nupkg
+/e2e/**/*.dll
 *_md5.checksum
 /pkg/
 ## Ignore Visual Studio temporary files, build results, and

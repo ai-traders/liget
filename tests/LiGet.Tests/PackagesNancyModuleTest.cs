@@ -163,6 +163,22 @@ namespace LiGet.Tests
             Assert.Equal(HttpStatusCode.BadRequest, result.StatusCode);
         }
 
+        [Fact]
+        public void GetPackageContentWhenExists() {
+            packageRepo.Setup(r => r.GetStream(It.IsAny<PackageIdentity>())).Returns(() => new MemoryStream(new byte[] { 1,2,3 })).Verifiable();
+            var result = browser.Get("/api/v2/contents/dummy/1.0.0", with =>
+            {
+                with.HttpRequest();
+            }).Result;
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            Assert.Equal("application/zip", result.ContentType);
+            packageRepo.Verify(r => r.GetStream(It.Is<PackageIdentity>(p =>
+                p.Version.Equals(NuGetVersion.Parse("1.0.0")) &&
+                p.Id == "dummy")), Times.Exactly(1));
+            var bytes = result.Body.AsStream().ReadAllBytes();
+            Assert.Equal(new byte[] { 1,2,3 },bytes);
+        }
+
         // [Fact]
         // public void FindPackageByIdWhenEmptyRepository() {
         //     packageRepo.Setup(r => r.FindPackagesById(It.IsAny<string>())).Returns(new List<ODataPackage>()).Verifiable();

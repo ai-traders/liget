@@ -8,6 +8,8 @@ using LiGet.Util;
 using Microsoft.OData.Edm;
 using Microsoft.OData.UriParser;
 using Nancy;
+using Nancy.Responses;
+using NuGet.Packaging.Core;
 using NuGet.Versioning;
 
 namespace LiGet
@@ -22,6 +24,23 @@ namespace LiGet
             :base(basePath)
         {
             this.OnError.AddItemToEndOfPipeline(HandleError);
+
+            base.Get("/contents/{id}/{version}", args => {
+                string id = args.id;
+                string v = args.version;
+                NuGetVersion version;
+                if(!NuGetVersion.TryParse(v, out version))
+                {
+                    _log.ErrorFormat("Bad version format {0}", v);  
+                    return HttpStatusCode.BadRequest;
+                }
+                var nupkg = repository.GetStream(new PackageIdentity(id,version));
+                if(nupkg == null) {
+                    _log.WarnFormat("Package contents not found {0}", base.Request.Path);
+                    return HttpStatusCode.NotFound;
+                }                
+                return new StreamResponse(nupkg, "application/zip");
+            });
 
             base.Get<Response>("/", args => {
                 var serviceUrl = GetServiceUrl();

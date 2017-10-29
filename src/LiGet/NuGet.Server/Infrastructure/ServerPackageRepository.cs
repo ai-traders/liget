@@ -781,6 +781,11 @@ namespace LiGet.NuGet.Server.Infrastructure
             }
         }
 
+        public Func<Stream> GetStream(PackageIdentity packageIdentity)
+        {
+            return _expandedPackageRepository.GetStream(packageIdentity);
+        }
+
         private class SupressedFileSystemWatcher : IDisposable
         {
             private readonly ServerPackageRepository _repository;

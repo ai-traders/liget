@@ -74,7 +74,9 @@ namespace NuGet
 
                 var nuspecPath = _pathResolver.GetManifestFilePath(package.Identity.Id, package.Identity.Version);
                 using(var nuspecStream = File.OpenWrite(nuspecPath)) {
-                    downloader.CoreReader.GetNuspecAsync(ct).Result.CopyTo(nuspecStream);                
+                    using(var fs = downloader.CoreReader.GetNuspecAsync(ct).Result) {
+                        fs.CopyTo(nuspecStream);                
+                    }
                 }
                 _log.DebugFormat("Saved manifest {0}",nuspecPath);
                 Lazy<NuspecReader> nuspecReader = new Lazy<NuspecReader>(() => new NuspecReader(nuspecPath));
@@ -218,6 +220,15 @@ namespace NuGet
             // return Path.Combine(
             //     GetPackageRoot(packageId, version),
             //     packageId + "." + version.ToNormalizedString() + Constants.PackageExtension);
+        }
+
+        internal Func<Stream> GetStream(PackageIdentity packageIdentity)
+        {
+            var path = _pathResolver.GetPackageFilePath(packageIdentity.Id, packageIdentity.Version);
+            if(!File.Exists(path))
+                return null;
+                
+            return () => File.OpenRead(path);
         }
     }
 }

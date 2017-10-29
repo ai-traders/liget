@@ -3,6 +3,11 @@ set -e
 # PATCH currently failing private caching server
 rm -f ~/.nuget/NuGet/NuGet.Config
 
+function make_clean_dir {
+  dir=$1
+  rm -rf $dir && mkdir -p $dir && cd $dir
+}
+
 command="$1"
 case "${command}" in
   build)
@@ -26,7 +31,7 @@ case "${command}" in
   prep_qe2e)
     dotnet publish -c Release src/LiGet.App/LiGet.App.csproj
     cd e2e/input &&\
-      nuget install log4net -Version 2.0.8 &&\
+      make_clean_dir 'liget-test1' && dotnet new classlib && dotnet pack &&\
     cd ../..
     ;;
   qe2e)
