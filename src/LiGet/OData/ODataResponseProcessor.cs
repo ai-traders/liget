@@ -55,7 +55,7 @@ namespace LiGet.OData
                 response.StatusCode = HttpStatusCode.OK;
                 response.Contents = netStream =>
                 {
-                    serializer.Serialize(netStream, odataPackage, "fixme", "fixme");
+                    serializer.Serialize(netStream, odataPackage, "fixme", "fixme", "fixme");
                 };
                 return response;
             }

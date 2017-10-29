@@ -60,11 +60,13 @@ namespace LiGet.NuGet.Server.Infrastructure
             }
             _config = serverConfig;
 
+             new DirectoryInfo(serverConfig.RootPath).Create();
             _fileSystem = new PhysicalFileSystem(serverConfig.RootPath);
             _runBackgroundTasks = serverConfig.RunBackgroundTasks;
             _expandedPackageRepository = innerRepository;
 
             _serverPackageStore = new ServerPackageStore(_fileSystem, Environment.MachineName.ToLowerInvariant() + ".cache.bin");
+            _logger.InfoFormat("Initialized server package repository at {0}",serverConfig.RootPath);
         }
 
         private void SetupBackgroundJobs()

@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace LiGet.NuGet.Server.Infrastructure
 {
     public class ServerPackageRepositoryConfig : IServerPackageRepositoryConfig
@@ -5,7 +7,7 @@ namespace LiGet.NuGet.Server.Infrastructure
         public ServerPackageRepositoryConfig()
         {
             this.EnableFrameworkFiltering = true;          
-            this.RootPath = System.Environment.CurrentDirectory;  
+            this.RootPath = Directory.GetCurrentDirectory();  
             this.RunBackgroundTasks = true;
         }
         public bool AllowOverrideExistingPackageOnPush

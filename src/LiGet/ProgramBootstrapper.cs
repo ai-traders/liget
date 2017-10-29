@@ -27,6 +27,7 @@ namespace LiGet
         {
             // No registrations should be performed in here, however you may
             // resolve things that are needed during application startup.
+            container.Resolve<IPackageService>();
         }
 
         protected override void ConfigureApplicationContainer(ILifetimeScope existingContainer)

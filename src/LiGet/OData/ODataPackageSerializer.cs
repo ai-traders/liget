@@ -9,7 +9,7 @@ namespace LiGet.OData
     public static class XmlNamespaces
     {
         public static readonly XNamespace xmlns = "http://www.w3.org/2005/Atom";
-        public static readonly XNamespace baze = "https://www.nuget.org/api/v2/curated-feeds/microsoftdotnet";
+        //public static readonly XNamespace baze = "https://www.nuget.org/api/v2/curated-feeds/microsoftdotnet";
         public static readonly XNamespace m = "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata";
         public static readonly XNamespace d = "http://schemas.microsoft.com/ado/2007/08/dataservices";
         public static readonly XNamespace georss = "http://www.georss.org/georss";
@@ -66,9 +66,9 @@ namespace LiGet.OData
 
     public class ODataPackageSerializer : IODataPackageSerializer
     {
-        public void Serialize(Stream outputStream, ODataPackage package, string resourceIdUrl, string packageContentUrl) {
+        public void Serialize(Stream outputStream, ODataPackage package, string serviceBaseUrl, string resourceIdUrl, string packageContentUrl) {
             var doc = new XElement(XmlElements.entry,
-                new XAttribute(XmlElements.baze, XmlNamespaces.baze),
+                new XAttribute(XmlElements.baze, XNamespace.Get(serviceBaseUrl)),
                 new XAttribute(XmlElements.m, XmlNamespaces.m),
                 new XAttribute(XmlElements.d, XmlNamespaces.d),
                 new XAttribute(XmlElements.georss, XmlNamespaces.georss),

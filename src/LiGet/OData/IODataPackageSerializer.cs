@@ -5,6 +5,6 @@ namespace LiGet.OData
 {
     public interface IODataPackageSerializer
     {
-        void Serialize(Stream outputStream, ODataPackage package, string resourceIdUrl, string packageContentUrl);
+        void Serialize(Stream outputStream, ODataPackage package, string serviceBaseUrl, string resourceIdUrl, string packageContentUrl);
     }
 }

@@ -12,6 +12,7 @@ namespace LiGet.Tests.OData
     {
         ODataPackageSerializer serializer = new ODataPackageSerializer();
         private Stream outputStream = new MemoryStream();
+        private string serviceUrl = "http://repo";
         private string resourceUrl = "http://repo/pkg/1.0";
         private string packageContentUrl = "http://repo/contents/pkg/1.0";
 
@@ -28,7 +29,7 @@ namespace LiGet.Tests.OData
                 Id = "Minimal",
                 Version = "1.0.0"
             };
-            serializer.Serialize(outputStream, pkg, resourceUrl, packageContentUrl);
+            serializer.Serialize(outputStream, pkg, serviceUrl, resourceUrl, packageContentUrl);
             var feed = XmlFeedHelper.ParsePage(readDocument());
             var entry = Assert.Single(feed);
             Assert.Equal("Minimal", entry.Id);

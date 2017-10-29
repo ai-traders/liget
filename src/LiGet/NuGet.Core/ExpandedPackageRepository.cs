@@ -116,15 +116,13 @@ namespace NuGet
             }
         }
 
-        public bool Exists(string packageId, SemanticVersion version)
+        public bool Exists(string packageId, NuGetVersion version)
         {
-            throw new NotImplementedException();
-
-            // var hashFilePath = Path.ChangeExtension(GetPackagePath(packageId, version), Constants.HashFileExtension);
-            // return _fileSystem.FileExists(hashFilePath);
+            var hashFilePath = _pathResolver.GetHashPath(packageId, version);
+            return _fileSystem.FileExists(hashFilePath);
         }
 
-        public LocalPackageInfo FindPackage(string packageId, SemanticVersion version)
+        public LocalPackageInfo FindPackage(string packageId, NuGetVersion version)
         {
             if (!Exists(packageId, version))
             {
