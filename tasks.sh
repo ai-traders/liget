@@ -27,7 +27,8 @@ function make_clean_dir {
 
 function build_inputs {
   cd e2e/input &&\
-    make_clean_dir 'liget-test1' && dotnet new classlib && dotnet pack &&\
+    make_clean_dir 'liget-test1' && dotnet new classlib && dotnet pack && cd .. &&\
+    make_clean_dir 'liget-two' && dotnet new classlib && dotnet pack && dotnet pack /p:PackageVersion=2.1.0 &&\
   cd ../..
 }
 

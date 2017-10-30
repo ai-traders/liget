@@ -203,3 +203,4 @@ docs/tools/FSharp.Formatting.svclog
 /docker-ops
 /releaser
 /e2e/data
+/e2e/test_update-package/paket/paket.lock
