@@ -134,14 +134,14 @@ case "${command}" in
       --repo liget \
       --tag $released_version \
       --name $released_version \
-      --description "LiGet $released_version, docker image tomzo/liget:$released_version"
+      --description "LiGet $released_version, docker image \`tomzo/liget:$released_version\`" \
       --pre-release
 
     $gh_release upload \
       --user ai-traders \
       --repo liget \
       --tag $released_version \
-      --name "liget-binaries-$released_version.tar.gz"
+      --name "liget-binaries-$released_version.tar.gz" \
       --file "liget-binaries-$released_version.tar.gz"
     ;;
   publish_docker_private)
