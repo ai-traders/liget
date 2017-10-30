@@ -196,3 +196,6 @@ docs/content/license.md
 docs/content/release-notes.md
 .fake
 docs/tools/FSharp.Formatting.svclog
+/e2e/test_one-exact-package/paket/paket.lock
+/e2e/test_one-exact-package/paket-pinned/paket.lock
+/e2e/test_one-exact-package/paket-locked/.paket/Paket.Restore.targets

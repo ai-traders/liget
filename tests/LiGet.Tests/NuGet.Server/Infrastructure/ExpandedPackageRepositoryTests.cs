@@ -171,39 +171,41 @@ namespace LiGet.Tests.NuGet.Server.Infrastructure
             Assert.Equal(NuGetVersion.Parse("1.0.0-beta1-345"), package.Identity.Version);
         }
 
-        /*
-
         [Fact]
         public void FindPackagesById_ReturnsAllVersionsOfAPackage()
         {
             // Arrange
-            var fileSystem = new MockFileSystem();
-            fileSystem.AddFile(Path.Combine("Foo", "1.0.0", "Foo.nuspec"),
+            var fileSystem = new PhysicalFileSystem(tmpDir.Path);
+            fileSystem.AddFile(Path.Combine("foo", "1.0.0", "foo.nuspec"),
                 @"<?xml version=""1.0""?><package><metadata><id>Foo</id><version>1.0.0</version><authors>None</authors><description>None</description></metadata></package>");
 
-            fileSystem.AddFile(Path.Combine("Bar", "1.0.0-beta1-345", "Bar.nuspec"),
+            fileSystem.AddFile(Path.Combine("bar", "1.0.0-beta1-345", "bar.nuspec"),
                 @"<?xml version=""1.0""?><package><metadata><id>Bar</id><version>1.0.0.0-beta1-345</version><authors>None</authors><description>None</description></metadata></package>");
-            fileSystem.AddFile(Path.Combine("Bar", "1.0.0-beta1-345", "Bar.1.0.0-beta1-345.nupkg.sha512"), "345sha");
+            fileSystem.AddFile(Path.Combine("bar", "1.0.0-beta1-345", "bar.1.0.0-beta1-345.nupkg.sha512"), "345sha");
+            fileSystem.AddFile(Path.Combine("bar", "1.0.0-beta1-345", "bar.1.0.0-beta1-345.nupkg"), "body");
 
-            fileSystem.AddFile(Path.Combine("Bar", "1.0.0-beta1-402", "Bar.nuspec"),
+            fileSystem.AddFile(Path.Combine("bar", "1.0.0-beta1-402", "bar.nuspec"),
                 @"<?xml version=""1.0""?><package><metadata><id>Bar</id><version>1.0.0.0-beta1-402</version><authors>None</authors><description>None</description></metadata></package>");
-            fileSystem.AddFile(Path.Combine("Bar", "1.0.0-beta1-402", "Bar.1.0.0-beta1-402.nupkg.sha512"), "402sha");
+            fileSystem.AddFile(Path.Combine("bar", "1.0.0-beta1-402", "bar.1.0.0-beta1-402.nupkg.sha512"), "402sha");
+            fileSystem.AddFile(Path.Combine("bar", "1.0.0-beta1-402", "bar.1.0.0-beta1-402.nupkg"), "body");
 
-            fileSystem.AddFile(Path.Combine("Bar", "1.0.0-beta1", "Bar.nuspec"),
+            fileSystem.AddFile(Path.Combine("bar", "1.0.0-beta1", "bar.nuspec"),
                 @"<?xml version=""1.0""?><package><metadata><id>Bar</id><version>1.0.0.0-beta1</version><authors>None</authors><description>None</description></metadata></package>");
-            fileSystem.AddFile(Path.Combine("Bar", "1.0.0-beta1", "Bar.1.0.0-beta1.nupkg.sha512"), "beta1sha");
+            fileSystem.AddFile(Path.Combine("bar", "1.0.0-beta1", "bar.1.0.0-beta1.nupkg.sha512"), "beta1sha");
+            fileSystem.AddFile(Path.Combine("bar", "1.0.0-beta1", "bar.1.0.0-beta1.nupkg"), "body");
 
             var repository = new ExpandedPackageRepository(fileSystem);
 
             // Act
-            var packages = repository.FindPackagesById("Bar").OrderBy(p => p.Version).ToList();
+            var packages = repository.FindPackagesById("Bar").OrderBy(p => p.Identity.Version).ToList();
 
             // Assert
             Assert.Equal(3, packages.Count);
-            Assert.Equal(SemanticVersion.Parse("1.0.0-beta1"), packages[0].Version);
-            Assert.Equal(SemanticVersion.Parse("1.0.0-beta1-345"), packages[1].Version);
-            Assert.Equal(SemanticVersion.Parse("1.0.0-beta1-402"), packages[2].Version);
+            Assert.Equal(NuGetVersion.Parse("1.0.0-beta1"), packages[0].Identity.Version);
+            Assert.Equal(NuGetVersion.Parse("1.0.0-beta1-345"), packages[1].Identity.Version);
+            Assert.Equal(NuGetVersion.Parse("1.0.0-beta1-402"), packages[2].Identity.Version);
         }
+        /*
 
         [Fact]
         public void FindPackagesById_IgnoresPackagesWithoutHashFiles()

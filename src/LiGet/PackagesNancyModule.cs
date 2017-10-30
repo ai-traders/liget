@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -89,10 +90,10 @@ namespace LiGet
                             throw new ArgumentException();//TODO nice bad request
                         else
                         {
-                            string id = idOrNull;
+                            string id = idOrNull.TrimStart('\'').TrimEnd('\'');
                             _log.DebugFormat("Request to FindPackagesById id={0}",id);
                             var found = repository.FindPackagesById(id,semVer);
-                            return found;
+                            return new ODataResponse<IEnumerable<PackageWithUrls>>(serviceUrl.AbsoluteUri, found.Select(ToPackageWithUrls));
                         }
                     }
                     else if(path.FirstSegment.Identifier == "Packages") {
@@ -104,12 +105,7 @@ namespace LiGet
                             var found = repository.FindPackage(id, NuGetVersion.Parse(version));
                             if(found == null)
                                 return NoPackage404();
-                            id = found.PackageInfo.Id;
-                            version = found.PackageInfo.Version;
-                            PackageUrls urls = new PackageUrls(serviceUrl.AbsoluteUri, 
-                                $"{serviceUrl}/Packages(Id='{id}',Version='{found.PackageInfo.Version}')",
-                                $"{serviceUrl}/contents/{id.ToLowerInvariant()}/{version.ToLowerInvariant()}");
-                            return new ODataPackageResponse(found.PackageInfo, urls);
+                            return new ODataResponse<PackageWithUrls>(serviceUrl.AbsoluteUri, ToPackageWithUrls(found));
                         }
                         else
                             throw new ArgumentException("Bad or not supported query");//TODO nice bad request
@@ -127,6 +123,16 @@ namespace LiGet
             base.Post<object>(@"^(.*)$", new Func<dynamic,object>(ThrowNotSupported));
             base.Put<object>(@"^(.*)$", new Func<dynamic,object>(ThrowNotSupported));
             base.Delete<object>(@"^(.*)$", new Func<dynamic,object>(ThrowNotSupported));
+        }
+
+        public PackageWithUrls ToPackageWithUrls(HostedPackage pkg) {
+            var serviceUrl = GetServiceUrl();
+            var id = pkg.PackageInfo.Id;
+            var version = pkg.PackageInfo.Version;
+            PackageWithUrls urls = new PackageWithUrls(pkg.PackageInfo, 
+                $"{serviceUrl}/Packages(Id='{id}',Version='{pkg.PackageInfo.Version}')",
+                $"{serviceUrl}/contents/{id.ToLowerInvariant()}/{version.ToLowerInvariant()}");
+            return urls;
         }
 
         private object NoPackage404()

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Autofac;
 using LiGet.Models;
+using LiGet.NuGet.Server.Infrastructure;
 using Moq;
 using Nancy;
 using Nancy.Responses.Negotiation;
@@ -179,16 +180,41 @@ namespace LiGet.Tests
             Assert.Equal(new byte[] { 1,2,3 },bytes);
         }
 
-        // [Fact]
-        // public void FindPackageByIdWhenEmptyRepository() {
-        //     packageRepo.Setup(r => r.FindPackagesById(It.IsAny<string>())).Returns(new List<ODataPackage>()).Verifiable();
-        //     var result = browser.Get("/api/v2/FindPackagesById()", with =>
-        //     {
-        //         with.Query("id","'aaabbb'");
-        //         with.HttpRequest();
-        //     }).Result;
-        //     Assert.Equal(HttpStatusCode.OK, result.StatusCode);
-        //     packageRepo.Verify(r => r.FindPackagesById("aaabbb"), Times.Exactly(1));
-        // }
+        [InlineData("aaabbb")]
+        [InlineData("'aaabbb'")]
+        [Theory]
+        public void FindPackageByIdWhenEmptyRepository(string queryName) {
+            packageRepo.Setup(r => r.FindPackagesById(It.IsAny<string>(), It.IsAny<ClientCompatibility>()))
+                .Returns(new List<HostedPackage>()).Verifiable();
+            var result = browser.Get("/api/v2/FindPackagesById()", with =>
+            {
+                with.Query("id",queryName);
+                with.HttpRequest();
+            }).Result;
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            packageRepo.Verify(r => r.FindPackagesById("aaabbb",It.IsAny<ClientCompatibility>()), Times.Exactly(1));
+            Assert.Equal("application/atom+xml", result.ContentType);
+            var entries = XmlFeedHelper.ParsePage(result.BodyAsXml());
+            Assert.Empty(entries);
+            Assert.Contains("http://testhost/api/v2",result.Body.AsString());
+        }
+
+        [Fact]
+        public void FindPackageByIdWhenOneFound() {
+            packageRepo.Setup(r => r.FindPackagesById(It.IsAny<string>(), It.IsAny<ClientCompatibility>()))
+                .Returns(new List<HostedPackage>() { dummy1_0_0 }).Verifiable();
+            var result = browser.Get("/api/v2/FindPackagesById()", with =>
+            {
+                with.Query("id","dummy");
+                with.HttpRequest();
+            }).Result;
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            packageRepo.Verify(r => r.FindPackagesById("dummy",It.IsAny<ClientCompatibility>()), Times.Exactly(1));
+            Assert.Equal("application/atom+xml", result.ContentType);
+            var entries = XmlFeedHelper.ParsePage(result.BodyAsXml());
+            var dummyEntry = Assert.Single(entries);
+            AssertDummyEntry(dummyEntry);
+            Assert.Contains("http://testhost/api/v2",result.Body.AsString());
+        }
     }
 }

@@ -32,8 +32,13 @@ namespace LiGet.OData
         {
             var match = new ProcessorMatch();
 
-            var odataPackage = model as ODataPackageResponse;
+            var odataPackage = model as ODataResponse<PackageWithUrls>;
             if (odataPackage != null)
+            {
+                match.ModelResult = MatchResult.ExactMatch;
+            }
+            var odataPackageCollection = model as ODataResponse<IEnumerable<PackageWithUrls>>;
+            if (odataPackageCollection != null)
             {
                 match.ModelResult = MatchResult.ExactMatch;
             }
@@ -44,7 +49,7 @@ namespace LiGet.OData
 
         public Response Process(MediaRange requestedMediaRange, dynamic model, NancyContext context)
         {
-            var odataPackage = model as ODataPackageResponse;
+            var odataPackage = model as ODataResponse<PackageWithUrls>;
             if (odataPackage != null)
             {
                 var response = context.Response;
@@ -55,8 +60,23 @@ namespace LiGet.OData
                 response.StatusCode = HttpStatusCode.OK;
                 response.Contents = netStream =>
                 {
-                    serializer.Serialize(netStream, odataPackage.Package, 
-                        odataPackage.Urls.ServiceBaseUrl, odataPackage.Urls.ResourceIdUrl, odataPackage.Urls.PackageContentUrl);
+                    serializer.Serialize(netStream, odataPackage.Entity.Pkg, 
+                        odataPackage.ServiceBaseUrl, odataPackage.Entity.ResourceIdUrl, odataPackage.Entity.PackageContentUrl);
+                };
+                return response;
+            }
+            var odataPackageCollection = model as ODataResponse<IEnumerable<PackageWithUrls>>;
+            if (odataPackageCollection != null)
+            {
+                var response = context.Response;
+                if (response == null)
+                    context.Response = response = new Response();
+
+                response.ContentType = atomXmlContentType;
+                response.StatusCode = HttpStatusCode.OK;
+                response.Contents = netStream =>
+                {
+                    serializer.Serialize(netStream, odataPackageCollection.Entity, odataPackageCollection.ServiceBaseUrl);
                 };
                 return response;
             }

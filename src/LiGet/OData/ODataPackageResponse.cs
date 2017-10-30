@@ -2,19 +2,18 @@ using LiGet.Models;
 
 namespace LiGet.OData
 {
-    public class ODataPackageResponse
+    public class ODataResponse<T>
     {
-        private readonly ODataPackage package;
-        private readonly PackageUrls urls;
-        public ODataPackageResponse(ODataPackage package, PackageUrls urls)
+        private readonly string serviceBaseUrl;
+        private readonly T entity;
+        public ODataResponse(string serviceBaseUrl, T entity)
         {
-            this.urls = urls;
-            this.package = package;
-
+            this.serviceBaseUrl = serviceBaseUrl;
+            this.entity = entity;
         }
 
-        public ODataPackage Package => package;
+        public string ServiceBaseUrl => serviceBaseUrl;
 
-        public PackageUrls Urls => urls;
+        public T Entity => entity;
     }
 }

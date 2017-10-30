@@ -751,7 +751,7 @@ namespace LiGet.NuGet.Server.Infrastructure
         IEnumerable<HostedPackage> IPackageService.FindPackagesById(string id, ClientCompatibility compatibility)
         {
             var found = this.FindPackagesById(id, compatibility);
-            throw new NotImplementedException();
+            return found.Select(ToHostedPackage);
         }
 
         HostedPackage IPackageService.FindPackage(string packageId, NuGetVersion version)

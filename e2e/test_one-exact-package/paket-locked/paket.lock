@@ -1,0 +1,3 @@
+NUGET
+  remote: http://liget:9011/api/v2
+    liget-test1 (1.0.0)

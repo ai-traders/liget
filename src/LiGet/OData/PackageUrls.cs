@@ -1,21 +1,25 @@
+using LiGet.Models;
+
 namespace LiGet.OData
 {
-    public class PackageUrls
+    public class PackageWithUrls
     {
-        private readonly string serviceBaseUrl;
+
         private readonly string resourceIdUrl;
         private readonly string packageContentUrl;
+        private readonly ODataPackage pkg;
 
-        public PackageUrls(string serviceBaseUrl, string resourceIdUrl, string packageContentUrl) {
-            this.serviceBaseUrl = serviceBaseUrl;
+        public PackageWithUrls(ODataPackage pkg, string resourceIdUrl, string packageContentUrl)
+        {
+            this.pkg = pkg;
             this.resourceIdUrl = resourceIdUrl;
             this.packageContentUrl = packageContentUrl;
         }
 
-        public string ServiceBaseUrl => serviceBaseUrl;
-
         public string ResourceIdUrl => resourceIdUrl;
 
         public string PackageContentUrl => packageContentUrl;
+
+        public ODataPackage Pkg => pkg;
     }
 }

@@ -155,7 +155,7 @@ namespace NuGet
             //TODO resign from IFileSystem
             var physicalFs = (PhysicalFileSystem)_fileSystem;
             string root = physicalFs.Root;
-            return LocalFolderUtility.GetPackagesV3(root, packageId, _logAdapter);
+            return LocalFolderUtility.GetPackagesV3(root, packageId.ToLowerInvariant(), _logAdapter);
             // foreach (var versionDirectory in _fileSystem.GetDirectoriesSafe(packageId))
             // {
             //     var versionDirectoryName = Path.GetFileName(versionDirectory);
@@ -227,7 +227,7 @@ namespace NuGet
             var path = _pathResolver.GetPackageFilePath(packageIdentity.Id, packageIdentity.Version);
             if(!File.Exists(path))
                 return null;
-                
+
             return () => File.OpenRead(path);
         }
     }

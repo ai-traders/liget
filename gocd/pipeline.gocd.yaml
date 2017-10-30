@@ -14,7 +14,7 @@ pipelines:
               artifacts:
                 - build:
                     source: src/LiGet.App/bin/Release/netcoreapp2.0/publish/**/*
-                    destination: bin
+                    destination: src/LiGet.App/bin/Release/netcoreapp2.0/publish
                 - build:
                     source: tests/LiGet.Tests/bin/Release/netcoreapp2.0/publish/**/*
                     destination: tests/LiGet.Tests/bin/Release/netcoreapp2.0/publish
@@ -23,10 +23,10 @@ pipelines:
                   command: ide
                   arguments:
                     - "./tasks.sh build"
-      - unit:
+      - test:
           clean_workspace: true
           jobs:
-            build:
+            unit:
               elastic_profile_id: w.c2.m2048.e10
               tasks:
                - fetch:
@@ -38,3 +38,16 @@ pipelines:
                   command: ide
                   arguments:
                     - "./tasks.sh test"
+            itest:
+              elastic_profile_id: w.c2.m2048.e10
+              tasks:
+               - fetch:
+                  stage: build
+                  job: build
+                  source: src
+                  destination:
+               - exec:
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - "./tasks.sh itest"

@@ -8,6 +8,12 @@ function make_clean_dir {
   rm -rf $dir && mkdir -p $dir && cd $dir
 }
 
+function build_inputs {
+  cd e2e/input &&\
+    make_clean_dir 'liget-test1' && dotnet new classlib && dotnet pack &&\
+  cd ../..
+}
+
 command="$1"
 case "${command}" in
   build)
@@ -30,12 +36,17 @@ case "${command}" in
     ;;
   prep_qe2e)
     dotnet publish -c Release src/LiGet.App/LiGet.App.csproj
-    cd e2e/input &&\
-      make_clean_dir 'liget-test1' && dotnet new classlib && dotnet pack &&\
-    cd ../..
+    build_inputs
     ;;
   qe2e)
     ide "./tasks.sh prep_qe2e"
+    ide --idefile Idefile.e2e "./e2e/run.sh"
+    ;;
+  prep_itest)
+    build_inputs
+    ;;
+  itest)
+    ide "./tasks.sh prep_itest"
     ide --idefile Idefile.e2e "./e2e/run.sh"
     ;;
     *)

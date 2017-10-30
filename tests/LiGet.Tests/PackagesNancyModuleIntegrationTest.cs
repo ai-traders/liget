@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Autofac;
 using LiGet.NuGet.Server.Infrastructure;
 using Nancy;
@@ -70,6 +71,25 @@ namespace LiGet.Tests
             Assert.Equal("2.0.0-0test", entry.Version.OriginalVersion);
             Assert.Equal("Test Author", Assert.Single(entry.Authors));
             Assert.Equal("test", entry.Id);
+        }
+
+        [Fact]
+        public void GetFindPackagesByIdWhen3Exist() {
+            var packagesInDropFolder = new Dictionary<string, LocalPackageInfo>
+                {
+                    {"test.1.11.nupkg", PackageHelper.CreatePackage(tmpDir.Path,"test", "1.11")},
+                    {"test.1.9.nupkg", PackageHelper.CreatePackage(tmpDir.Path,"test", "1.9")},
+                    {"test.2.0.0-0test.nupkg", PackageHelper.CreatePackage(tmpDir.Path,"test", "2.0.0-0test")},
+                };
+            var result = browser.Get("/api/v2/FindPackagesById()?id='test'", with =>
+            {
+                with.HttpRequest();
+            }).Result;
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            Assert.Equal("application/atom+xml", result.ContentType);
+            var entries = XmlFeedHelper.ParsePage(result.BodyAsXml()).ToList();
+            Assert.Equal(3, entries.Count);
+            Assert.Equal(new [] { "1.11.0", "1.9.0", "2.0.0-0test" }, entries.Select(e => e.Version.OriginalVersion).OrderBy(v => v));
         }
     }
 }
