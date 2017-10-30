@@ -204,3 +204,4 @@ docs/tools/FSharp.Formatting.svclog
 /releaser
 /e2e/data
 /e2e/test_update-package/paket/paket.lock
+/e2e/test_update-package/paket-constraint/paket.lock

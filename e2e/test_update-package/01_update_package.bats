@@ -39,3 +39,9 @@ load '/opt/bats-assert/load.bash'
   assert_equal "$status" 0
   assert [ -e 'paket/packages/liget-two/liget-two.2.1.0.nupkg' ]
 }
+
+@test "paket install with constraint (< 2.0.0)" {
+  run /bin/bash -c "cd paket-constraint && paket install"
+  assert_equal "$status" 0
+  assert [ -e 'paket-constraint/packages/liget-two/liget-two.1.0.0.nupkg' ]
+}
