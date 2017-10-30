@@ -118,11 +118,69 @@ case "${command}" in
     fi
     exit $?
     ;;
+  github_release)
+    ./tasks.sh package_tar
+    released_version=$(get_last_version_from_changelog "${changelog_file}")
+    gh_release='./tools/bin/linux/amd64/github-release'
+    if [[ ! -f $gh_release ]];then
+      cd tools
+      wget --quiet https://github.com/aktau/github-release/releases/download/v0.7.2/linux-amd64-github-release.tar.bz2
+      tar xf linux-amd64-github-release.tar.bz2
+      rm linux-amd64-github-release.tar.bz2
+      cd ..
+    fi
+    github-release release \
+      --user ai-traders \
+      --repo liget \
+      --tag $released_version \
+      --name $released_version \
+      --description "LiGet $released_version, docker image tomzo/liget:$released_version"
+      --pre-release
+
+    github-release upload \
+      --user ai-traders \
+      --repo liget \
+      --tag $released_version \
+      --name "liget-binaries-$released_version.tar.gz"
+      --file "liget-binaries-$released_version.tar.gz"
+    ;;
   publish_docker_private)
     source_imagerc "${image_dir}"  "${imagerc_filename}"
     production_image_tag=$(get_last_version_from_changelog "${changelog_file}")
     docker_push "${AIT_DOCKER_IMAGE_NAME}" "${AIT_DOCKER_IMAGE_TAG}" "${production_image_tag}"
     exit $?
+    ;;
+  publish_docker_public)
+    source_imagerc "${image_dir}"  "${imagerc_filename}"
+    production_image_tag=$(get_last_version_from_changelog "${changelog_file}")
+    docker login --username tomzo --password ${DOCKERHUB_PASSWORD}
+    testing_image_tag="${AIT_DOCKER_IMAGE_TAG}"
+
+    log_info "testing_image_tag set to: ${testing_image_tag}"
+    log_info "production_image_tag set to: ${production_image_tag}"
+    if ! docker images ${AIT_DOCKER_IMAGE_NAME} | awk '{print $2}' | grep ${testing_image_tag} 1>/dev/null ; then
+      # if docker image does not exist locally, then "docker tag" will fail,
+      # so pull it. However, do not always pull it, the image may be not pushed
+      # and only available locally.
+      set -x -e
+      docker pull "${AIT_DOCKER_IMAGE_NAME}:${testing_image_tag}"
+    fi
+    set -x -e
+    # When tagging a docker image using docker 1.8.3, we can use `docker tag -f`.
+    # When using docker 1.12, there is no `-f` option, but `docker tag`
+    # always works as if force was used.
+    docker tag -f "${AIT_DOCKER_IMAGE_NAME}:${testing_image_tag}" "${public_image_name}:${production_image_tag}" || docker tag "${AIT_DOCKER_IMAGE_NAME}:${testing_image_tag}" "${public_image_name}:${production_image_tag}"
+    docker tag -f "${AIT_DOCKER_IMAGE_NAME}:${testing_image_tag}" "${public_image_name}:latest" || docker tag "${AIT_DOCKER_IMAGE_NAME}:${testing_image_tag}" "${public_image_name}:latest"
+    if [[ "${dryrun}" != "true" ]];then
+      docker push "${public_image_name}:${production_image_tag}"
+      docker push "${public_image_name}:latest"
+    fi
+    set +x +e
+    exit $?
+    ;;
+  package_tar)
+    released_version=$(get_last_version_from_changelog "${changelog_file}")
+    tar -zcvf "liget-binaries-$released_version.tar.gz" publish
     ;;
     *)
       echo "Invalid command: '${command}'"

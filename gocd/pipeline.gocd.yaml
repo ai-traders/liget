@@ -102,3 +102,38 @@ pipelines:
                     arguments:
                       - -c
                       - ./tasks.sh publish_docker_private
+            docker_public:
+              resources:
+                - docker_builder
+              secure_variables:
+                DOCKERHUB_PASSWORD: CioRNFm+WifCZPcqU+78+A==
+              tasks:
+                - fetch:
+                    stage: test_pack
+                    job: docker
+                    source: imagerc
+                    destination: docker/
+                    is_file: true
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks.sh publish_docker_public
+      - github_release:
+          clean_workspace: true
+          jobs:
+            github:
+              elastic_profile_id: w.c2.m2048.e10
+              secure_variables:
+                GITHUB_TOKEN: J2VpEh3xtuzZuU+kaHVCLM/glpKCSXKhGt3XCmZZTOLARPVLXFPKUaKiqeQ5smiT
+              tasks:
+               - fetch:
+                  stage: build
+                  job: build
+                  source: src/LiGet.App/bin/Release/netcoreapp2.0/publish
+                  destination:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks.sh github_release
