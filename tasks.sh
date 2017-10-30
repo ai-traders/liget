@@ -129,7 +129,7 @@ case "${command}" in
       rm linux-amd64-github-release.tar.bz2
       cd ..
     fi
-    github-release release \
+    $gh_release release \
       --user ai-traders \
       --repo liget \
       --tag $released_version \
@@ -137,7 +137,7 @@ case "${command}" in
       --description "LiGet $released_version, docker image tomzo/liget:$released_version"
       --pre-release
 
-    github-release upload \
+    $gh_release upload \
       --user ai-traders \
       --repo liget \
       --tag $released_version \
