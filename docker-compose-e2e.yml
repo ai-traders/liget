@@ -1,0 +1,18 @@
+version: '2'
+services:
+  default:
+    container_name: default
+    image: docker-registry.ai-traders.com/mono-ide:1.3.0
+    links:
+      - liget:liget
+    volumes:
+      - ${IDE_IDENTITY}:/ide/identity:ro
+      - ${IDE_WORK}:/ide/work
+    env_file:
+      - ${ENV_FILE}
+  liget:
+    image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}
+    volumes:
+      - ${IDE_WORK}/e2e/data:/data
+    env_file:
+      - ${ENV_FILE}

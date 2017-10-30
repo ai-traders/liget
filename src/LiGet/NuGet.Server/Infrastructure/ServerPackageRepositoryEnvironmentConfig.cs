@@ -37,7 +37,7 @@ namespace LiGet.NuGet.Server.Infrastructure
         {
             get
             {
-                return GetBoolean(configuration.GetSection("LIGET_ALLOW_OVERRIDE"), false);
+                return GetBoolean(configuration.GetSection("LIGET_ALLOW_OVERWRITE"), false);
             }
         }
 
@@ -83,7 +83,7 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         public string RootPath {
             get {
-                return GetString(configuration.GetSection("LIGET_ROOT_PATH"), 
+                return GetString(configuration.GetSection("LIGET_SIMPLE_ROOT_PATH"), 
                     Path.Combine(Directory.GetCurrentDirectory(), "simple"));
             }
         }

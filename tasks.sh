@@ -3,6 +3,23 @@ set -e
 # PATCH currently failing private caching server
 rm -f ~/.nuget/NuGet/NuGet.Config
 
+if [[ ! -f ./releaser ]];then
+  wget --quiet http://http.archive.ai-traders.com/releaser/1.0.3/releaser
+fi
+source ./releaser
+if [[ ! -f ./docker-ops ]];then
+  wget --quiet http://http.archive.ai-traders.com/docker-ops/0.2.1/docker-ops
+fi
+source ./docker-ops
+# This goes as last in order to let end user variables override default values
+releaser_init
+
+image_name_no_registry="liget"
+private_image_name="docker-registry.ai-traders.com/${image_name_no_registry}"
+public_image_name="tomzo/${image_name_no_registry}"
+image_dir="./docker"
+imagerc_filename="imagerc"
+
 function make_clean_dir {
   dir=$1
   rm -rf $dir && mkdir -p $dir && cd $dir
@@ -42,12 +59,31 @@ case "${command}" in
     ide "./tasks.sh prep_qe2e"
     ide --idefile Idefile.e2e "./e2e/run.sh"
     ;;
-  prep_itest)
+  build_inputs)
     build_inputs
     ;;
   itest)
-    ide "./tasks.sh prep_itest"
+    ide "./tasks.sh build_inputs"
     ide --idefile Idefile.e2e "./e2e/run.sh"
+    ;;
+  build_docker)
+    # pwd is the ${image_dir}
+    image_tag=$2
+    docker_build "${image_dir}" "${imagerc_filename}" "${private_image_name}" "$image_tag"
+    exit $?
+    ;;
+  test_docker)
+    source "${image_dir}/${imagerc_filename}"
+    if [[ -z "AIT_DOCKER_IMAGE_NAME" ]]; then
+      echo "fail! AIT_DOCKER_IMAGE_NAME not set"
+      return 1
+    fi
+    if [[ -z "AIT_DOCKER_IMAGE_TAG" ]]; then
+      echo "fail! AIT_DOCKER_IMAGE_TAG not set"
+      return 1
+    fi
+    ide "./tasks.sh build_inputs"
+    ide --idefile Idefile.e2e-docker "./e2e/run.sh"
     ;;
     *)
       echo "Invalid command: '${command}'"

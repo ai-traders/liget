@@ -199,3 +199,7 @@ docs/tools/FSharp.Formatting.svclog
 /e2e/test_one-exact-package/paket/paket.lock
 /e2e/test_one-exact-package/paket-pinned/paket.lock
 /e2e/test_one-exact-package/paket-locked/.paket/Paket.Restore.targets
+/docker/imagerc*
+/docker-ops
+/releaser
+/e2e/data
