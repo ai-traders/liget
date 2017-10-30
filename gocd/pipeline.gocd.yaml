@@ -127,11 +127,11 @@ pipelines:
               secure_variables:
                 GITHUB_TOKEN: J2VpEh3xtuzZuU+kaHVCLM/glpKCSXKhGt3XCmZZTOLARPVLXFPKUaKiqeQ5smiT
               tasks:
-               - fetch:
-                  stage: build
-                  job: build
-                  source: src/LiGet.App/bin/Release/netcoreapp2.0/publish
-                  destination:
+                - fetch:
+                    stage: build
+                    job: build
+                    source: src/LiGet.App/bin/Release/netcoreapp2.0/publish
+                    destination:
                 - exec:
                     command: /bin/bash
                     arguments:
