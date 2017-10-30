@@ -24,6 +24,24 @@ This project aims at following:
 
 # Usage
 
+## On client side
+
+For **dotnet CLI and nuget** you need to configure nuget config `~/.nuget/NuGet/NuGet.Config` with something like:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="nuget.org" value="https://www.nuget.org/api/v2" protocolVersion="2" />
+    <add key="liget" value="http://liget:9011/api/v2" protocolVersion="2" />
+  </packageSources>
+</configuration>
+```
+
+For paket, in `paket.dependencies`, just specify another source:
+```
+source http://liget:9011/api/v2
+```
+
 ## Docker
 
 The simplest start command is
