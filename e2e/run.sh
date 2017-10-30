@@ -12,6 +12,9 @@ cat << EOF > /home/ide/.nuget/NuGet/NuGet.Config
 </configuration>
 EOF
 
+echo "Sleeping 4s to wait for server to be ready"
+sleep 4
+
 E2E_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 for test_dir in `find $E2E_DIR -mindepth 1 -type d -name 'test_*'`
