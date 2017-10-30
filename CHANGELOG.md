@@ -1,4 +1,4 @@
-### 0.1.1 - Unreleased
+### 0.1.1 (2017-Oct-30)
 
 Fix release scripts
 
