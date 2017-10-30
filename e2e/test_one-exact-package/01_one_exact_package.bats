@@ -15,7 +15,6 @@ load '/opt/bats-assert/load.bash'
 
 @test "paket install pinned package version" {
   run /bin/bash -c "cd paket-pinned && paket install"
-  assert_output --partial "Downloading liget-test1 1.0.0"
   assert_equal "$status" 0
 }
 
