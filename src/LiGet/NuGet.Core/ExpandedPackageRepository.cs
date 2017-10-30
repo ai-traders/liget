@@ -147,7 +147,11 @@ namespace NuGet
                 return null;
             }
 
-            return GetPackageInternal(packageId, version);
+            //TODO resign from IFileSystem
+            var physicalFs = (PhysicalFileSystem)_fileSystem;
+            string root = physicalFs.Root;
+
+            return LocalFolderUtility.GetPackageV3(root, packageId, version, _logAdapter);
         }
 
         public IEnumerable<LocalPackageInfo> FindPackagesById(string packageId)
@@ -156,41 +160,6 @@ namespace NuGet
             var physicalFs = (PhysicalFileSystem)_fileSystem;
             string root = physicalFs.Root;
             return LocalFolderUtility.GetPackagesV3(root, packageId.ToLowerInvariant(), _logAdapter);
-            // foreach (var versionDirectory in _fileSystem.GetDirectoriesSafe(packageId))
-            // {
-            //     var versionDirectoryName = Path.GetFileName(versionDirectory);
-            //     SemanticVersion version;
-            //     if (SemanticVersion.TryParse(versionDirectoryName, out version) &&
-            //         Exists(packageId, version))
-            //     {
-            //         IPackage package = null;
-
-            //         try
-            //         {
-            //             package = GetPackageInternal(packageId, version);
-            //         }
-            //         catch (XmlException ex)
-            //         {
-            //             Logger.Log(MessageLevel.Warning, ex.Message);
-            //             Logger.Log(
-            //                 MessageLevel.Warning, 
-            //                 NuGetResources.Manifest_NotFound, 
-            //                 string.Format("{0}/{1}", packageId, version));
-            //             continue;
-            //         }
-            //         catch (IOException ex)
-            //         {
-            //             Logger.Log(MessageLevel.Warning, ex.Message);
-            //             Logger.Log(
-            //                 MessageLevel.Warning, 
-            //                 NuGetResources.Manifest_NotFound, 
-            //                 string.Format("{0}/{1}", packageId, version));
-            //             continue;
-            //         }
-
-            //         yield return package;
-            //     }
-            // }
         }
 
         public IEnumerable<LocalPackageInfo> GetPackages()
@@ -203,23 +172,6 @@ namespace NuGet
         private static string GetPackageRoot(string packageId, SemanticVersion version)
         {
             return Path.Combine(packageId, version.ToNormalizedString());
-        }
-
-        private LocalPackageInfo GetPackageInternal(string packageId, SemanticVersion version)
-        {
-            // var packagePath = GetPackagePath(packageId, version);
-            // var manifestPath = Path.Combine(GetPackageRoot(packageId, version), packageId + Constants.ManifestExtension);
-            // return new ZipPackage(() => _fileSystem.OpenFile(packagePath), () => _fileSystem.OpenFile(manifestPath));
-            throw new NotImplementedException();
-        }
-
-        private string GetPackagePath(string packageId, SemanticVersion version)
-        {
-            throw new NotImplementedException();
-            //return _pathResolver.GetPackageFilePath(packageId, new NuGetVersion(version));
-            // return Path.Combine(
-            //     GetPackageRoot(packageId, version),
-            //     packageId + "." + version.ToNormalizedString() + Constants.PackageExtension);
         }
 
         internal Func<Stream> GetStream(PackageIdentity packageIdentity)
