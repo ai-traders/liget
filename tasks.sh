@@ -76,14 +76,52 @@ case "${command}" in
     source "${image_dir}/${imagerc_filename}"
     if [[ -z "AIT_DOCKER_IMAGE_NAME" ]]; then
       echo "fail! AIT_DOCKER_IMAGE_NAME not set"
-      return 1
+      exit 1
     fi
     if [[ -z "AIT_DOCKER_IMAGE_TAG" ]]; then
       echo "fail! AIT_DOCKER_IMAGE_TAG not set"
-      return 1
+      exit 1
     fi
     ide "./tasks.sh build_inputs"
     ide --idefile Idefile.e2e-docker "./e2e/run.sh"
+    ;;
+  prepare_code_release)
+    version=$2
+    if [[ -z "$version" ]]; then
+      version=$(get_last_version_from_changelog "${changelog_file}")
+    fi
+    set_version_in_changelog "${changelog_file}" "${version}"
+    exit $?
+    ;;
+  code_release)
+    # conditional release
+    git fetch origin
+    current_commit_git_tags=$(git tag -l --points-at HEAD)
+    if [[ "${current_commit_git_tags}" != "" ]];then
+      log_error "Current commit is already tagged"
+      exit 1
+    else
+      log_info "Current commit has no tags, starting code release..."
+      version_from_changelog=$(get_last_version_from_changelog "${changelog_file}")
+      validate_version_is_semver "${version_from_changelog}"
+      changelog_first_line=$(cat ${changelog_file} | head -1)
+      if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]];then
+        log_error "Top of changelog has 'Unreleased' flag"
+        exit 1
+      fi
+      if git tag | grep "${version_from_changelog}"; then
+        log_error "The last version from changelog was already git tagged: ${version_from_changelog}"
+        exit 1
+      fi
+      git tag "${version_from_changelog}" && git push origin "${version_from_changelog}"
+    fi
+    exit $?
+    ;;
+  publish_docker_private)
+    source_imagerc "${image_dir}"  "${imagerc_filename}"
+    production_image_tag=$(get_last_version_from_changelog "${changelog_file}")
+    docker_push "${AIT_DOCKER_IMAGE_NAME}" "${AIT_DOCKER_IMAGE_TAG}" "${production_image_tag}"
+    exit $?
     ;;
     *)
       echo "Invalid command: '${command}'"

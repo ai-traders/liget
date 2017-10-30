@@ -73,3 +73,32 @@ pipelines:
                   arguments:
                     - -c
                     - "./tasks.sh test_docker"
+      - release:
+          clean_workspace: true
+          jobs:
+            code:
+              elastic_profile_id: w.c2.m2048.e10
+              tasks:
+               - exec:
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - "./tasks.sh code_release"
+      - publish:
+          clean_workspace: true
+          jobs:
+            docker_private:
+              resources:
+                - docker_builder
+              tasks:
+                - fetch:
+                    stage: test_pack
+                    job: docker
+                    source: imagerc
+                    destination: docker/
+                    is_file: true
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks.sh publish_docker_private
