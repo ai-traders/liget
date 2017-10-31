@@ -1,5 +1,6 @@
 using System.IO;
 using Autofac;
+using LiGet.Cache.Proxy;
 using LiGet.NuGet.Server.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -16,8 +17,9 @@ namespace LiGet.App
                     var configuration = new ConfigurationBuilder()
                         .AddEnvironmentVariables()
                         .Build();
-                    var config = new ServerPackageRepositoryEnvironmentConfig(configuration);                   
+                    var config = new LiGetEnvironmentConfig(configuration);                   
                     builder.RegisterModule(new NuGetServerAutofacModule(config));
+                    builder.RegisterModule(new CachingProxyAutofacModule(config));
                 });
             }));
         }

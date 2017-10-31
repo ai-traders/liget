@@ -24,7 +24,7 @@ load '/opt/bats-assert/load.bash'
 }
 
 @test "dotnet restore exact package version" {
-  run /bin/bash -c "cd dotnet && dotnet restore"
+  run /bin/bash -c "cd dotnet && dotnet restore --no-cache"
   assert_output --partial "Restore completed"
   assert_equal "$status" 0
 }

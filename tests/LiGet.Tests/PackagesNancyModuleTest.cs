@@ -54,7 +54,7 @@ namespace LiGet.Tests
 
         public PackagesNancyModuleTest() {
             packageRepo = new Mock<IPackageService>(MockBehavior.Strict);
-            var bootstrapper = new TestBootstrapper(b => {
+            var bootstrapper = new TestBootstrapper(typeof(PackagesNancyModule), b => {
                 b.RegisterInstance(packageRepo.Object).As<IPackageService>();
             });
             this.browser = new Browser(bootstrapper, ctx => {

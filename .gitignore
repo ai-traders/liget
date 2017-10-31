@@ -205,3 +205,6 @@ docs/tools/FSharp.Formatting.svclog
 /e2e/data
 /e2e/test_update-package/paket/paket.lock
 /e2e/test_update-package/paket-constraint/paket.lock
+/e2e/test_proxy/paket/paket.lock
+/e2e/test_proxy/paket-constraint/paket.lock
+/e2e/test_one-exact-package/paket-pinned/.paket/Paket.Restore.targets

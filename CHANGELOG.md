@@ -1,3 +1,7 @@
+### 0.2.0 - Unreleased
+
+Add caching proxy with v3 API.
+
 ### 0.1.2 (2017-Oct-31)
 
  * cleanup unused code and tests

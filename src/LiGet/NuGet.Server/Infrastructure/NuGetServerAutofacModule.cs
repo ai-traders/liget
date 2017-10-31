@@ -1,4 +1,5 @@
 using Autofac;
+using LiGet.Cache.Proxy;
 using NuGet;
 
 namespace LiGet.NuGet.Server.Infrastructure
@@ -13,15 +14,16 @@ namespace LiGet.NuGet.Server.Infrastructure
 
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterInstance(serverConfig).As<IServerPackageRepositoryConfig>();
-            builder.Register<ExpandedPackageRepository>(c => 
+            builder.RegisterInstance(serverConfig)
+                .As<IServerPackageRepositoryConfig>();            
+            builder.Register<ExpandedPackageRepository>(c =>
                 new ExpandedPackageRepository(c.Resolve<IServerPackageRepositoryConfig>()))
                 .As<ExpandedPackageRepository>()
                 .SingleInstance();
             builder
                 .RegisterType<ServerPackageRepository>()
                 .As<IPackageService>()
-                .SingleInstance();            
+                .SingleInstance();
         }
     }
 

@@ -1,20 +1,21 @@
 using System;
 using System.IO;
+using LiGet.Cache.Proxy;
 using Microsoft.Extensions.Configuration;
 
 namespace LiGet.NuGet.Server.Infrastructure
 {
-    public class ServerPackageRepositoryEnvironmentConfig : IServerPackageRepositoryConfig
+    public class LiGetEnvironmentConfig : IServerPackageRepositoryConfig, ICachingProxyConfig
     {
         private readonly IConfiguration configuration;
         
-        public ServerPackageRepositoryEnvironmentConfig()
+        public LiGetEnvironmentConfig()
             : this(new ConfigurationBuilder()
                         .AddEnvironmentVariables()
                         .Build())
         { }
         
-        public ServerPackageRepositoryEnvironmentConfig(IConfiguration configuration)
+        public LiGetEnvironmentConfig(IConfiguration configuration)
         {
             this.configuration = configuration;
         }
@@ -88,6 +89,11 @@ namespace LiGet.NuGet.Server.Infrastructure
             }
         }
 
-        
+        public string V3NugetIndexSource {
+            get {
+                return GetString(configuration.GetSection("LIGET_CACHE_PROXY_SOURCE_INDEX"), 
+                    "https://api.nuget.org/v3/index.json");
+            }
+        }
     }
 }

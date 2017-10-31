@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Autofac;
+using LiGet.Cache.Proxy;
 using log4net;
 using log4net.Config;
 using Nancy;
@@ -15,7 +16,8 @@ namespace LiGet.Tests
 {
     public class TestBootstrapper : ProgramBootstrapper
     {
-        public static void ConfigureLogging() {
+        public static void ConfigureLogging()
+        {
             // enough to call it, static constructor will be called exactly once
         }
         public static Stream GenerateStreamFromString(string s)
@@ -27,9 +29,10 @@ namespace LiGet.Tests
             stream.Position = 0;
             return stream;
         }
-        static TestBootstrapper() {
+        static TestBootstrapper()
+        {
             var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-            string configText =            
+            string configText =
 @"<log4net>
   <appender name=""ConsoleAppender"" type=""log4net.Appender.ConsoleAppender"">
     <layout type=""log4net.Layout.PatternLayout"">
@@ -49,19 +52,32 @@ namespace LiGet.Tests
     <appender-ref ref=""ConsoleAppender"" />
   </root>
 </log4net>";
-            using (Stream s = GenerateStreamFromString(configText)) {
+            using (Stream s = GenerateStreamFromString(configText))
+            {
                 XmlConfigurator.Configure(logRepository, s);
             }
         }
+        private readonly Type nancyModule;
 
-        //PATCH: Force nancy modules to register, autodiscovery seems to fail when testing
-        public TestBootstrapper(Action<ContainerBuilder> additionalSetup = null)
-            :base(b => {
-                b.RegisterType<PackagesNancyModule>().As<INancyModule>();
-                if(additionalSetup != null)
+        public TestBootstrapper(Type nancyModule, Action<ContainerBuilder> additionalSetup = null)
+            : base(b =>
+            {                
+                b.RegisterType(nancyModule).As<INancyModule>().As(nancyModule);
+                if (additionalSetup != null)
                     additionalSetup(b);
             })
-        {            
+        {
+            this.nancyModule = nancyModule;
+        }
+
+        protected override void ApplicationStartup(ILifetimeScope container, IPipelines pipelines)
+        {
+        }
+
+        // in tests we want to test just one module at a time
+        protected override IEnumerable<INancyModule> GetAllModules(ILifetimeScope container)
+        {
+            return new INancyModule[] { (INancyModule)container.Resolve(nancyModule) };
         }
     }
 }

@@ -30,7 +30,7 @@ namespace LiGet.Tests
                 RunBackgroundTasks = false,
                 RootPath = tmpDir.Path
             };
-            var bootstrapper = new TestBootstrapper(b => {
+            var bootstrapper = new TestBootstrapper(typeof(PackagesNancyModule),b => {
                 b.RegisterModule(new NuGetServerAutofacModule(config));
             });
             this.browser = new Browser(bootstrapper, ctx => {
