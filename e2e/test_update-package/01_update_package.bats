@@ -2,7 +2,7 @@ load '/opt/bats-support/load.bash'
 load '/opt/bats-assert/load.bash'
 
 @test "push private package liget-two v1.0.0" {
-  run /bin/bash -c "cd ../input/liget-two/bin/Debug/ && nuget push liget-two.1.0.0.nupkg -src http://liget:9011/api/v2"
+  run /bin/bash -c "cd ../input/liget-two/bin/Debug/ && dotnet nuget push liget-two.1.0.0.nupkg --source http://liget:9011/api/v2"
   assert_output --partial "http://liget:9011/api/v2"
   assert_equal "$status" 0
 }
@@ -22,7 +22,7 @@ load '/opt/bats-assert/load.bash'
 
 # Publish newer version
 @test "push private package liget-two v2.1.0" {
-  run /bin/bash -c "cd ../input/liget-two/bin/Debug/ && nuget push liget-two.2.1.0.nupkg -src http://liget:9011/api/v2"
+  run /bin/bash -c "cd ../input/liget-two/bin/Debug/ && dotnet nuget push liget-two.2.1.0.nupkg --source http://liget:9011/api/v2"
   assert_output --partial "http://liget:9011/api/v2"
   assert_equal "$status" 0
 }

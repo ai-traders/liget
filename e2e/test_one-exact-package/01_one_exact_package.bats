@@ -2,7 +2,7 @@ load '/opt/bats-support/load.bash'
 load '/opt/bats-assert/load.bash'
 
 @test "push private package liget-test1" {
-  run /bin/bash -c "cd ../input/liget-test1/bin/Debug/ && nuget push liget-test1.1.0.0.nupkg -src http://liget:9011/api/v2"
+  run /bin/bash -c "cd ../input/liget-test1/bin/Debug/ && dotnet nuget push liget-test1.1.0.0.nupkg --source http://liget:9011/api/v2"
   assert_output --partial "http://liget:9011/api/v2"
   assert_equal "$status" 0
 }
