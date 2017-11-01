@@ -59,7 +59,7 @@ pipelines:
       - e2e:
           clean_workspace: true
           jobs:
-            docker:
+            functional:
               elastic_profile_id: w.c2.m2048.e10
               tasks:
                - fetch:
@@ -73,6 +73,32 @@ pipelines:
                   arguments:
                     - -c
                     - "./tasks.sh test_docker"
+               - exec:
+                  run_if: failed
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - dmesg | tail -n 100
+            stress:
+              elastic_profile_id: w.c2.m4096.e200
+              tasks:
+               - fetch:
+                  stage: test_pack
+                  job: docker
+                  source: imagerc
+                  destination: docker/
+                  is_file: true
+               - exec:
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - "./tasks.sh stress_docker"
+               - exec:
+                  run_if: failed
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - dmesg | tail -n 100
       - release:
           clean_workspace: true
           jobs:

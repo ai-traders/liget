@@ -85,6 +85,7 @@ namespace LiGet.Cache.Proxy
                             {
                                 netStream.Write(bytes, 0, bytes.Length);
                                 netStream.Flush();
+                                _log.DebugFormat("Served {0} bytes from cache", bytes.Length);
                             }
                             catch (Exception ex)
                             {

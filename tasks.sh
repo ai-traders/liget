@@ -86,6 +86,18 @@ case "${command}" in
     ide "./tasks.sh build_inputs"
     ide --idefile Idefile.e2e-docker "./e2e/run.sh"
     ;;
+  stress_docker)
+    source "${image_dir}/${imagerc_filename}"
+    if [[ -z "AIT_DOCKER_IMAGE_NAME" ]]; then
+      echo "fail! AIT_DOCKER_IMAGE_NAME not set"
+      exit 1
+    fi
+    if [[ -z "AIT_DOCKER_IMAGE_TAG" ]]; then
+      echo "fail! AIT_DOCKER_IMAGE_TAG not set"
+      exit 1
+    fi
+    ide --idefile Idefile.e2e-docker "cd e2e/stress && ./run.sh"
+    ;;
   prepare_code_release)
     version=$2
     if [[ -z "$version" ]]; then
