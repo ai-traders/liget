@@ -22,3 +22,6 @@ do
     echo "Running tests in $test_dir"
     cd $test_dir && bats .
 done
+
+cd $E2E_DIR/stress
+./run.sh

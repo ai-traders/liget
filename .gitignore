@@ -210,3 +210,4 @@ docs/tools/FSharp.Formatting.svclog
 /e2e/test_proxy/paket-constraint/paket.lock
 /e2e/test_one-exact-package/paket-pinned/.paket/Paket.Restore.targets
 /e2e/test_stress/paket/paket.lock
+/e2e/stress/paket/paket.lock

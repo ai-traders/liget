@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Runtime;
 using System.Threading;
 using log4net;
 using log4net.Config;
@@ -38,7 +39,7 @@ namespace LiGet.App
           }
           XmlConfigurator.Configure(logRepository, config);
 
-          log.Info("Starting http kestrel host");
+          log.InfoFormat("Starting http kestrel host. ServerGC={0}", GCSettings.IsServerGC);
 
           try {
             using(var host = new WebHostBuilder()
