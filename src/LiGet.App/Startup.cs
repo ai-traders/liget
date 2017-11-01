@@ -1,8 +1,10 @@
 using System.IO;
 using Autofac;
+using LiGet.Cache.DBreeze;
 using LiGet.Cache.Proxy;
 using LiGet.NuGet.Server.Infrastructure;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Nancy.Owin;
 
@@ -20,6 +22,7 @@ namespace LiGet.App
                     var config = new LiGetEnvironmentConfig(configuration);                   
                     builder.RegisterModule(new NuGetServerAutofacModule(config));
                     builder.RegisterModule(new CachingProxyAutofacModule(config));
+                    builder.RegisterModule(new DBreezeCacheAutofacModule(config));
                 });
             }));
         }

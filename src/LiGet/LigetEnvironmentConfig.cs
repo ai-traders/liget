@@ -1,11 +1,13 @@
 using System;
 using System.IO;
+using DBreeze;
+using LiGet.Cache.DBreeze;
 using LiGet.Cache.Proxy;
 using Microsoft.Extensions.Configuration;
 
 namespace LiGet.NuGet.Server.Infrastructure
 {
-    public class LiGetEnvironmentConfig : IServerPackageRepositoryConfig, ICachingProxyConfig
+    public class LiGetEnvironmentConfig : IServerPackageRepositoryConfig, ICachingProxyConfig, IDBreezeConfig
     {
         private readonly IConfiguration configuration;
         
@@ -93,6 +95,32 @@ namespace LiGet.NuGet.Server.Infrastructure
             get {
                 return GetString(configuration.GetSection("LIGET_CACHE_PROXY_SOURCE_INDEX"), 
                     "https://api.nuget.org/v3/index.json");
+            }
+        }
+
+        public string CacheBackend {
+            get {
+                return GetString(configuration.GetSection("LIGET_NUPKG_CACHE_BACKEND"), "dbreeze");
+            }
+        }
+
+        public string RootCacheDirectory {
+            get {
+                return GetString(configuration.GetSection("LIGET_NUPKG_CACHE_DBREEZE_ROOT_PATH"), 
+                    Path.Combine(Directory.GetCurrentDirectory(), "cache", "dbreeze"));
+            
+            }
+        }
+
+        public DBreezeConfiguration.eStorage StorageBackend {
+            get {
+                string name = GetString(configuration.GetSection("LIGET_NUPKG_CACHE_DBREEZE_BACKEND"), null);
+                if(name == null || name == "" || name.Contains("disk"))
+                    return DBreezeConfiguration.eStorage.DISK;
+                else if(name.Contains("memory"))
+                    return DBreezeConfiguration.eStorage.MEMORY;
+                else
+                    throw new Exception("Invalid dbreeze backend name " + name);
             }
         }
     }

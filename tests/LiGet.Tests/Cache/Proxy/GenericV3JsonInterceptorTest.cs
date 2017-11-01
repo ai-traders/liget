@@ -34,6 +34,22 @@ namespace LiGet.Tests.Cache.Proxy
             }
         }
 
+        [Fact]
+        public void ShouldReplaceFlatContainerEntryContent() {
+            string input = @"{
+                ""@id"": ""https://api.nuget.org/v3-flatcontainer/"",
+                ""@type"": ""PackageBaseAddress/3.0.0""
+                }";
+            using(var istream = AsStream(input)) {
+                using(var ostream = new MemoryStream())
+                {
+                    interceptor.Intercept(replacements, istream, ostream);
+                    string output = AsString(ostream);
+                    Assert.Equal(@"{""@id"":""http://liget.com:9011/api/cache/v3-flatcontainer/"",""@type"":""PackageBaseAddress/3.0.0""}", output);
+                }
+            }
+        }
+
         private static string AsString(MemoryStream ostream)
         {
             return Encoding.UTF8.GetString(ostream.ToArray());

@@ -4,13 +4,11 @@
 
 A nuget server created with linux-first approach.
 
-## Why?
+### Why? and goals
 
 There seems to be no good nuget server for hosting private nuget packages and caching,
 when working mainly with linux and dotnet core.
 Running windows just to host a several nuget packages seems like a big waste.
-
-## Goals
 
 This project aims at following:
  * provide **self-hosted** nuget server for private package hosting.
@@ -22,9 +20,25 @@ This project aims at following:
  * easy to develop on linux in VS Code, not only in VS on windows.
  * if possible, implement caching mode for public packages from nuget.org
 
+## Features and limitations
+
+ * Limited NuGet V2 API for hosting private packages. Includes endpoints `FindPackagesById()`, `Packages()` and `PUT /api/v2`.
+ Which is sufficient for clients to download, push, find or restore packages.
+ * Caching proxy of with limited NuGet V3 API. Allows to cache `.nupkg` packages on server,
+ rather than downloading them from the Internet each time.
+ It intercepts responses from selected services of `https://api.nuget.org/v3/index.json`
+ replacing `https://api.nuget.org/v3` by local LiGet server URL.
+
+Not implemented:
+
+ * V2 search, filter and alike queries. These seem to used only by UI or nuget gallery.
+ * Authentication and user-based acceess. Currently the server is open for all requests.
+
 # Usage
 
 ## On client side
+
+### Usage only as private repository
 
 For **dotnet CLI and nuget** you need to configure nuget config `~/.nuget/NuGet/NuGet.Config` with something like:
 ```xml
@@ -41,6 +55,29 @@ For paket, in `paket.dependencies`, just specify another source:
 ```
 source http://liget:9011/api/v2
 ```
+
+### Usage as caching proxy
+
+For **dotnet CLI and nuget** you need to configure nuget config `~/.nuget/NuGet/NuGet.Config` with something like:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="liget-proxy" value="http://liget:9011/api/cache/v3/index.json" protocolVersion="3" />
+    <add key="liget" value="http://liget:9011/api/v2" protocolVersion="2" />
+  </packageSources>
+</configuration>
+```
+
+For paket, in `paket.dependencies`, just specify liget as the 2 only sources
+```
+source http://liget:9011/api/cache/v3/index.json
+# public packages...
+
+source http://liget:9011/api/v2
+# private packages...
+```
+
 
 ## Docker
 
@@ -78,6 +115,16 @@ Everything can be configured with environment variables:
  * `LIGET_FRAMEWORK_FILTERING`, by default `true`. Not implemented.
  * `LIGET_ENABLE_DELISTING`, by default `true`. Not implemented.
  * `LIGET_IGNORE_SYMBOLS`, by default `false`. Not implemented.
+
+#### Cache
+
+ * `LIGET_CACHE_PROXY_SOURCE_INDEX` - address of original V3 API to cache. By default `https://api.nuget.org/v3/index.json`.
+ * `LIGET_NUPKG_CACHE_BACKEND` - backend of the .nupkg caching proxy. By default `dbreeze`,
+ which, currently is the only implementation.
+ * `LIGET_NUPKG_CACHE_DBREEZE_ROOT_PATH` - root directory where dbreeze will store cached packages.
+ By default `/data/cache/dbreeze`.
+ * `LIGET_NUPKG_CACHE_DBREEZE_BACKEND` - storage backend of dbreeze, can be `disk` or `memory`.
+ By default `disk`.
 
 #### Logging
 

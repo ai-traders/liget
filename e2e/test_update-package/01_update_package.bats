@@ -14,8 +14,8 @@ load '/opt/bats-assert/load.bash'
   assert [ -e 'nuget/liget-two.1.0.0' ]
 }
 
-@test "paket install latest package version (1.0.0)" {
-  run /bin/bash -c "cd paket && paket install"
+@test "paket update latest package version (1.0.0)" {
+  run /bin/bash -c "cd paket && paket update"
   assert_equal "$status" 0
   assert [ -e 'paket/packages/liget-two/liget-two.1.0.0.nupkg' ]
 }

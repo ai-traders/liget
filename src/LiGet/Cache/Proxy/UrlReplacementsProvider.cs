@@ -16,14 +16,11 @@ namespace LiGet.Cache.Proxy
             v3flatcontainer = config.V3NugetIndexSource.Replace("v3/index.json","v3-flatcontainer");
         }
 
-        public Uri GetOriginNupkgUri(string relativeLigetPathAfterFlatContainer)
+        public Uri GetOriginUri(Uri fullLiGetUrl)
         {
-            return new Uri(v3flatcontainer + "/" + relativeLigetPathAfterFlatContainer);
-        }
-
-        public Uri GetOriginUri(string relativeLigetPathAfterV3)
-        {
-            return new Uri(v3baseAddress + "/" + relativeLigetPathAfterV3);
+            string absoluteLiget = fullLiGetUrl.AbsoluteUri;
+            string ligetBase = new Uri(fullLiGetUrl.GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped) + "/api/cache/v3").AbsoluteUri;
+            return new Uri(absoluteLiget.Replace(ligetBase, v3baseAddress));
         }
 
         public Dictionary<string, string> GetReplacements(string ligetV3Url)

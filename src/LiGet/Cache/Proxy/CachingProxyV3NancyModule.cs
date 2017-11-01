@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading.Tasks;
 using Nancy;
 using Newtonsoft.Json;
 
@@ -14,12 +15,13 @@ namespace LiGet.Cache.Proxy
     {
         private static readonly log4net.ILog _log = log4net.LogManager.GetLogger(typeof(CachingProxyV3NancyModule));
 
-        static readonly string basePath = "/api/cache/v3";
+        static readonly string basePath = "/api/cache";
         private IHttpClient client;
         private IV3JsonInterceptor interceptor;
         private readonly IUrlReplacementsProvider replacementsProvider;
 
-        public CachingProxyV3NancyModule(IHttpClient client, IV3JsonInterceptor interceptor, IUrlReplacementsProvider replacementsProvider)
+        public CachingProxyV3NancyModule(IHttpClient client, IV3JsonInterceptor interceptor, 
+            IUrlReplacementsProvider replacementsProvider, INupkgCacheProvider nupkgCache)
             :base(basePath)
         {
             this.client = client;
@@ -31,9 +33,8 @@ namespace LiGet.Cache.Proxy
             base.Get<Response>("/{path*}", args => {
                 string myV3Url = this.GetServiceUrl().AbsoluteUri;
                 Dictionary<string, string> replacements = replacementsProvider.GetReplacements(myV3Url);
-                string pathAndQuery = args.path + this.Request.Url.Query;
                 var request = new HttpRequestMessage() {
-                                            RequestUri = replacementsProvider.GetOriginUri(pathAndQuery),                                            
+                                            RequestUri = replacementsProvider.GetOriginUri(this.Request.Url),                                            
                                             Method = HttpMethod.Get,
                                         };
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -55,6 +56,83 @@ namespace LiGet.Cache.Proxy
                         }
                     }
                 };
+            });
+
+            base.Get<Response>("/v3-flatcontainer/{package}/{version}/{filename}", args =>
+            {
+                string package = args.package;
+                string version = args.version;
+                string path = package + "/" + version + "/" + args.filename;
+                byte[] hit;
+                using(var tx = nupkgCache.OpenTransaction()) {
+                    hit = tx.TryGet(args.package, args.version);
+                }
+                if(hit == null) { // cache miss
+                    var request = new HttpRequestMessage()
+                    {
+                        RequestUri = replacementsProvider.GetOriginUri(this.Request.Url),
+                        Method = HttpMethod.Get,
+                    };
+                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
+                    _log.DebugFormat("Cache miss. Proxying {0} to {1}", this.Request.Url, request.RequestUri);
+                    var originalResponse = client.SendAsync(request).Result;
+                    return new DisposingResponse(originalResponse)
+                    {
+                        ContentType = originalResponse.Content.Headers.ContentType.MediaType,
+                        Contents = netStream =>
+                        {
+                            try
+                            {
+                                using(var cacheTx = nupkgCache.OpenTransaction()) {
+                                    Stream originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
+                                    using(var ms = new MemoryStream((int)originalResponse.Content.Headers.ContentLength.GetValueOrDefault(4096))) {
+                                        originalStream.CopyTo(ms);
+                                        byte[] value = ms.ToArray();
+                                        var writing = netStream.WriteAsync(value, 0, value.Length);
+                                        try {
+                                            cacheTx.Insert(package, version, value);    
+                                        }
+                                        catch(Exception cacheError){
+                                            _log.Error("Failed to insert package to cache", cacheError);
+                                        }
+                                        finally {
+                                            writing.Wait();
+                                            netStream.Flush();
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _log.Error("Something went wrong when serving nupkg", ex);
+                                throw new Exception("Serving nupkg failed", ex);
+                            }
+                            finally {
+                                originalResponse.Dispose();
+                            }
+                        }
+                    };
+                }
+                else { // cache hit, return from cache
+                    _log.DebugFormat("Cache hit. Serving {0} from cache", this.Request.Url);
+                    return new DisposingResponse()
+                    {
+                        ContentType = "application/octet-stream",
+                        Contents = netStream =>
+                        {
+                            try
+                            {
+                                netStream.Write(hit, 0, hit.Length);
+                                netStream.Flush();
+                            }
+                            catch (Exception ex)
+                            {
+                                _log.Error("Something went wrong when serving nupkg from cache", ex);
+                                throw new Exception("Serving nupkg from cache failed", ex);
+                            }
+                        }
+                    };
+                }
             });
 
             base.Head<object>(@"^(.*)$", new Func<dynamic,object>(ThrowNotSupported));
@@ -92,7 +170,7 @@ namespace LiGet.Cache.Proxy
 
         public Uri GetServiceUrl()
         {
-            return new Uri(new Uri(base.Request.Url).GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped) + basePath);
+            return new Uri(new Uri(base.Request.Url).GetComponents(UriComponents.SchemeAndServer, UriFormat.Unescaped) + basePath + "/v3");
         }
     }
 }
