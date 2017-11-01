@@ -16,9 +16,6 @@ RUN mkdir -p /home/liget /home/liget/.nuget/NuGet &&\
     useradd -d /home/liget -s /bin/bash -u 1000 -g liget liget &&\
     chown -R liget:liget /home/liget
 
-# avoid access problem when running as root, #11837
-RUN mkdir -p /root/.nuget/NuGet
-
 ADD liget.sh /liget.sh
 RUN chmod +x /liget.sh
 

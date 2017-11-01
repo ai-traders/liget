@@ -100,7 +100,7 @@ chown $NEWUID:$NEWGID -R /etc/liget /home/liget
 
 cd /data
 if [[ $NEWGID != 0 ]]; then
-  exec sudo -u liget -E dotnet /app/LiGet.App.dll
+  exec sudo -u liget -E -H dotnet /app/LiGet.App.dll
 else
   echo "WARNING: running liget as root"
   exec dotnet /app/LiGet.App.dll
