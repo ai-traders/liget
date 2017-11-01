@@ -4,7 +4,7 @@ using DBreeze.Transactions;
 
 namespace LiGet.Cache.DBreeze
 {
-    public class DBreezeCacheTransaction : ICacheTransaction
+    public class DBreezeCacheTransaction : INupkgCacheTransaction
     {
         private readonly Transaction tx;
         public DBreezeCacheTransaction(Transaction tx)
@@ -21,7 +21,7 @@ namespace LiGet.Cache.DBreeze
         public byte[] TryGet(string table, string key) {
             var row = this.tx.Select<string,byte[]>(table, key);
             if(row.Exists) {
-                return row.Value;
+                return row.Value;                
             }
             return null;
         }

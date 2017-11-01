@@ -32,7 +32,7 @@ This project aims at following:
 Not implemented:
 
  * V2 search, filter and alike queries. These seem to used only by UI or nuget gallery.
- * Authentication and user-based acceess. Currently the server is open for all requests.
+ * Authentication and user-based access. Currently the server is open for all requests.
 
 # Usage
 

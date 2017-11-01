@@ -18,15 +18,17 @@ namespace LiGet.Tests.Cache.Proxy
         private readonly IV3JsonInterceptor interceptor;
         private readonly Mock<IUrlReplacementsProvider> replacementsProvider;
         private readonly Mock<INupkgCacheProvider> cacheProvider;
+        Mock<IPackageMetadataCache> metaCacheProvider;
         private Browser browser;
 
         string originalResponseContent = "{ \"message\" : \"response body\" }";
         private HttpResponseMessage originalResponse;
 
-        Mock<ICacheTransaction> tx;
+        Mock<INupkgCacheTransaction> tx;
 
         public CachingProxyV3NancyModuleTest()
         {
+            metaCacheProvider = new Mock<IPackageMetadataCache>(MockBehavior.Strict);
             client = new Mock<IHttpClient>(MockBehavior.Strict);
             originalResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
             {
@@ -39,7 +41,7 @@ namespace LiGet.Tests.Cache.Proxy
             replacementsProvider = new Mock<IUrlReplacementsProvider>(MockBehavior.Strict);
             replacementsProvider.Setup(p => p.GetReplacements(It.IsAny<string>())).Returns(new Dictionary<string,string>());
             cacheProvider = new Mock<INupkgCacheProvider>(MockBehavior.Strict);
-            tx = new Mock<ICacheTransaction>(MockBehavior.Strict);
+            tx = new Mock<INupkgCacheTransaction>(MockBehavior.Strict);
             cacheProvider.Setup(c => c.OpenTransaction()).Returns(tx.Object);
             tx.Setup(t => t.TryGet(It.IsAny<string>(), It.IsAny<string>())).Returns(null as byte[]);
             tx.Setup(t => t.Dispose());
@@ -50,6 +52,7 @@ namespace LiGet.Tests.Cache.Proxy
                 b.RegisterInstance(interceptor).As<IV3JsonInterceptor>();
                 b.RegisterInstance(replacementsProvider.Object).As<IUrlReplacementsProvider>();
                 b.RegisterInstance(cacheProvider.Object).As<INupkgCacheProvider>();
+                b.RegisterInstance(metaCacheProvider.Object).As<IPackageMetadataCache>();
             });
             this.browser = new Browser(bootstrapper, ctx => {
                 ctx.HostName("testhost");
@@ -171,6 +174,59 @@ namespace LiGet.Tests.Cache.Proxy
             client.Verify(c => c.SendAsync(It.IsAny<HttpRequestMessage>()), Times.Never());
             tx.Verify(t => t.TryGet("system.net.http","4.3.3"), Times.Once());
             tx.Verify(t => t.Insert("system.net.http","4.3.3", It.IsAny<byte[]>()), Times.Never());
+        }
+
+        [Fact]
+        public void RequestToPackageMetadataWhenCacheMissShouldForwardToOriginAndInsertAlteredContentToCache()
+        {
+            metaCacheProvider.Setup(m => m.TryGet(It.IsAny<string>())).Returns(null as byte[]);
+            metaCacheProvider.Setup(m => m.Insert(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<byte[]>()));
+            replacementsProvider.Setup(p => p.GetReplacements(It.IsAny<string>()))
+                .Returns(new Dictionary<string,string>() {
+                    { "response body", "alter" }
+                });
+            replacementsProvider.Setup(p => p.GetOriginUri(new Uri("http://testhost/api/cache/v3/registration3/log4net/index.json")))
+                .Returns(new Uri("http://origin.com/v3/registration3/log4net/index.json"));
+            var result = browser.Get("/api/cache/v3/registration3/log4net/index.json", with =>
+            {
+                with.HttpRequest();
+            }).Result;
+            string response = result.Body.AsString();
+            Assert.Equal("{\"message\":\"alter\"}", response);
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            client.Verify(c => c.SendAsync(It.Is<HttpRequestMessage>(req => 
+                req.Method == HttpMethod.Get &&
+                req.RequestUri.AbsoluteUri == "http://origin.com/v3/registration3/log4net/index.json")), 
+                Times.Once());
+            
+            metaCacheProvider.Verify(m => m.TryGet(It.IsAny<string>()), Times.Once());
+            metaCacheProvider.Verify(m => m.Insert(It.Is<string>(n => n == "log4net"), It.IsAny<DateTimeOffset>(), 
+                It.Is<byte[]>(content => 
+                    Encoding.UTF8.GetString(content) == "{\"message\":\"alter\"}"
+                )));
+        }
+
+        [Fact]
+        public void RequestToPackageMetadataWhenCacheHitShouldNotForwardToOriginAndNotInsertContentToCache()
+        {
+            metaCacheProvider.Setup(m => m.TryGet(It.IsAny<string>())).Returns(Encoding.UTF8.GetBytes("cached"));
+            metaCacheProvider.Setup(m => m.Insert(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<byte[]>()));
+            replacementsProvider.Setup(p => p.GetReplacements(It.IsAny<string>()))
+                .Returns(new Dictionary<string,string>() {
+                    { "response body", "alter" }
+                });
+            replacementsProvider.Setup(p => p.GetOriginUri(new Uri("http://testhost/api/cache/v3/registration3/log4net/index.json")))
+                .Returns(new Uri("http://origin.com/v3/registration3/log4net/index.json"));
+            var result = browser.Get("/api/cache/v3/registration3/log4net/index.json", with =>
+            {
+                with.HttpRequest();
+            }).Result;
+            string response = result.Body.AsString();
+            Assert.Equal("cached", response);
+            Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+            client.Verify(c => c.SendAsync(It.IsAny<HttpRequestMessage>()), Times.Never());            
+            metaCacheProvider.Verify(m => m.TryGet(It.IsAny<string>()), Times.Once());
+            metaCacheProvider.Verify(m => m.Insert(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<byte[]>()), Times.Never());
         }
     }
 }

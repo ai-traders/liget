@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace LiGet.Cache
 {
-    public interface ICacheTransaction : IDisposable
+    public interface INupkgCacheTransaction : IDisposable
     {
          byte[] TryGet(string package, string version);
 

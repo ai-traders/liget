@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -19,40 +20,149 @@ namespace LiGet.Cache.Proxy
         private IHttpClient client;
         private IV3JsonInterceptor interceptor;
         private readonly IUrlReplacementsProvider replacementsProvider;
+        private readonly IPackageMetadataCache metadataCache;
 
-        public CachingProxyV3NancyModule(IHttpClient client, IV3JsonInterceptor interceptor, 
-            IUrlReplacementsProvider replacementsProvider, INupkgCacheProvider nupkgCache)
-            :base(basePath)
+        public CachingProxyV3NancyModule(IHttpClient client, IV3JsonInterceptor interceptor,
+            IUrlReplacementsProvider replacementsProvider, INupkgCacheProvider nupkgCache,
+            IPackageMetadataCache metadataCache)
+            : base(basePath)
         {
+            this.metadataCache = metadataCache;
             this.client = client;
             this.interceptor = interceptor;
             this.replacementsProvider = replacementsProvider;
 
             this.OnError.AddItemToEndOfPipeline(HandleError);
 
-            base.Get<Response>("/{path*}", args => {
+            base.Get<Response>("/{path*}", args =>
+            {
                 string myV3Url = this.GetServiceUrl().AbsoluteUri;
                 Dictionary<string, string> replacements = replacementsProvider.GetReplacements(myV3Url);
-                var request = new HttpRequestMessage() {
-                                            RequestUri = replacementsProvider.GetOriginUri(this.Request.Url),                                            
-                                            Method = HttpMethod.Get,
-                                        };
+                var request = new HttpRequestMessage()
+                {
+                    RequestUri = replacementsProvider.GetOriginUri(this.Request.Url),
+                    Method = HttpMethod.Get,
+                };
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 _log.DebugFormat("Proxying {0} to {1}", this.Request.Url, request.RequestUri);
                 var originalResponse = client.SendAsync(request).Result;
-                return new Response() {
+                return new Response()
+                {
                     StatusCode = (Nancy.HttpStatusCode)(int)originalResponse.StatusCode,
                     ContentType = originalResponse.Content.Headers.ContentType.MediaType,
-                    Contents = netStream => {      
-                        try {
+                    Contents = netStream =>
+                    {
+                        try
+                        {
                             Stream originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
-                            if(originalResponse.Content.Headers.ContentEncoding.Contains("gzip"))
-                                originalStream = new GZipStream(originalStream,CompressionMode.Decompress);
+                            if (originalResponse.Content.Headers.ContentEncoding.Contains("gzip"))
+                                originalStream = new GZipStream(originalStream, CompressionMode.Decompress);
                             interceptor.Intercept(replacements, originalStream, netStream);
                         }
-                        catch(Exception ex) {
+                        catch (Exception ex)
+                        {
                             _log.Error("Something went wrong when intercepting origin response", ex);
-                            throw new Exception("Intercepting origins response failed",ex);
+                            throw new Exception("Intercepting origins response failed", ex);
+                        }
+                    }
+                };
+            });
+
+            base.Get<Response>("/v3/registration3/{package}/index.json", args =>
+            {
+                string package = args.package;
+                byte[] bytes = this.metadataCache.TryGet(package);
+                if (bytes != null)
+                {
+                    _log.DebugFormat("Cache hit. Serving {0} from cache", Request.Url);
+                    return new Response()
+                    {
+                        StatusCode = Nancy.HttpStatusCode.OK,
+                        ContentType = "application/json",
+                        Contents = netStream =>
+                        {
+                            try
+                            {
+                                netStream.Write(bytes, 0, bytes.Length);
+                                netStream.Flush();
+                            }
+                            catch (Exception ex)
+                            {
+                                _log.Error("Something went wrong when serving query from cache", ex);
+                                throw new Exception("Serving query from cache failed", ex);
+                            }
+                        }
+                    };
+                }
+                string myV3Url = this.GetServiceUrl().AbsoluteUri;
+                Dictionary<string, string> replacements = replacementsProvider.GetReplacements(myV3Url);
+                var request = new HttpRequestMessage()
+                {
+                    RequestUri = replacementsProvider.GetOriginUri(Request.Url),
+                    Method = HttpMethod.Get,
+                };
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                _log.DebugFormat("Cache miss. Proxying {0} to {1}", Request.Url, request.RequestUri);
+                var timestamp = DateTimeOffset.UtcNow;
+                var originalResponse = client.SendAsync(request).Result;
+                return new Response()
+                {
+                    StatusCode = (Nancy.HttpStatusCode)(int)originalResponse.StatusCode,
+                    ContentType = originalResponse.Content.Headers.ContentType.MediaType,
+                    Contents = netStream =>
+                    {
+                        try
+                        {
+                            Stream originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
+                            if (originalResponse.Content.Headers.ContentEncoding.Contains("gzip"))
+                                originalStream = new GZipStream(originalStream, CompressionMode.Decompress);
+                            using (var ms = new MemoryStream())
+                            {
+                                interceptor.Intercept(replacements, originalStream, ms);
+                                bytes = ms.ToArray();
+                                this.metadataCache.Insert(package, timestamp, bytes);
+                                netStream.Write(bytes, 0, bytes.Length);
+                                netStream.Flush();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _log.Error("Something went wrong when intercepting origin response", ex);
+                            throw new Exception("Intercepting origins response failed", ex);
+                        }
+                    }
+                };
+            });
+
+            base.Get<Response>("/{path*}", args =>
+            {
+                string myV3Url = this.GetServiceUrl().AbsoluteUri;
+                Dictionary<string, string> replacements = replacementsProvider.GetReplacements(myV3Url);
+                var request = new HttpRequestMessage()
+                {
+                    RequestUri = replacementsProvider.GetOriginUri(this.Request.Url),
+                    Method = HttpMethod.Get,
+                };
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                _log.DebugFormat("Proxying {0} to {1}", this.Request.Url, request.RequestUri);
+                var originalResponse = client.SendAsync(request).Result;
+                return new Response()
+                {
+                    StatusCode = (Nancy.HttpStatusCode)(int)originalResponse.StatusCode,
+                    ContentType = originalResponse.Content.Headers.ContentType.MediaType,
+                    Contents = netStream =>
+                    {
+                        try
+                        {
+                            Stream originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
+                            if (originalResponse.Content.Headers.ContentEncoding.Contains("gzip"))
+                                originalStream = new GZipStream(originalStream, CompressionMode.Decompress);
+                            interceptor.Intercept(replacements, originalStream, netStream);
+                        }
+                        catch (Exception ex)
+                        {
+                            _log.Error("Something went wrong when intercepting origin response", ex);
+                            throw new Exception("Intercepting origins response failed", ex);
                         }
                     }
                 };
@@ -64,10 +174,12 @@ namespace LiGet.Cache.Proxy
                 string version = args.version;
                 string path = package + "/" + version + "/" + args.filename;
                 byte[] hit;
-                using(var tx = nupkgCache.OpenTransaction()) {
+                using (var tx = nupkgCache.OpenTransaction())
+                {
                     hit = tx.TryGet(args.package, args.version);
                 }
-                if(hit == null) { // cache miss
+                if (hit == null)
+                { // cache miss
                     var request = new HttpRequestMessage()
                     {
                         RequestUri = replacementsProvider.GetOriginUri(this.Request.Url),
@@ -83,19 +195,24 @@ namespace LiGet.Cache.Proxy
                         {
                             try
                             {
-                                using(var cacheTx = nupkgCache.OpenTransaction()) {
+                                using (var cacheTx = nupkgCache.OpenTransaction())
+                                {
                                     Stream originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
-                                    using(var ms = new MemoryStream((int)originalResponse.Content.Headers.ContentLength.GetValueOrDefault(4096))) {
+                                    using (var ms = new MemoryStream((int)originalResponse.Content.Headers.ContentLength.GetValueOrDefault(4096)))
+                                    {
                                         originalStream.CopyTo(ms);
                                         byte[] value = ms.ToArray();
                                         var writing = netStream.WriteAsync(value, 0, value.Length);
-                                        try {
-                                            cacheTx.Insert(package, version, value);    
+                                        try
+                                        {
+                                            cacheTx.Insert(package, version, value);
                                         }
-                                        catch(Exception cacheError){
+                                        catch (Exception cacheError)
+                                        {
                                             _log.Error("Failed to insert package to cache", cacheError);
                                         }
-                                        finally {
+                                        finally
+                                        {
                                             writing.Wait();
                                             netStream.Flush();
                                         }
@@ -107,13 +224,15 @@ namespace LiGet.Cache.Proxy
                                 _log.Error("Something went wrong when serving nupkg", ex);
                                 throw new Exception("Serving nupkg failed", ex);
                             }
-                            finally {
+                            finally
+                            {
                                 originalResponse.Dispose();
                             }
                         }
                     };
                 }
-                else { // cache hit, return from cache
+                else
+                { // cache hit, return from cache
                     _log.DebugFormat("Cache hit. Serving {0} from cache", this.Request.Url);
                     return new DisposingResponse()
                     {
@@ -135,14 +254,15 @@ namespace LiGet.Cache.Proxy
                 }
             });
 
-            base.Head<object>(@"^(.*)$", new Func<dynamic,object>(ThrowNotSupported));
-            base.Post<object>(@"^(.*)$", new Func<dynamic,object>(ThrowNotSupported));
-            base.Put<object>(@"^(.*)$", new Func<dynamic,object>(ThrowNotSupported));
-            base.Delete<object>(@"^(.*)$", new Func<dynamic,object>(ThrowNotSupported));
+            base.Head<object>(@"^(.*)$", new Func<dynamic, object>(ThrowNotSupported));
+            base.Post<object>(@"^(.*)$", new Func<dynamic, object>(ThrowNotSupported));
+            base.Put<object>(@"^(.*)$", new Func<dynamic, object>(ThrowNotSupported));
+            base.Delete<object>(@"^(.*)$", new Func<dynamic, object>(ThrowNotSupported));
         }
 
-        private object ThrowNotSupported(dynamic args) {
-            throw new NotSupportedException(string.Format("Not supported endpoint path {0}",base.Request.Path));
+        private object ThrowNotSupported(dynamic args)
+        {
+            throw new NotSupportedException(string.Format("Not supported endpoint path {0}", base.Request.Path));
         }
 
         public dynamic HandleError(NancyContext ctx, Exception ex)
@@ -150,18 +270,22 @@ namespace LiGet.Cache.Proxy
             string path = ctx.Request.Path;
             _log.ErrorFormat("Error handling proxy request {0}\n{1}", path, ex);
             var notSupported = ex as NotSupportedException;
-            if(notSupported != null){
-                if(_log.IsDebugEnabled) {
+            if (notSupported != null)
+            {
+                if (_log.IsDebugEnabled)
+                {
                     string method = ctx.Request.Method;
                     string body = "";
-                    if(ctx.Request.Body != null) {
+                    if (ctx.Request.Body != null)
+                    {
                         body = new StreamReader(ctx.Request.Body).ReadToEnd();
                     }
                     StringBuilder headers = new StringBuilder();
-                    foreach(var h in ctx.Request.Headers) {
+                    foreach (var h in ctx.Request.Headers)
+                    {
                         headers.Append(h.Key).Append(": ").Append(string.Join(" ", h.Value)).AppendLine();
                     }
-                    _log.DebugFormat("Not supported proxy request content: {0} {1}\nHeaders:\n{2}\nBody:\n{3}",method,ctx.Request.Url,headers,body);
+                    _log.DebugFormat("Not supported proxy request content: {0} {1}\nHeaders:\n{2}\nBody:\n{3}", method, ctx.Request.Url, headers, body);
                 }
                 return HttpStatusCode.NotImplemented;
             }

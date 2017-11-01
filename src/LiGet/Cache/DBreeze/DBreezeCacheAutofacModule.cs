@@ -11,7 +11,10 @@ namespace LiGet.Cache.DBreeze
         }
 
         protected override void Load(ContainerBuilder builder) {
-            builder.RegisterType<DBreezeCacheProvider>().As<INupkgCacheProvider>().SingleInstance();
+            builder.RegisterType<DBreezeCacheProvider>()
+                .As<INupkgCacheProvider>()
+                .As<IPackageMetadataCache>()
+                .SingleInstance();
             builder.RegisterInstance(config).As<IDBreezeConfig>();
         }
     }

@@ -16,6 +16,7 @@
     <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
     <PackageReference Include="Nancy.Bootstrappers.Autofac" Version="2.0.0-clinteastwood" />
     <PackageReference Include="Autofac" Version="4.6.2" />
+    <PackageReference Include="NuGet.CatalogReader" Version="1.5.12" />
     <PackageReference Include="NuGet.Packaging" Version="4.4.0" />
     <PackageReference Include="NuGet.Packaging.Core" Version="4.4.0" />
     <PackageReference Include="NuGet.Protocol" Version="4.4.0" />
