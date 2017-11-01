@@ -9,12 +9,16 @@ load '/opt/bats-assert/load.bash'
 
 @test "paket install latest log4net version" {
   run /bin/bash -c "cd paket && paket install"
+  refute_output --partial 'Could not download'
+  refute_output --partial 'went wrong'
   assert_equal "$status" 0
   assert [ -e 'paket/packages/log4net' ]
 }
 
 @test "paket install with constraint (<= 2.0.8)" {
   run /bin/bash -c "cd paket-constraint && paket install"
+  refute_output --partial 'Could not download'
+  refute_output --partial 'went wrong'
   assert_equal "$status" 0
   assert [ -e 'paket-constraint/packages/log4net/log4net.2.0.8.nupkg' ]
 }
