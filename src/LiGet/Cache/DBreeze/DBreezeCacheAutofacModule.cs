@@ -1,4 +1,5 @@
 using Autofac;
+using LiGet.Cache.Catalog;
 
 namespace LiGet.Cache.DBreeze
 {
@@ -15,7 +16,16 @@ namespace LiGet.Cache.DBreeze
                 .As<INupkgCacheProvider>()
                 .As<IPackageMetadataCache>()
                 .SingleInstance();
+            builder.RegisterType<DBreezeCatalogScanStore>()
+                .As<ICatalogScanStore>()
+                .SingleInstance();
+            builder.RegisterType<DBreezeEngine>()
+                .As<IDBreezeEngineProvider>()
+                .SingleInstance();
             builder.RegisterInstance(config).As<IDBreezeConfig>();
+            builder.RegisterType<CatalogInvalidator>()
+                .As<ICatalogScanner>()
+                .SingleInstance();
         }
     }
 }

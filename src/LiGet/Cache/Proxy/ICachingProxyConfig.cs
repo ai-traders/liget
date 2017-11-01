@@ -7,6 +7,7 @@ namespace LiGet.Cache.Proxy
         /// E.g. https://api.nuget.org/v3/index.json
         /// </summary>
         /// <returns></returns>
-         string V3NugetIndexSource { get; }
+        string V3NugetIndexSource { get; }
+        int InvalidationCheckSeconds { get; }
     }
 }

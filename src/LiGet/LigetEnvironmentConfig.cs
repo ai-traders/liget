@@ -29,6 +29,13 @@ namespace LiGet.NuGet.Server.Infrastructure
             return bool.Parse(configurationSection.Value);
         }
 
+        private int GetInteger(IConfigurationSection configurationSection, int fallBack)
+        {
+            if(string.IsNullOrEmpty(configurationSection.Value))
+                return fallBack;
+            return int.Parse(configurationSection.Value);
+        }
+
         private string GetString(IConfigurationSection configurationSection, string fallBack)
         {
             if(string.IsNullOrEmpty(configurationSection.Value))
@@ -121,6 +128,12 @@ namespace LiGet.NuGet.Server.Infrastructure
                     return DBreezeConfiguration.eStorage.MEMORY;
                 else
                     throw new Exception("Invalid dbreeze backend name " + name);
+            }
+        }
+
+        public int InvalidationCheckSeconds {
+            get {
+                return GetInteger(configuration.GetSection("LIGET_CACHE_INVALIDATION_CHECK_PERIOD"), 60);
             }
         }
     }

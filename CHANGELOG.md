@@ -1,6 +1,8 @@
 ### 0.2.0 - Unreleased
 
-Add caching proxy with v3 API.
+Add caching proxy with v3 API, including
+ - DBreeze backend
+ - Periodic cache invalidation based on upstream changes
 
 ### 0.1.2 (2017-Oct-31)
 

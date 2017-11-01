@@ -2,35 +2,22 @@ using System;
 using DBreeze;
 using DBreeze.Transactions;
 using DBreeze.Utils;
+using LiGet.Cache.Catalog;
 
 namespace LiGet.Cache.DBreeze
 {
-    public class DBreezeCacheProvider : INupkgCacheProvider, IPackageMetadataCache, IDisposable
+    public class DBreezeCacheProvider : INupkgCacheProvider, IPackageMetadataCache
     {
         private const string MetadataTableName = "metadata";
+
         private static readonly log4net.ILog _log = log4net.LogManager.GetLogger(typeof(DBreezeCacheProvider));
 
-        DBreezeEngine engine;
-        private readonly IDBreezeConfig config;
+        global::DBreeze.DBreezeEngine engine;
 
-        public DBreezeCacheProvider(IDBreezeConfig config)
+        public DBreezeCacheProvider(IDBreezeEngineProvider engine, ICatalogScanner catalogScanner)
         {
-            this.config = config;
-            var dbConfig = new DBreezeConfiguration() {
-                DBreezeDataFolderName = config.RootCacheDirectory,
-                Storage = config.StorageBackend
-            };
-            engine = new DBreezeEngine(dbConfig);
-        }
-
-        public DateTimeOffset CacheCreationDate => throw new NotImplementedException();
-
-        public void Dispose()
-        {
-            if (engine != null) {
-                engine.Dispose();
-                _log.Info("Closed dbreeze engine");
-            }
+            this.engine = engine.Engine;
+            catalogScanner.UpdatedEntry += InvalidateMetadata;
         }
 
         public void Insert(string package, DateTimeOffset timestamp, byte[] content)
@@ -64,6 +51,23 @@ namespace LiGet.Cache.DBreeze
                     tx.RemoveKey(MetadataTableName, package);
                     tx.Commit();
                 }
+            }
+        }
+
+        private void InvalidateMetadata(object sender, CatalogEntryEventArgs e)
+        {
+            using(var tx = engine.GetTransaction()) {
+                foreach(var entry in e.Entries) {
+                    var found = tx.Select<string, long>(MetadataTableName, entry.Id);
+                    if(!found.Exists)
+                        continue;
+                    long unixMs = found.Value;
+                    if(DateTimeOffset.FromUnixTimeMilliseconds(unixMs) <= entry.CommitTimeStamp) {
+                        tx.RemoveKey(MetadataTableName, entry.Id);     
+                        _log.InfoFormat("Invalidating cache for {0}", entry.Id);
+                    }
+                }
+                tx.Commit();
             }
         }
 

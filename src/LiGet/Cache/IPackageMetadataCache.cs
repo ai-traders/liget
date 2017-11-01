@@ -4,12 +4,6 @@ namespace LiGet.Cache
 {
     public interface IPackageMetadataCache
     {
-        /// <summary>
-        /// Date at which cache store was created.
-        /// Implies that no entry is older than this.
-        /// </summary>
-        /// <returns></returns>
-        DateTimeOffset CacheCreationDate { get; }
 
         byte[] TryGet(string package);
 

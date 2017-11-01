@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using LiGet.Cache.Catalog;
 using LiGet.Cache.DBreeze;
 using Moq;
 using Xunit;
@@ -9,19 +10,22 @@ namespace LiGet.Tests.Cache.DBreeze
 {
     public class DBreezeCacheProviderTest : IDisposable
     {
+        private Mock<ICatalogScanner> catalogScanner;
         private DBreezeCacheProvider db;
         private byte[] metaContent = Encoding.UTF8.GetBytes("meta");
+        private DBreezeEngine engine;
 
         public DBreezeCacheProviderTest() {
             Mock<IDBreezeConfig> config = new Mock<IDBreezeConfig>(MockBehavior.Loose);
             config.SetupGet(c => c.StorageBackend).Returns(eStorage.MEMORY);
             config.SetupGet(c => c.RootCacheDirectory).Returns("dummy");
-            db = new DBreezeCacheProvider(config.Object);
+            catalogScanner = new Mock<ICatalogScanner>(MockBehavior.Loose);
+            db = new DBreezeCacheProvider(engine = new DBreezeEngine(config.Object), catalogScanner.Object);
         }
         public void Dispose()
         {
-            if(db != null)
-                db.Dispose();
+            if(engine != null)
+                engine.Dispose();
         }
 
         [Fact]
@@ -59,5 +63,6 @@ namespace LiGet.Tests.Cache.DBreeze
             db.InvalidateIfOlder("b", DateTimeOffset.FromUnixTimeSeconds(11));
             Assert.NotNull(db.TryGet("a"));
         }
+
     }
 }

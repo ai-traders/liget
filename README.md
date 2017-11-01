@@ -24,10 +24,14 @@ This project aims at following:
 
  * Limited NuGet V2 API for hosting private packages. Includes endpoints `FindPackagesById()`, `Packages()` and `PUT /api/v2`.
  Which is sufficient for clients to download, push, find or restore packages.
- * Caching proxy of with limited NuGet V3 API. Allows to cache `.nupkg` packages on server,
- rather than downloading them from the Internet each time.
- It intercepts responses from selected services of `https://api.nuget.org/v3/index.json`
- replacing `https://api.nuget.org/v3` by local LiGet server URL.
+ * Caching proxy of with limited NuGet V3 API. It intercepts responses from selected
+ services of `https://api.nuget.org/v3/index.json` replacing `https://api.nuget.org/v3`
+ by local LiGet server URL.
+   - Allows to cache `.nupkg` packages on server,
+rather than downloading them from the Internet each time.
+   - Caches package metadata and invalidates when upstream changes are detected using [NuGet.CatalogReader](https://github.com/emgarten/NuGet.CatalogReader).
+   - For end user effect is similar to running a mirror of nuget.org,
+   but instead of downloading all packages, cache keeps only the ones which were ever requested.
 
 Not implemented:
 
@@ -119,6 +123,7 @@ Everything can be configured with environment variables:
 #### Cache
 
  * `LIGET_CACHE_PROXY_SOURCE_INDEX` - address of original V3 API to cache. By default `https://api.nuget.org/v3/index.json`.
+ * `LIGET_CACHE_INVALIDATION_CHECK_PERIOD` - defines frequency at which a check with upstream server is made to see if cache is invalid. By default `60` (seconds).
  * `LIGET_NUPKG_CACHE_BACKEND` - backend of the .nupkg caching proxy. By default `dbreeze`,
  which, currently is the only implementation.
  * `LIGET_NUPKG_CACHE_DBREEZE_ROOT_PATH` - root directory where dbreeze will store cached packages.
