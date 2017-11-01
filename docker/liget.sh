@@ -98,6 +98,22 @@ fi
 # find <%= @user_home %> -group 1000 -exec chgrp -h $NEWGID {} \;
 chown $NEWUID:$NEWGID -R /etc/liget /home/liget
 
+cat << EOF > /app/LiGet.App.runtimeconfig.json
+{
+  "runtimeOptions": {
+    "tfm": "netcoreapp2.0",
+    "framework": {
+      "name": "Microsoft.NETCore.App",
+      "version": "2.0.0"
+    },
+    "configProperties": {
+      "System.GC.Concurrent": $LIGET_GC_CONCURRENT,
+      "System.GC.Server": $LIGET_GC_SERVER
+    }
+  }
+}
+EOF
+
 cd /data
 if [[ $NEWGID != 0 ]]; then
   exec sudo -u liget -E -H dotnet /app/LiGet.App.dll

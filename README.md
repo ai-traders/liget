@@ -120,6 +120,13 @@ Everything can be configured with environment variables:
  * `LIGET_ENABLE_DELISTING`, by default `true`. Not implemented.
  * `LIGET_IGNORE_SYMBOLS`, by default `false`. Not implemented.
 
+#### Runtime
+
+Every dotnet Core application has `.runtimeconfig.json`, which can configure garbage collector.
+You may want to set following:
+ * `LIGET_GC_CONCURRENT` - by default `true`
+ * `LIGET_GC_SERVER` - by default `true`, beware though that [this may cause higher memory use](https://blog.markvincze.com/troubleshooting-high-memory-usage-with-asp-net-core-on-kubernetes/).
+
 #### Cache
 
  * `LIGET_CACHE_PROXY_SOURCE_INDEX` - address of original V3 API to cache. By default `https://api.nuget.org/v3/index.json`.
