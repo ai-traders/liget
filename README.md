@@ -22,9 +22,9 @@ This project aims at following:
 
 ## Features and limitations
 
- * Limited NuGet V2 API for hosting private packages. Includes endpoints `FindPackagesById()`, `Packages()` and `PUT /api/v2`.
+ * Limited **NuGet V2 API for hosting private packages**. Includes endpoints `FindPackagesById()`, `Packages()` and `PUT /api/v2`.
  Which is sufficient for clients to download, push, find or restore packages.
- * Caching proxy of with limited NuGet V3 API. It intercepts responses from selected
+ * **Caching proxy of with limited NuGet V3 API**. It intercepts responses from selected
  services of `https://api.nuget.org/v3/index.json` replacing `https://api.nuget.org/v3`
  by local LiGet server URL.
    - Allows to cache `.nupkg` packages on server,

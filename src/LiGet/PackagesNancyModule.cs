@@ -75,6 +75,10 @@ namespace LiGet
                     _log.Error("Tried to push a package which already exists", dup);
                     return HttpStatusCode.Conflict;
                 }
+                catch(Exception ex) {
+                    _log.Error("Failed to push package", ex);
+                    return HttpStatusCode.InternalServerError;
+                }
             });
 
             base.Get<object>(@"^(.*)$", args => {

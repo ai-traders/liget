@@ -1,0 +1,17 @@
+source http://liget:9011/api/cache/v3/index.json
+
+nuget NodaTime
+nuget Hekate
+nuget Aether
+nuget log4net
+nuget Gelf4Net.UdpAppender
+nuget Argu
+nuget Microsoft.AspNetCore.Server.Kestrel
+nuget Microsoft.AspNetCore.Owin
+nuget StackExchange.Redis
+nuget FParsec
+nuget Freya
+nuget FSharp.Core
+nuget NETStandard.Library
+nuget Expecto
+nuget FAKE
