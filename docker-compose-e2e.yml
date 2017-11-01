@@ -16,4 +16,4 @@ services:
       - ${IDE_WORK}/e2e/data:/data
     env_file:
       - ${ENV_FILE}
-    mem_limit: 450m
+    mem_limit: 550m
