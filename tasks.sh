@@ -1,7 +1,18 @@
 #!/bin/bash
-set -e
+
 # PATCH currently failing private caching server
-rm -f ~/.nuget/NuGet/NuGet.Config
+# Add bleeding edge nancyfx builds
+cat << EOF > ~/.nuget/NuGet/NuGet.Config
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
+    <add key="nancy-myget" value="https://www.myget.org/F/nancyfx/api/v3/index.json" />
+  </packageSources>
+</configuration>
+EOF
+
+set -e
 
 if [[ ! -f ./releaser ]];then
   wget --quiet http://http.archive.ai-traders.com/releaser/1.0.3/releaser

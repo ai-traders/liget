@@ -14,8 +14,8 @@
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Gelf4Net.UdpAppender" Version="1.0.0.10" />
-    <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
-    <PackageReference Include="Nancy.Bootstrappers.Autofac" Version="2.0.0-clinteastwood" />
+    <PackageReference Include="Nancy" Version="2.0.0-Pre1885" />
+    <PackageReference Include="Nancy.Bootstrappers.Autofac" Version="2.0.0-Pre486" />
     <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0" />
