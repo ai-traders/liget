@@ -34,7 +34,7 @@ namespace LiGet.Cache.Proxy
 
             this.OnError.AddItemToEndOfPipeline(HandleError);
 
-            base.Get<Response>("/{path*}", args =>
+            base.Get<Response>("/{path*}", async args =>
             {
                 string myV3Url = this.GetServiceUrl().AbsoluteUri;
                 Dictionary<string, string> replacements = replacementsProvider.GetReplacements(myV3Url);
@@ -45,7 +45,7 @@ namespace LiGet.Cache.Proxy
                 };
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 _log.DebugFormat("Proxying {0} to {1}", this.Request.Url, request.RequestUri);
-                var originalResponse = client.SendAsync(request).Result;
+                var originalResponse = await client.SendAsync(request);
                 return new Response()
                 {
                     StatusCode = (Nancy.HttpStatusCode)(int)originalResponse.StatusCode,
@@ -68,7 +68,7 @@ namespace LiGet.Cache.Proxy
                 };
             });
 
-            base.Get<Response>("/v3/registration3/{package}/index.json", args =>
+            base.Get<Response>("/v3/registration3/{package}/index.json", async args =>
             {
                 string package = args.package;
                 byte[] bytes = this.metadataCache.TryGet(package);
@@ -105,7 +105,7 @@ namespace LiGet.Cache.Proxy
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 _log.DebugFormat("Cache miss. Proxying {0} to {1}", Request.Url, request.RequestUri);
                 var timestamp = DateTimeOffset.UtcNow;
-                var originalResponse = client.SendAsync(request).Result;
+                var originalResponse = await client.SendAsync(request);
                 return new Response()
                 {
                     StatusCode = (Nancy.HttpStatusCode)(int)originalResponse.StatusCode,
@@ -135,7 +135,7 @@ namespace LiGet.Cache.Proxy
                 };
             });
 
-            base.Get<Response>("/{path*}", args =>
+            base.Get<Response>("/{path*}", async args =>
             {
                 string myV3Url = this.GetServiceUrl().AbsoluteUri;
                 Dictionary<string, string> replacements = replacementsProvider.GetReplacements(myV3Url);
@@ -146,7 +146,7 @@ namespace LiGet.Cache.Proxy
                 };
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 _log.DebugFormat("Proxying {0} to {1}", this.Request.Url, request.RequestUri);
-                var originalResponse = client.SendAsync(request).Result;
+                var originalResponse = await client.SendAsync(request);
                 return new Response()
                 {
                     StatusCode = (Nancy.HttpStatusCode)(int)originalResponse.StatusCode,
@@ -169,7 +169,7 @@ namespace LiGet.Cache.Proxy
                 };
             });
 
-            base.Get<Response>("/v3-flatcontainer/{package}/{version}/{filename}", args =>
+            base.Get<Response>("/v3-flatcontainer/{package}/{version}/{filename}", async args =>
             {
                 string package = args.package;
                 string version = args.version;
@@ -188,7 +188,7 @@ namespace LiGet.Cache.Proxy
                     };
                     request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
                     _log.DebugFormat("Cache miss. Proxying {0} to {1}", this.Request.Url, request.RequestUri);
-                    var originalResponse = client.SendAsync(request).Result;
+                    var originalResponse = await client.SendAsync(request);
                     return new DisposingResponse(originalResponse)
                     {
                         ContentType = originalResponse.Content.Headers.ContentType.MediaType,
