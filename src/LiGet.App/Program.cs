@@ -38,14 +38,20 @@ namespace LiGet.App
               Environment.Exit(1);
           }
           XmlConfigurator.Configure(logRepository, config);
-
-          log.InfoFormat("Starting http kestrel host. ServerGC={0}", GCSettings.IsServerGC);
+          
 
           try {
-            using(var host = new WebHostBuilder()
+            var builder = new WebHostBuilder();
+            string threadCount = Environment.GetEnvironmentVariable("LIGET_LIBUV_THREAD_COUNT");
+            if(!string.IsNullOrEmpty(threadCount))
+              builder.UseLibuv(opts => opts.ThreadCount = int.Parse(threadCount));
+
+
+            log.InfoFormat("Starting http kestrel host. ServerGC={0}, ThreadCount={1}", GCSettings.IsServerGC, threadCount);
+            using(var host = builder
                 .UseSetting("detailedErrors", "true")
                 .UseUrls("http://0.0.0.0:9011")
-                .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseContentRoot(Directory.GetCurrentDirectory())                
                 .UseKestrel()
                 .UseStartup<Startup>()
                 .Build()) {
