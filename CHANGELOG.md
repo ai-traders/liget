@@ -1,8 +1,10 @@
-### 0.2.0 - Unreleased
+### 0.2.0 (2017-Nov-02)
 
-Add caching proxy with v3 API, including
- - DBreeze backend
- - Periodic cache invalidation based on upstream changes
+ * Add caching proxy with v3 API, including
+   - DBreeze backend
+   - Periodic cache invalidation based on upstream changes
+ * Adds stress tests
+ * Tweaked kestrel options to get better performance
 
 ### 0.1.2 (2017-Oct-31)
 

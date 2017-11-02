@@ -176,7 +176,7 @@ The stress tests run
 3. Then 6 workers run `paket install -f` via liget caching proxy V3 API.
 
 Under these conditions:
- * cache download performance is *good*. The 6 workers end download within 7 minutes and are mostly constrained by IO limit. Same test on my local machine on SSD drive, passes in 3 minutes.
+ * cache download performance is *good*. The 6 workers end download within 9 minutes and are mostly constrained by IO limit. Same test on my local machine on SSD drive, passes in 3 minutes.
  * memory usage reported by docker stats peaks at about 520 MB. So docker mem_limit of 550MB-600MB makes sense.
 
 # Development
