@@ -4,6 +4,9 @@ set -e
 echo "Sleeping 4s to wait for server to be ready"
 sleep 4
 
+STRESS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $STRESS_DIR
+
 echo "paket update to download a bunch of packages"
 cd paket
 paket update

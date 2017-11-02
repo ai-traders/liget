@@ -107,7 +107,7 @@ case "${command}" in
       echo "fail! AIT_DOCKER_IMAGE_TAG not set"
       exit 1
     fi
-    ide --idefile Idefile.e2e-docker "cd e2e/stress && ./run.sh"
+    ide --idefile Idefile.e2e-docker "e2e/stress/run.sh"
     ;;
   prepare_code_release)
     version=$2

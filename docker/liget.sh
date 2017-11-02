@@ -108,7 +108,9 @@ cat << EOF > /app/LiGet.App.runtimeconfig.json
     },
     "configProperties": {
       "System.GC.Concurrent": $LIGET_GC_CONCURRENT,
-      "System.GC.Server": $LIGET_GC_SERVER
+      "System.GC.Server": $LIGET_GC_SERVER,
+      "System.Threading.ThreadPool.MinThreads": $LIGET_THREAD_POOL_MIN,
+      "System.Threading.ThreadPool.MaxThreads": $LIGET_THREAD_POOL_MAX
     }
   }
 }
