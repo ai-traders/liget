@@ -52,7 +52,16 @@ namespace LiGet.App
                 .UseSetting("detailedErrors", "true")
                 .UseUrls("http://0.0.0.0:9011")
                 .UseContentRoot(Directory.GetCurrentDirectory())                
-                .UseKestrel()
+                .UseKestrel(options => {
+                  // options.ApplicationSchedulingMode = SchedulingMode.ThreadPool;
+                  // options.Limits.MaxConcurrentConnections = 8;
+                  // options.Limits.MaxConcurrentUpgradedConnections = 8;
+                  options.Limits.MaxResponseBufferSize = null;
+                  options.Limits.MinRequestBodyDataRate = null;
+                  options.Limits.MinResponseDataRate = null;
+                  options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(5);
+                  
+                })
                 .UseStartup<Startup>()
                 .Build()) {
               host.RunAsync(cts.Token).Wait();

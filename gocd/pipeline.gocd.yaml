@@ -82,6 +82,8 @@ pipelines:
             stress:
               elastic_profile_id: w.c2.m4096.e200
               timeout: 60
+              environment_variables:
+                LIGET_LIBUV_THREAD_COUNT: 8
               tasks:
                - fetch:
                   stage: test_pack
