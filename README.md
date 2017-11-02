@@ -158,6 +158,27 @@ Logging to graylog.
  * `LIGET_LOG_GELF_HOST` - no default. But should be configured when `LIGET_LOG_BACKEND=gelf`
  * `LIGET_LOG_GELF_PORT` - by default `12201`.
 
+# Performance
+
+We are running load tests against the server under following setup:
+1. There is a dedicated 2-core VM with capped IO limits on disk:
+ * max read bytes/sec 64 MB/s
+ * max write bytes/sec 32 MB/s
+ * max read IO ops/s 3000
+ * max write IO ops/s 1200
+2. On the VM we start 2 docker containers with docker-compose, server has [limit on memory of 550MB](docker-compose-e2e.yml#L19).
+3. LiGet is configured with defaults and:
+ * `LIGET_LIBUV_THREAD_COUNT=16`
+
+The stress tests run
+1. paket install to download about 500MB of packages, via liget caching proxy V3 API.
+2. nuget push of each package to repository using V2 API.
+3. Then 6 workers run `paket install -f` via liget caching proxy V3 API.
+
+Under these conditions:
+ * cache download performance is *good*. The 6 workers end download within 7 minutes and are mostly constrained by IO limit. Same test on my local machine on SSD drive, passes in 3 minutes.
+ * memory usage reported by docker stats peaks at about 520 MB. So docker mem_limit of 550MB-600MB makes sense.
+
 # Development
 
 All building and tests are done with [IDE](https://github.com/ai-traders/ide) and docker.

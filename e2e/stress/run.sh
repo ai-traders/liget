@@ -14,7 +14,7 @@ echo "nuget push a bunch of packages"
 ./push_all.sh
 cd ..
 
-for i in `seq 1 4`;
+for i in `seq 1 6`;
 do
         echo "Generating specialized HOME for paket load in /home/ide/$i"
         mkdir -p paket-$i /home/ide/$i/.nuget/NuGet
