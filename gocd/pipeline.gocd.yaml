@@ -81,6 +81,7 @@ pipelines:
                     - dmesg | tail -n 100
             stress:
               elastic_profile_id: w.c2.m4096.e200
+              timeout: 60
               tasks:
                - fetch:
                   stage: test_pack

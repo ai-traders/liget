@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+echo "Sleeping 4s to wait for server to be ready"
+sleep 4
+
 echo "paket update to download a bunch of packages"
 cd paket
 paket update
