@@ -127,7 +127,7 @@ You may want to set following:
  * `LIGET_GC_CONCURRENT` - by default `true`
  * `LIGET_GC_SERVER` - by default `true`, beware though that [this may cause higher memory use](https://blog.markvincze.com/troubleshooting-high-memory-usage-with-asp-net-core-on-kubernetes/).
  * `LIGET_THREAD_POOL_MIN` - minimal number of worker threads. By default 16.
- * `LIGET_THREAD_POOL_MAX` - minimal number of worker threads. By default 64.
+ * `LIGET_THREAD_POOL_MAX` - minimal number of worker threads. By default 32.
 
 Kestrel specific:
  * `LIGET_LIBUV_THREAD_COUNT` - number of libuv threads handling the requests. By default not set, determined by libuv default.
