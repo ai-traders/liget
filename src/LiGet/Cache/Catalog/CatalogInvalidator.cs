@@ -13,27 +13,23 @@ namespace LiGet.Cache.Catalog
 
         private Uri indexUrl;
         private Timer _scanTimer;
-        CatalogReader reader;
+        ICatalogReader reader;
         private bool _working;
         private readonly ICatalogScanStore store;
 
         public CatalogInvalidator(
-            ICachingProxyConfig config, ICatalogScanStore store)
+            ICachingProxyConfig config, ICatalogScanStore store, ICatalogReader reader)
         {
             this.store = store;
-            indexUrl = new Uri(config.V3NugetIndexSource);
-
             var period = TimeSpan.FromSeconds(config.InvalidationCheckSeconds);
             _scanTimer = new Timer(state => Run(), null, period, period);
-            reader = new CatalogReader(indexUrl);
+            this.reader = reader;
         }
 
         public void Dispose()
         {
             if (_scanTimer != null)
                 _scanTimer.Dispose();
-            if (reader != null)
-                reader.Dispose();
         }
 
         public void Run()
@@ -49,7 +45,8 @@ namespace LiGet.Cache.Catalog
                 DateTimeOffset start = store.LastScanEndDate;
                 DateTimeOffset end = DateTimeOffset.UtcNow;
                 _log.InfoFormat("Getting all upstream changes between {0} and {1}", start, end);
-                var changes = reader.GetFlattenedEntriesAsync(start, end).Result;
+                var changes = reader.GetFlattenedEntries(start, end);
+                bool anyFailed = false;
                 foreach (var h in this.UpdatedEntry.GetInvocationList())
                 {
                     try
@@ -59,10 +56,12 @@ namespace LiGet.Cache.Catalog
                     }
                     catch (Exception ex)
                     {
+                        anyFailed = true;
                         _log.Error("Failed to execute catalog entry handler", ex);
                     }
                 }                
-                store.LastScanEndDate = end;
+                if(!anyFailed)
+                    store.LastScanEndDate = end;
                 _log.InfoFormat("Finished handling {0} upstream changes", changes.Count);
             }
             catch(Exception ex) {

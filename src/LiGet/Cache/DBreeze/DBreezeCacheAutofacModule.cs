@@ -26,6 +26,9 @@ namespace LiGet.Cache.DBreeze
             builder.RegisterType<CatalogInvalidator>()
                 .As<ICatalogScanner>()
                 .SingleInstance();
+            builder.RegisterType<NuGetCatalogReader>()
+                .As<ICatalogReader>()
+                .SingleInstance();
         }
     }
 }

@@ -1,3 +1,7 @@
+### 0.2.1 - Unreleased
+
+ * minor fix to not save scan date on failure
+
 ### 0.2.0 (2017-Nov-02)
 
  * Add caching proxy with v3 API, including
