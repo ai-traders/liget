@@ -22,3 +22,11 @@ load '/opt/bats-assert/load.bash'
   assert_equal "$status" 0
   assert [ -e 'paket-constraint/packages/log4net/log4net.2.0.8.nupkg' ]
 }
+
+@test "paket update with bug01" {
+  run /bin/bash -c "cd paket-bug01 && paket update"
+  refute_output --partial 'Could not download'
+  refute_output --partial 'went wrong'
+  refute_output --partial "Couldn't get package details"
+  assert_equal "$status" 0
+}

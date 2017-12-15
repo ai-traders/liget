@@ -212,3 +212,4 @@ docs/tools/FSharp.Formatting.svclog
 /e2e/test_stress/paket/paket.lock
 /e2e/stress/paket/paket.lock
 /e2e/stress/paket-*
+/e2e/test_proxy/paket-bug01/paket.lock

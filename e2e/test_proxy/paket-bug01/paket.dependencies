@@ -1,3 +1,34 @@
 source http://liget:9011/api/cache/v3/index.json
 
-nuget microsoft.net.test.sdk = 15.3.0
+nuget log4net
+nuget Autofac
+nuget CommandLineParser
+nuget Gelf4Net.UdpAppender
+nuget FluentValidation
+nuget Newtonsoft.Json
+nuget Nancy = 2.0.0-clinteastwood
+nuget Nancy.Bootstrappers.Autofac = 2.0.0-clinteastwood
+nuget Nancy.Serialization.JsonNet = 2.0.0-clinteastwood
+nuget Microsoft.AspNetCore.Hosting = 2.0.0
+nuget Microsoft.AspNetCore.Server.Kestrel = 2.0.0
+nuget Microsoft.AspNetCore.Owin = 2.0.0
+nuget Microsoft.Extensions.Configuration.EnvironmentVariables
+nuget Microsoft.Extensions.Configuration
+
+group Test
+  source http://localhost:9011/api/cache/v3/index.json
+
+  nuget xunit >= 2.3.0
+  nuget FluentAssertions >= 4.19.2
+  nuget log4net
+  nuget Moq
+  nuget Autofac
+  nuget Autofac.Extras.Moq
+  nuget FluentValidation
+  nuget Newtonsoft.Json
+  nuget ReportUnit
+  nuget Nancy
+  nuget Nancy.Bootstrappers.Autofac
+  nuget Nancy.Testing
+  nuget microsoft.net.test.sdk = 15.3.0
+  nuget xunit.runner.visualstudio >= 2.3.0

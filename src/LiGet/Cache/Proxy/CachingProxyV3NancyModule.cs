@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Nancy;
+using Nancy.Responses.Negotiation;
 using Newtonsoft.Json;
 
 namespace LiGet.Cache.Proxy
@@ -147,6 +148,8 @@ namespace LiGet.Cache.Proxy
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 _log.DebugFormat("Proxying {0} to {1}", this.Request.Url, request.RequestUri);
                 var originalResponse = await client.SendAsync(request);
+                if(!(200 <= (int)originalResponse.StatusCode && (int)originalResponse.StatusCode < 300))
+                    _log.WarnFormat("Origin server {0} response status is {1}",request.RequestUri, originalResponse.StatusCode);
                 return new Response()
                 {
                     StatusCode = (Nancy.HttpStatusCode)(int)originalResponse.StatusCode,
@@ -158,7 +161,10 @@ namespace LiGet.Cache.Proxy
                             Stream originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
                             if (originalResponse.Content.Headers.ContentEncoding.Contains("gzip"))
                                 originalStream = new GZipStream(originalStream, CompressionMode.Decompress);
-                            interceptor.Intercept(replacements, originalStream, netStream);
+                            if(new MediaRange("application/json").Matches(new MediaRange(originalResponse.Content.Headers.ContentType.MediaType)))
+                                interceptor.Intercept(replacements, originalStream, netStream);
+                            else
+                                originalStream.CopyTo(netStream);
                         }
                         catch (Exception ex)
                         {

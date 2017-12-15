@@ -1,6 +1,7 @@
 ### 0.2.1 - Unreleased
 
  * minor fix to not save scan date on failure
+ * fix forwarding requests when response is not successfull \#12154
 
 ### 0.2.0 (2017-Nov-02)
 
