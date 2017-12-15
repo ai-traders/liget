@@ -20,8 +20,13 @@ namespace LiGet.Cache.DBreeze
             catalogScanner.UpdatedEntry += InvalidateMetadata;
         }
 
+        private string ToLowerPackage(string package) {
+            return package.ToLowerInvariant();
+        }
+
         public void Insert(string package, DateTimeOffset timestamp, byte[] content)
         {
+            package = ToLowerPackage(package);
             using(var tx = engine.GetTransaction()) {
                 tx.InsertPart<string, long>(MetadataTableName, package, timestamp.ToUnixTimeMilliseconds(), 0);
                 tx.InsertPart<string, byte[]>(MetadataTableName, package, content, sizeof(long));
@@ -31,6 +36,7 @@ namespace LiGet.Cache.DBreeze
 
         public byte[] TryGet(string package)
         {
+            package = ToLowerPackage(package);
             using(var tx = engine.GetTransaction()) {
                 var found = tx.Select<string, byte[]>(MetadataTableName, package);
                 if(found.Exists) {
@@ -42,6 +48,7 @@ namespace LiGet.Cache.DBreeze
 
         public void InvalidateIfOlder(string package, DateTimeOffset timestamp)
         {
+            package = ToLowerPackage(package);
             using(var tx = engine.GetTransaction()) {
                 var found = tx.Select<string, long>(MetadataTableName, package);
                 if(!found.Exists)
@@ -58,13 +65,14 @@ namespace LiGet.Cache.DBreeze
         {
             using(var tx = engine.GetTransaction()) {
                 foreach(var entry in e.Entries) {
-                    var found = tx.Select<string, long>(MetadataTableName, entry.Id);
+                    string packageName = ToLowerPackage(entry.Id);
+                    var found = tx.Select<string, long>(MetadataTableName, packageName);
                     if(!found.Exists)
                         continue;
                     long unixMs = found.Value;
                     if(DateTimeOffset.FromUnixTimeMilliseconds(unixMs) <= entry.CommitTimeStamp) {
-                        tx.RemoveKey(MetadataTableName, entry.Id);     
-                        _log.InfoFormat("Invalidating cache for {0}", entry.Id);
+                        tx.RemoveKey(MetadataTableName, packageName);
+                        _log.InfoFormat("Invalidating cache for {0}", packageName);
                     }
                 }
                 tx.Commit();

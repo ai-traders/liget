@@ -2,6 +2,7 @@
 
  * minor fix to not save scan date on failure
  * fix forwarding requests when response is not successfull \#12154
+ * fix cache never invalidating due to case mismatch \#11699
 
 ### 0.2.0 (2017-Nov-02)
 
