@@ -16,7 +16,7 @@ nuget Microsoft.Extensions.Configuration.EnvironmentVariables
 nuget Microsoft.Extensions.Configuration
 
 group Test
-  source http://localhost:9011/api/cache/v3/index.json
+  source http://liget:9011/api/cache/v3/index.json
 
   nuget xunit >= 2.3.0
   nuget FluentAssertions >= 4.19.2

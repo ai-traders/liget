@@ -35,40 +35,6 @@ namespace LiGet.Cache.Proxy
 
             this.OnError.AddItemToEndOfPipeline(HandleError);
 
-            base.Get<Response>("/{path*}", async args =>
-            {
-                string myV3Url = this.GetServiceUrl().AbsoluteUri;
-                Dictionary<string, string> replacements = replacementsProvider.GetReplacements(myV3Url);
-                var request = new HttpRequestMessage()
-                {
-                    RequestUri = replacementsProvider.GetOriginUri(this.Request.Url),
-                    Method = HttpMethod.Get,
-                };
-                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                _log.DebugFormat("Proxying {0} to {1}", this.Request.Url, request.RequestUri);
-                var originalResponse = await client.SendAsync(request);
-                return new Response()
-                {
-                    StatusCode = (Nancy.HttpStatusCode)(int)originalResponse.StatusCode,
-                    ContentType = originalResponse.Content.Headers.ContentType.MediaType,
-                    Contents = netStream =>
-                    {
-                        try
-                        {
-                            Stream originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
-                            if (originalResponse.Content.Headers.ContentEncoding.Contains("gzip"))
-                                originalStream = new GZipStream(originalStream, CompressionMode.Decompress);
-                            interceptor.Intercept(replacements, originalStream, netStream);
-                        }
-                        catch (Exception ex)
-                        {
-                            _log.Error("Something went wrong when intercepting origin response", ex);
-                            throw new Exception("Intercepting origins response failed", ex);
-                        }
-                    }
-                };
-            });
-
             base.Get<Response>("/v3/registration3/{package}/index.json", async args =>
             {
                 string package = args.package;
