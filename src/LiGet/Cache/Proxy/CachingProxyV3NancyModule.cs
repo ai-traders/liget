@@ -73,15 +73,16 @@ namespace LiGet.Cache.Proxy
                 _log.DebugFormat("Cache miss. Proxying {0} to {1}", Request.Url, request.RequestUri);
                 var timestamp = DateTimeOffset.UtcNow;
                 var originalResponse = await client.SendAsync(request);
-                return new Response()
+                return new DisposingResponse(originalResponse)
                 {
                     StatusCode = (Nancy.HttpStatusCode)(int)originalResponse.StatusCode,
                     ContentType = originalResponse.Content.Headers.ContentType.MediaType,
                     Contents = netStream =>
                     {
+                        Stream originalStream = null;
                         try
                         {
-                            Stream originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
+                            originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
                             if (originalResponse.Content.Headers.ContentEncoding.Contains("gzip"))
                                 originalStream = new GZipStream(originalStream, CompressionMode.Decompress);
                             using (var ms = new MemoryStream())
@@ -97,6 +98,11 @@ namespace LiGet.Cache.Proxy
                         {
                             _log.Error("Something went wrong when intercepting origin response", ex);
                             throw new Exception("Intercepting origins response failed", ex);
+                        }
+                        finally {
+                            if(originalStream != null)
+                                originalStream.Dispose();
+                            originalResponse.Dispose();
                         }
                     }
                 };
@@ -116,26 +122,32 @@ namespace LiGet.Cache.Proxy
                 var originalResponse = await client.SendAsync(request);
                 if(!(200 <= (int)originalResponse.StatusCode && (int)originalResponse.StatusCode < 300))
                     _log.WarnFormat("Origin server {0} response status is {1}",request.RequestUri, originalResponse.StatusCode);
-                return new Response()
+                return new DisposingResponse(originalResponse)
                 {
                     StatusCode = (Nancy.HttpStatusCode)(int)originalResponse.StatusCode,
                     ContentType = originalResponse.Content.Headers.ContentType.MediaType,
                     Contents = netStream =>
                     {
+                        Stream originalStream = null;
                         try
                         {
-                            Stream originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
+                            originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
                             if (originalResponse.Content.Headers.ContentEncoding.Contains("gzip"))
                                 originalStream = new GZipStream(originalStream, CompressionMode.Decompress);
                             if(new MediaRange("application/json").Matches(new MediaRange(originalResponse.Content.Headers.ContentType.MediaType)))
                                 interceptor.Intercept(replacements, originalStream, netStream);
                             else
-                                originalStream.CopyTo(netStream);
+                                originalStream.CopyTo(netStream);                            
                         }
                         catch (Exception ex)
                         {
                             _log.Error("Something went wrong when intercepting origin response", ex);
                             throw new Exception("Intercepting origins response failed", ex);
+                        }
+                        finally {
+                            if(originalStream != null)
+                                originalStream.Dispose();
+                            originalResponse.Dispose();
                         }
                     }
                 };
@@ -166,11 +178,12 @@ namespace LiGet.Cache.Proxy
                         ContentType = originalResponse.Content.Headers.ContentType.MediaType,
                         Contents = netStream =>
                         {
+                            Stream originalStream = null;
                             try
                             {
                                 using (var cacheTx = nupkgCache.OpenTransaction())
                                 {
-                                    Stream originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
+                                    originalStream = originalResponse.Content.ReadAsStreamAsync().Result;
                                     using (var ms = new MemoryStream((int)originalResponse.Content.Headers.ContentLength.GetValueOrDefault(4096)))
                                     {
                                         originalStream.CopyTo(ms);
@@ -197,8 +210,9 @@ namespace LiGet.Cache.Proxy
                                 _log.Error("Something went wrong when serving nupkg", ex);
                                 throw new Exception("Serving nupkg failed", ex);
                             }
-                            finally
-                            {
+                            finally {
+                                if(originalStream != null)
+                                    originalStream.Dispose();
                                 originalResponse.Dispose();
                             }
                         }
