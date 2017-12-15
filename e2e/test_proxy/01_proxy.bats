@@ -8,7 +8,7 @@ load '/opt/bats-assert/load.bash'
 }
 
 @test "paket install latest log4net version" {
-  run /bin/bash -c "cd paket && paket install"
+  run /bin/bash -c "cd paket && mono /ide/work/.paket/paket.exe install"
   refute_output --partial 'Could not download'
   refute_output --partial 'went wrong'
   assert_equal "$status" 0
@@ -16,17 +16,9 @@ load '/opt/bats-assert/load.bash'
 }
 
 @test "paket install with constraint (<= 2.0.8)" {
-  run /bin/bash -c "cd paket-constraint && paket install"
+  run /bin/bash -c "cd paket-constraint && mono /ide/work/.paket/paket.exe install"
   refute_output --partial 'Could not download'
   refute_output --partial 'went wrong'
   assert_equal "$status" 0
   assert [ -e 'paket-constraint/packages/log4net/log4net.2.0.8.nupkg' ]
-}
-
-@test "paket update with bug01" {
-  run /bin/bash -c "cd paket-bug01 && paket update"
-  refute_output --partial 'Could not download'
-  refute_output --partial 'went wrong'
-  refute_output --partial "Couldn't get package details"
-  assert_equal "$status" 0
 }

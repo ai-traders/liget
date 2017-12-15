@@ -15,7 +15,7 @@ load '/opt/bats-assert/load.bash'
 }
 
 @test "paket update latest package version (1.0.0)" {
-  run /bin/bash -c "cd paket && paket update"
+  run /bin/bash -c "cd paket && mono /ide/work/.paket/paket.exe update"
   refute_output --partial 'Could not download'
   refute_output --partial 'went wrong'
   assert_equal "$status" 0
@@ -39,7 +39,7 @@ load '/opt/bats-assert/load.bash'
 }
 
 @test "paket update latest package version (2.1.0)" {
-  run /bin/bash -c "cd paket && paket update"
+  run /bin/bash -c "cd paket && mono /ide/work/.paket/paket.exe update"
   refute_output --partial 'Could not download'
   refute_output --partial 'went wrong'
   assert_equal "$status" 0
@@ -47,7 +47,7 @@ load '/opt/bats-assert/load.bash'
 }
 
 @test "paket install with constraint (< 2.0.0)" {
-  run /bin/bash -c "cd paket-constraint && paket install"
+  run /bin/bash -c "cd paket-constraint && mono /ide/work/.paket/paket.exe install"
   refute_output --partial 'Could not download'
   refute_output --partial 'went wrong'
   assert_equal "$status" 0

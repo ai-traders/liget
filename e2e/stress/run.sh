@@ -4,12 +4,14 @@ set -e
 echo "Sleeping 4s to wait for server to be ready"
 sleep 4
 
+mono /ide/work/.paket/paket.bootstrapper.exe
+
 STRESS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $STRESS_DIR
 
 echo "paket update to download a bunch of packages"
 cd paket
-paket update
+mono /ide/work/.paket/paket.exe update
 echo "nuget push a bunch of packages"
 ./push_all.sh
 cd ..
@@ -28,7 +30,7 @@ do
   </packageSources>
 </configuration>
 EOF
-        bash -c "cd paket-$i && HOME=/home/ide/$i paket install -f" &
+        bash -c "cd paket-$i && HOME=/home/ide/$i mono /ide/work/.paket/paket.exe install -f" &
 done
 
 time wait

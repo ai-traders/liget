@@ -61,6 +61,7 @@ case "${command}" in
     ;;
   build_inputs)
     build_inputs
+    mono /ide/work/.paket/paket.bootstrapper.exe
     ;;
   itest)
     ide "./tasks.sh build_inputs"

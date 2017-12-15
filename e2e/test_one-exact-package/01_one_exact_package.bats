@@ -14,14 +14,14 @@ load '/opt/bats-assert/load.bash'
 }
 
 @test "paket install pinned package version" {
-  run /bin/bash -c "cd paket-pinned && paket install"
+  run /bin/bash -c "cd paket-pinned && mono /ide/work/.paket/paket.exe install"
   refute_output --partial 'Could not download'
   refute_output --partial 'went wrong'
   assert_equal "$status" 0
 }
 
 @test "paket restore pinned package version" {
-  run /bin/bash -c "cd paket-locked && paket restore"
+  run /bin/bash -c "cd paket-locked && mono /ide/work/.paket/paket.exe restore"
   refute_output --partial 'Could not download'
   refute_output --partial 'went wrong'
   assert_equal "$status" 0
