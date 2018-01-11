@@ -1,3 +1,7 @@
+### 0.2.2 (2018-Jan-11)
+
+ * fix \#1 - do not cache catalog pages on disk
+
 ### 0.2.1 (2017-Dec-15)
 
  * minor fix to not save scan date on failure
