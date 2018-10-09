@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -7,14 +7,14 @@
   <ItemGroup>
     <PackageReference Include="DBreeze" Version="1.89.0" />
     <PackageReference Include="log4net" Version="2.0.8" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.OData.vNext" Version="6.0.2-alpha-rtm" />
     <PackageReference Include="Microsoft.OData.Core" Version="7.3.1" />
     <PackageReference Include="Microsoft.OData.Edm" Version="7.3.1" />
     <PackageReference Include="Microsoft.Spatial" Version="7.3.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.0.0" />
-    <PackageReference Include="Nancy" Version="2.0.0-Pre1885" />
-    <PackageReference Include="Nancy.Bootstrappers.Autofac" Version="2.0.0-Pre486" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.1.1" />
+    <PackageReference Include="Nancy" Version="2.0.0-clinteastwood" />
+    <PackageReference Include="Nancy.Bootstrappers.Autofac" Version="2.0.0-clinteastwood" />
     <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="NuGet.CatalogReader" Version="1.5.12" />
     <PackageReference Include="NuGet.Packaging" Version="4.4.0" />
