@@ -1,0 +1,63 @@
+source https://api.nuget.org/v3/index.json
+framework netcoreapp2.1, netstandard2.0
+storage: none
+
+nuget McMaster.Extensions.CommandLineUtils
+nuget Microsoft.AspNetCore.App 2.1.4
+nuget Microsoft.AspNetCore.TestHost
+nuget Microsoft.Azure.Search
+nuget Microsoft.Data.SQLite
+nuget Microsoft.EntityFrameworkCore.Design
+nuget Microsoft.EntityFrameworkCore.Relational
+nuget Microsoft.EntityFrameworkCore.Sqlite
+nuget Microsoft.Extensions.Configuration.FileExtensions
+nuget Microsoft.Extensions.Configuration.Json
+nuget Microsoft.Extensions.Logging.Abstractions
+nuget Microsoft.Extensions.Logging.Configuration
+nuget Microsoft.Extensions.Logging.Console
+nuget Microsoft.Extensions.Options.ConfigurationExtensions
+nuget Gelf.Extensions.Logging
+nuget morelinq
+nuget NuGet.Client
+nuget NuGet.Packaging
+nuget NuGet.Packaging.Core
+nuget NuGet.Protocol
+nuget WindowsAzure.Storage
+nuget carter
+nuget Microsoft.AspNetCore.OData.vNext 6.0.2-alpha-rtm
+nuget Microsoft.OData.Core
+nuget Microsoft.OData.Edm
+nuget Microsoft.Spatial
+
+group Tools
+  source https://api.nuget.org/v3/index.json
+
+  nuget xunit.runner.console
+  nuget Fake.IO.FileSystem
+  nuget Fake.DotNet.MSBuild
+  nuget Fake.Core.Target
+  nuget Fake.Core.ReleaseNotes
+  nuget Fake.DotNet.Cli
+  nuget Fake.Tools.Git
+  nuget Fake.Api.GitHub
+  nuget Fake.DotNet.Testing.XUnit2
+  nuget Fake.IO.Zip
+
+group Test
+  source https://api.nuget.org/v3/index.json
+  framework netcoreapp2.1, netstandard2.0
+  storage: none
+
+  clitool dotnet-xunit
+  nuget Moq
+  nuget xunit
+  nuget xunit.runner.visualstudio
+  nuget xunit.runner.console
+  nuget Microsoft.NET.Test.Sdk
+  nuget Microsoft.AspNetCore.App 2.1.4
+  nuget Microsoft.AspNetCore.TestHost
+  nuget Microsoft.Extensions.Logging
+  nuget Microsoft.Extensions.Logging.Abstractions
+  nuget Microsoft.Extensions.Logging.Configuration
+  nuget NuGet.Protocol
+  nuget carter

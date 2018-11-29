@@ -1,0 +1,9 @@
+Microsoft.EntityFrameworkCore.Relational
+NuGet.Client
+NuGet.Packaging
+NuGet.Packaging.Core
+NuGet.Protocol
+Microsoft.AspNetCore.OData.vNext
+Microsoft.OData.Core
+Microsoft.OData.Edm
+Microsoft.Spatial

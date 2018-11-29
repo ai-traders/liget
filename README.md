@@ -1,8 +1,10 @@
+[![Build Status](https://travis-ci.com/ai-traders/liget.svg?branch=master)](https://travis-ci.com/ai-traders/liget)
+
 # LiGet
 
 [![Join the chat at https://gitter.im/AI-Traders/liget-server](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/AI-Traders/liget-server?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-A nuget server created with linux-first approach.
+A [NuGet server](https://docs.microsoft.com/en-us/nuget/api/overview) with linux-first approach.
 
 ### Why? and goals
 
@@ -12,33 +14,68 @@ Running windows just to host a several nuget packages seems like a big waste.
 
 This project aims at following:
  * provide **self-hosted** nuget server for private package hosting.
+ * provide caching mode for public packages from nuget.org
  * hosted with kestrel on dotnet core 2.0
- * released as ready to use [docker image](#docker), preferably to be deployed to kubernetes.
+ * released as ready to use, **end-to-end** tested [docker image](#docker), preferably to be deployed to kubernetes.
  * continuously tested with paket including several common project setup cases
  * good performance when server is used by multiple clients,
  such as CI agents building various projects, downloading lots of packages at the same time.
  * easy to develop on linux in VS Code, not only in VS on windows.
- * if possible, implement caching mode for public packages from nuget.org
 
-## Features and limitations
+#### BaGet fork
 
- * Limited **NuGet V2 API for hosting private packages**. Includes endpoints `FindPackagesById()`, `Packages()` and `PUT /api/v2`.
- Which is sufficient for clients to download, push, find or restore packages.
- * **Caching proxy of with limited NuGet V3 API**. It intercepts responses from selected
- services of `https://api.nuget.org/v3/index.json` replacing `https://api.nuget.org/v3`
- by local LiGet server URL.
-   - Allows to cache `.nupkg` packages on server,
-rather than downloading them from the Internet each time.
-   - Caches package metadata and invalidates when upstream changes are detected using [NuGet.CatalogReader](https://github.com/emgarten/NuGet.CatalogReader).
-   - For end user effect is similar to running a mirror of nuget.org,
-   but instead of downloading all packages, cache keeps only the ones which were ever requested.
+TL;DR since `1.0.0` LiGet is a fork of BaGet. Read lower why...
 
-Not implemented:
+We have previously created and used LiGet from various pojects, just to get it working on dotnet core.
+When [BaGet](https://github.com/loic-sharma/BaGet) started to look promissing,
+we contributed some work there with indention to migrate from LiGet to BaGet and obsolete the project.
+However, following was deal-breaker:
+ - What we consider critical basis for mature project [was not merged](https://github.com/loic-sharma/BaGet/pull/108):
+    - build must be reproducible, which in current .Net world means `paket.lock` commited in source repository.
+    - released product must be built CD-style. Which in short means to build artifacts only once, and run them through a pipeline of tests and QA. It is not acceptable to run `dotnet build` or `dotnet publish` several times for same commit. There must be a well-defined set of binaries which were tested through all pipeline stages.
+    - if docker is released then docker image must be tested with end-case tests running actual nuget clients.
+  - long feedback time for PRs in BaGet. I spend only a few days at time to get job done. I cannot wait weeks for review.
 
- * V2 search, filter and alike queries. These seem to used only by UI or nuget gallery.
- * Authentication and user-based access. Currently the server is open for all requests.
+How is this fork different from upstream BaGet:
+- using FAKE for build system, rather than scripting in MsBuild.
+- added unit, integration tests and e2e tests with paket and nuget cli.
+- we use docker and [CLI tool IDE](https://github.com/ai-traders/ide) to create reproducible [development](#Development) environment for LiGet.
+- added release cycle and testing of docker image using continuous delivery practices.
+- implements read-through cache as separate endpoint. Which at the time [does not work upstream](https://github.com/loic-sharma/BaGet/issues/93).
+- uses paket and FAKE for build system.
+- uses [Carter](https://github.com/CarterCommunity/Carter) for routing rather than bare Asp routing.
+- adds ability to log to graylog
+- adds V2 implementation from old LiGet
+- caching proxy has different endpoint `/api/cache/v3/index.json` than private packages `/api/v3/index.json`
 
 # Usage
+
+See [releases](https://github.com/ai-traders/LiGet/releases) to get docker image version.
+
+```
+docker run -ti -p 9011:9011 tomzo/liget:<version>
+```
+
+*TODO: change back to liget convention /data/*
+
+For persistent data, you should mount **volumes**:
+ - `/var/baget/packages` contains pushed private packages
+ - `/var/baget/db` contains sqlite database
+ - `/var/baget/cache` contains cached public packages
+
+You should change the default api key (`NUGET-SERVER-API-KEY`) used for pushing packages,
+by setting SHA256 into `ApiKeyHash` environment variable. You can generate it with `echo -n 'my-secret' | sha256sum`.
+
+### Logging to graylog
+
+LiGet is using [GELF provider for Microsoft.Extensions.Logging](https://github.com/mattwcole/gelf-extensions-logging)
+to optionally configure logging via GELF to graylog.
+To configure docker image for logging to your graylog, you can set following environment variables:
+```
+Graylog__Host=your-graylog.com
+Graylog__Port=12201
+Graylog__AdditionalFields__environment=development
+```
 
 ## On client side
 
@@ -49,15 +86,21 @@ For **dotnet CLI and nuget** you need to configure nuget config `~/.nuget/NuGet/
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
-    <add key="nuget.org" value="https://www.nuget.org/api/v2" protocolVersion="2" />
-    <add key="liget" value="http://liget:9011/api/v2" protocolVersion="2" />
+    <add key="nuget" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
+    <add key="baget" value="http://liget:9011/v3/index.json" protocolVersion="3" />
   </packageSources>
 </configuration>
 ```
 
 For paket, in `paket.dependencies`, just specify another source:
 ```
-source http://liget:9011/api/v2
+source http://liget:9011/v3/index.json
+```
+
+### Pushing packages
+
+```
+dotnet nuget push mypackage.1.0.0.nupkg --source http://liget:9011/v3/index.json --api-key NUGET-SERVER-API-KEY
 ```
 
 ### Usage as caching proxy
@@ -67,23 +110,64 @@ For **dotnet CLI and nuget** you need to configure nuget config `~/.nuget/NuGet/
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
-    <add key="liget-proxy" value="http://liget:9011/api/cache/v3/index.json" protocolVersion="3" />
-    <add key="liget" value="http://liget:9011/api/v2" protocolVersion="2" />
+    <add key="baget" value="http://liget:9011/cache/v3/index.json" protocolVersion="3" />
+    <add key="baget" value="http://liget:9011/v3/index.json" protocolVersion="3" />
   </packageSources>
 </configuration>
 ```
 
 For paket, in `paket.dependencies`, just specify liget as the 2 only sources
 ```
-source http://liget:9011/api/cache/v3/index.json
+source http://liget:9011/cache/v3/index.json
 # public packages...
 
-source http://liget:9011/api/v2
+source http://liget:9011/v3/index.json
 # private packages...
 ```
 
+## Migrating from LiGet
+
+*TODO: this will be inversed to migration from BaGet*
+
+If you have been using LiGet before, then many of your nuget sources in projects,
+ could look like this, e.g. in paket:
+```
+source http://my-nuget.com/api/cache/v3/index.json
+# public packages
+
+source http://my-nuget.com/api/v2
+# private packages
+```
+Above endpoints end up in `paket.lock` too.
+BaGet has different endpoints (no `/api` before endpoints).
+If you want to deploy BaGet in place of LiGet and (at least temporarily) keep above endpoints,
+you can enable LiGet compatibity mode in BaGet.
+```
+LiGetCompat__Enabled=true
+```
+This will enable following behavior:
+ - `/api/cache/v3/index.json` returns same content as original BaGet's `/cache/v3/index.json`.
+ - `/api/v2/*` returns **V2** resources, same as `/v2/*`
+
+### Importing packages
+
+To make transition from LiGet or any other server which keeps `.nupkg` files in a directory,
+there is an `import` command:
+```
+dotnet BaGet.dll import --path dir
+```
+In the docker image you can setup environment variable - `BAGET_IMPORT_ON_BOOT=/data/simple`
+which will cause baget to first search for `nupkg` files in `$BAGET_IMPORT_ON_BOOT`, before starting server.
+Packages which were already added are skipped.
+Setting `BAGET_IMPORT_ON_BOOT=/data/simple` is sufficient for migration from LiGet.
+
+*Note: you only need to set this variable once to perform initial migration.
+You should unset it in later deployments to avoid uncessary scanning.*
+
 
 ## Docker
+
+*TODO: update paths*
 
 The simplest start command is
 
@@ -109,6 +193,8 @@ The exception to this is when `/data` is owned by `root`, then liget has to run 
 
 ### Configuration
 
+*TODO: update names*
+
 Everything can be configured with environment variables:
 
  * `LIGET_BACKEND` by default `simple`. Currently the only implementation
@@ -121,6 +207,8 @@ Everything can be configured with environment variables:
  * `LIGET_IGNORE_SYMBOLS`, by default `false`. Not implemented.
 
 #### Runtime
+
+*TODO: implement as was in liget*
 
 Every dotnet Core application has `.runtimeconfig.json`, which can configure garbage collector.
 You may want to set following:
@@ -158,59 +246,63 @@ Logging to graylog.
  * `LIGET_LOG_GELF_HOST` - no default. But should be configured when `LIGET_LOG_BACKEND=gelf`
  * `LIGET_LOG_GELF_PORT` - by default `12201`.
 
-# Performance
-
-We are running load tests against the server under following setup:
-1. There is a dedicated 2-core VM with capped IO limits on disk:
- * max read bytes/sec 64 MB/s
- * max write bytes/sec 32 MB/s
- * max read IO ops/s 3000
- * max write IO ops/s 1200
-2. On the VM we start 2 docker containers with docker-compose, server has [limit on memory of 550MB](docker-compose-e2e.yml#L19).
-3. LiGet is configured with defaults and:
- * `LIGET_LIBUV_THREAD_COUNT=16`
-
-The stress tests run
-1. paket install to download about 500MB of packages, via liget caching proxy V3 API.
-2. nuget push of each package to repository using V2 API.
-3. Then 6 workers run `paket install -f` via liget caching proxy V3 API.
-
-Under these conditions:
- * cache download performance is *good*. The 6 workers end download within 9 minutes and are mostly constrained by IO limit. Same test on my local machine on SSD drive, passes in 3 minutes.
- * memory usage reported by docker stats peaks at about 520 MB. So docker mem_limit of 550MB-600MB makes sense.
-
 # Development
 
-All building and tests are done with [IDE](https://github.com/ai-traders/ide) and docker.
+We rely heavily on docker to create reproducible development environment.
+This allows to execute entire build process on any machine which has:
+ - local docker daemon
+ - docker-compose
+ - `ide` script on path. It is a [CLI tool](https://github.com/ai-traders/ide)
+  wrapper around docker and docker-compose which deals with issues such as ownership of files,
+  mounting proper volumes, cleanup, etc.
 
-### Build
-
+You can execute entire build from scratch to e2e tests (like [travis](.travis.yml)).
+ - Install docker daemon if you haven't already
+ - Install docker-compose
+ - Install IDE
 ```
-dotnet restore
-dotnet build
-```
-
-Or
-
-```
-./tasks.sh build
+sudo bash -c "`curl -L https://raw.githubusercontent.com/ai-traders/ide/master/install.sh`"
 ```
 
-### Run unit tests
+Then to execute entire build:
+```
+./tasks.sh all
+```
 
-```
-./tasks.sh build
-./tasks.sh test
-```
+This will pull `dotnet-ide` [docker image](https://github.com/ai-traders/docker-dotnet-ide) which
+has all build and test dependencies: dotnet SDK, mono, paket CLI, FAKE, Node.js.
+
+Usage of IDE is optional and you can easily contribute if you have above tools installed on your machine.
+
+## Release cycle
+
+Releases are automated from the master branch, executed by GoCD pipeline, release is published only if all tests have passed.
+[Travis](https://travis-ci.com/ai-traders/LiGet) executes the same tasks in the same environment and is for reference to the public community.
+If there is `- Unreleased` note at the top of [Changelog](CHANGELOG.md),
+then release is a preview, tagged as `<version>-<short-commit-sha>`.
+Otherwise it is a full release, tagged as `<version>`.
+
+### Submitting patches
+
+1. Fork and create branch.
+2. Commit your changes.
+3. Submit a PR, travis will run all tests.
+4. Address issues in the review and build failures.
+5. Before merge rebase on master `git rebase -i master` and possibly squash some of the commits.
+
+### Issues
+
+If you have an idea or found a bug, open an issue to discuss it.
 
 # License and authors
 
 Firsly, this project is using lots of code from other nuget servers,
 either as reference or actually porting pieces of code.
 Credits:
+ * Loïc Sharma for creating [BaGet](https://github.com/loic-sharma/BaGet)
  * [TanukiSharp/MinimalNugetServer as minimal dotnet core setup](https://github.com/TanukiSharp/MinimalNugetServer)
  * [emresenturk/NetCoreNugetServer another minimal dotnet core server](https://github.com/emresenturk/NetCoreNugetServer)
  * [official NuGet.Server](https://github.com/NuGet/NuGet.Server)
  * [NuGet.Lucene](https://github.com/themotleyfool/NuGet.Lucene/tree/master/source) which is part of klondike
 
-This project is licenced under Apache License 2.0.
+This project is licenced under MIT.

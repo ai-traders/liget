@@ -1,0 +1,3 @@
+source http://liget:9011/cache/v3/index.json
+
+nuget fsharp.core = 4.5.3

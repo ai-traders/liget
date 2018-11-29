@@ -2,21 +2,18 @@
 
 set -e
 
-if [[ ! -f ./releaser ]];then
-  wget --quiet http://http.archive.ai-traders.com/releaser/1.0.3/releaser
-fi
-source ./releaser
-if [[ ! -f ./docker-ops ]];then
-  wget --quiet http://http.archive.ai-traders.com/docker-ops/0.2.1/docker-ops
-fi
-source ./docker-ops
-# This goes as last in order to let end user variables override default values
+source .build/docker-ops
+source .build/releaser
+
 releaser_init
+
+# Fix for multi-line environment variables not working in docker envs
+unset TRAVIS_COMMIT_MESSAGE
 
 image_name_no_registry="liget"
 private_image_name="docker-registry.ai-traders.com/${image_name_no_registry}"
 public_image_name="tomzo/${image_name_no_registry}"
-image_dir="./docker"
+image_dir="./"
 imagerc_filename="imagerc"
 
 function make_clean_dir {
@@ -24,79 +21,76 @@ function make_clean_dir {
   rm -rf $dir && mkdir -p $dir && cd $dir
 }
 
-function build_inputs {
-  cd e2e/input &&\
-    make_clean_dir 'liget-test1' && dotnet new classlib && dotnet pack && cd .. &&\
-    make_clean_dir 'liget-two' && dotnet new classlib && dotnet pack && dotnet pack /p:PackageVersion=2.1.0 &&\
-  cd ../..
+export E2E_PAKET_VERSION="5.181.1"
+
+function get_version_tag {
+  changelog_first_line=$(cat ${changelog_file} | head -1)
+  changelog_version=$(get_last_version_from_changelog "${changelog_file}")
+  short_sha=$(git rev-parse --short=8 HEAD)
+  if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"UNRELEASED"* ]];then
+    log_info "Top of changelog has 'Unreleased' flag"
+    echo "$changelog_version-$short_sha"
+  else
+    echo "$changelog_version"
+  fi
 }
 
 command="$1"
 case "${command}" in
+  _build)
+      ./build.sh --target Build
+      ./build.sh --target SpaPublish
+      ;;
+  _unit_test)
+      ./build.sh --target Build --single-target
+      ;;
   build)
-    dotnet restore
-    dotnet publish -c Release src/LiGet.App/LiGet.App.csproj
-    dotnet publish -c Release tests/LiGet.Tests/LiGet.Tests.csproj
+    ide "./tasks.sh _build"
     ;;
-  test)
-    mkdir -p tools
-    cd tools && nuget install xunit.runner.console -Version 2.3.0 && cd ..
-    test_assembly='tests/LiGet.Tests/bin/Release/netcoreapp2.0/publish/LiGet.Tests.dll'
-    shift
-    dotnet tools/xunit.runner.console.2.3.0/tools/netcoreapp2.0/xunit.console.dll $test_assembly -parallel none -maxthreads 1 -verbose
+  unit_test)
+    ide "./tasks.sh _unit_test"
     ;;
-  qtest)
-    dotnet publish -c Release tests/LiGet.Tests/LiGet.Tests.csproj
-    test_assembly='tests/LiGet.Tests/bin/Release/netcoreapp2.0/publish/LiGet.Tests.dll'
-    shift
-    dotnet tools/xunit.runner.console.2.3.0/tools/netcoreapp2.0/xunit.console.dll $test_assembly -parallel none -maxthreads 1 -verbose $@
-    ;;
-  prep_qe2e)
-    dotnet publish -c Release src/LiGet.App/LiGet.App.csproj
-    build_inputs
-    ;;
-  qe2e)
-    ide "./tasks.sh prep_qe2e"
-    ide --idefile Idefile.e2e "./e2e/run.sh"
-    ;;
-  build_inputs)
-    build_inputs
-    mono /ide/work/.paket/paket.bootstrapper.exe
+  _build_inputs)
+    ./build.sh --target ExampleNuGets --single-target
     ;;
   itest)
     ide "./tasks.sh build_inputs"
     ide --idefile Idefile.e2e "./e2e/run.sh"
     ;;
   build_docker)
-    # pwd is the ${image_dir}
     image_tag=$2
     docker_build "${image_dir}" "${imagerc_filename}" "${private_image_name}" "$image_tag"
     exit $?
     ;;
   test_docker)
-    source "${image_dir}/${imagerc_filename}"
-    if [[ -z "AIT_DOCKER_IMAGE_NAME" ]]; then
-      echo "fail! AIT_DOCKER_IMAGE_NAME not set"
-      exit 1
-    fi
-    if [[ -z "AIT_DOCKER_IMAGE_TAG" ]]; then
-      echo "fail! AIT_DOCKER_IMAGE_TAG not set"
-      exit 1
-    fi
-    ide "./tasks.sh build_inputs"
+    source_imagerc "${image_dir}"  "${imagerc_filename}"
+    ide "./tasks.sh _build_inputs"
+    rm -rf e2e/data/db/*
+    rm -rf e2e/data/packages/*
+    rm -rf e2e/data/cache/*
+    rm e2e/test_*/nuget*/*/ -rf
     ide --idefile Idefile.e2e-docker "./e2e/run.sh"
     ;;
   stress_docker)
-    source "${image_dir}/${imagerc_filename}"
-    if [[ -z "AIT_DOCKER_IMAGE_NAME" ]]; then
-      echo "fail! AIT_DOCKER_IMAGE_NAME not set"
-      exit 1
-    fi
-    if [[ -z "AIT_DOCKER_IMAGE_TAG" ]]; then
-      echo "fail! AIT_DOCKER_IMAGE_TAG not set"
-      exit 1
-    fi
+    source_imagerc "${image_dir}"  "${imagerc_filename}"
     ide --idefile Idefile.e2e-docker "e2e/stress/run.sh"
+    ;;
+  liget_compat_docker)
+    source_imagerc "${image_dir}"  "${imagerc_filename}"
+    ide "./tasks.sh _build_inputs"
+    rm -rf e2e/liget-compat/data/db/*
+    rm -rf e2e/liget-compat/data/packages/*
+    rm -rf e2e/liget-compat/data/cache/*
+    export LiGetCompat__Enabled=true
+    export BAGET_IMPORT_ON_BOOT=/data/simple
+    ide --idefile Idefile.liget-compat "e2e/liget-compat/run.sh"
+    ;;
+  all)
+    ide "./build.sh --target All"
+    ./tasks.sh build_docker
+    ./tasks.sh test_docker
+    ./tasks.sh liget_compat_docker
+    ./tasks.sh stress_docker
     ;;
   prepare_code_release)
     version=$2
@@ -106,65 +100,15 @@ case "${command}" in
     set_version_in_changelog "${changelog_file}" "${version}"
     exit $?
     ;;
-  code_release)
-    # conditional release
-    git fetch origin
-    current_commit_git_tags=$(git tag -l --points-at HEAD)
-    if [[ "${current_commit_git_tags}" != "" ]];then
-      log_error "Current commit is already tagged"
-      exit 1
-    else
-      log_info "Current commit has no tags, starting code release..."
-      version_from_changelog=$(get_last_version_from_changelog "${changelog_file}")
-      validate_version_is_semver "${version_from_changelog}"
-      changelog_first_line=$(cat ${changelog_file} | head -1)
-      if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]];then
-        log_error "Top of changelog has 'Unreleased' flag"
-        exit 1
-      fi
-      if git tag | grep "${version_from_changelog}"; then
-        log_error "The last version from changelog was already git tagged: ${version_from_changelog}"
-        exit 1
-      fi
-      git tag "${version_from_changelog}" && git push origin "${version_from_changelog}"
-    fi
-    exit $?
-    ;;
-  github_release)
-    ./tasks.sh package_tar
-    released_version=$(get_last_version_from_changelog "${changelog_file}")
-    gh_release='./tools/bin/linux/amd64/github-release'
-    if [[ ! -f $gh_release ]];then
-      cd tools
-      wget --quiet https://github.com/aktau/github-release/releases/download/v0.7.2/linux-amd64-github-release.tar.bz2
-      tar xf linux-amd64-github-release.tar.bz2
-      rm linux-amd64-github-release.tar.bz2
-      cd ..
-    fi
-    $gh_release release \
-      --user ai-traders \
-      --repo liget \
-      --tag $released_version \
-      --name $released_version \
-      --description "LiGet $released_version, docker image \`tomzo/liget:$released_version\`" \
-      --pre-release
-
-    $gh_release upload \
-      --user ai-traders \
-      --repo liget \
-      --tag $released_version \
-      --name "liget-binaries-$released_version.tar.gz" \
-      --file "liget-binaries-$released_version.tar.gz"
-    ;;
   publish_docker_private)
     source_imagerc "${image_dir}"  "${imagerc_filename}"
-    production_image_tag=$(get_last_version_from_changelog "${changelog_file}")
+    production_image_tag=$(get_version_tag)
     docker_push "${AIT_DOCKER_IMAGE_NAME}" "${AIT_DOCKER_IMAGE_TAG}" "${production_image_tag}"
     exit $?
     ;;
   publish_docker_public)
     source_imagerc "${image_dir}"  "${imagerc_filename}"
-    production_image_tag=$(get_last_version_from_changelog "${changelog_file}")
+    production_image_tag=$(get_version_tag)
     docker login --username tomzo --password ${DOCKERHUB_PASSWORD}
     testing_image_tag="${AIT_DOCKER_IMAGE_TAG}"
 
@@ -190,9 +134,8 @@ case "${command}" in
     set +x +e
     exit $?
     ;;
-  package_tar)
-    released_version=$(get_last_version_from_changelog "${changelog_file}")
-    tar -zcvf "liget-binaries-$released_version.tar.gz" publish
+  github_release)
+    ide "./build.sh --target GitHubRelease"
     ;;
     *)
       echo "Invalid command: '${command}'"

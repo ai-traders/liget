@@ -1,6 +1,7 @@
+format_version: 3
 pipelines:
   liget:
-    group: stcdev
+    group: liget
     label_template: "${git[:8]}"
     materials:
       git:
@@ -13,39 +14,30 @@ pipelines:
               elastic_profile_id: w.c2.m2048.e10
               artifacts:
                 - build:
-                    source: src/LiGet.App/bin/Release/netcoreapp2.0/publish/**/*
-                    destination: src/LiGet.App/bin/Release/netcoreapp2.0/publish
+                    source: src/*/bin/Release/netcoreapp2.1/publish/**/*
+                    destination: src
                 - build:
-                    source: tests/LiGet.Tests/bin/Release/netcoreapp2.0/publish/**/*
-                    destination: tests/LiGet.Tests/bin/Release/netcoreapp2.0/publish
+                    source: tests/*/bin/Release/netcoreapp2.1/publish/**/*
+                    destination: tests
               tasks:
                - exec:
                   command: ide
                   arguments:
-                    - "./tasks.sh build"
+                    - "./build.sh --target Build"
       - test_pack:
           clean_workspace: true
           jobs:
-            docker:
-              resources:
-                - docker_builder
-              artifacts:
-                - build:
-                    source: docker/imagerc*
-                    destination:
-              tasks:
-               - fetch:
-                  stage: build
-                  job: build
-                  source: src/LiGet.App/bin/Release/netcoreapp2.0/publish
-                  destination: docker
-               - exec:
-                  command: /bin/bash
-                  arguments:
-                    - -c
-                    - "ops_docker_push=true ./tasks.sh build_docker ${GO_PIPELINE_LABEL}"
-            unit:
+            test:
               elastic_profile_id: w.c2.m2048.e10
+              tabs:
+                test_results: "test-results/TestResults.html"
+              artifacts:
+                - test:
+                    source: "*TestsResults.xml"
+                    destination: test-results
+                - build:
+                    source: "*TestResults.html"
+                    destination: test-results
               tasks:
                - fetch:
                   stage: build
@@ -55,7 +47,25 @@ pipelines:
                - exec:
                   command: ide
                   arguments:
-                    - "./tasks.sh test"
+                    - "./build.sh --target ExampleNuGets && ./build.sh --target RunTests --single-target"
+            docker:
+              resources:
+                - docker_builder
+              artifacts:
+                - build:
+                    source: "imagerc*"
+                    destination:
+              tasks:
+               - fetch:
+                  stage: build
+                  job: build
+                  source: src/BaGet/bin/Release/netcoreapp2.1/publish
+                  destination: src/BaGet/bin/Release/netcoreapp2.1
+               - exec:
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - "ops_docker_push=true ./tasks.sh build_docker ${GO_PIPELINE_LABEL}"
       - e2e:
           clean_workspace: true
           jobs:
@@ -66,7 +76,7 @@ pipelines:
                   stage: test_pack
                   job: docker
                   source: imagerc
-                  destination: docker/
+                  destination:
                   is_file: true
                - exec:
                   command: /bin/bash
@@ -80,16 +90,13 @@ pipelines:
                     - -c
                     - dmesg | tail -n 100
             stress:
-              elastic_profile_id: w.c2.m4096.e200
-              timeout: 60
-              environment_variables:
-                LIGET_LIBUV_THREAD_COUNT: 16
+              elastic_profile_id: w.c2.m2048.e10
               tasks:
                - fetch:
                   stage: test_pack
                   job: docker
                   source: imagerc
-                  destination: docker/
+                  destination:
                   is_file: true
                - exec:
                   command: /bin/bash
@@ -102,17 +109,26 @@ pipelines:
                   arguments:
                     - -c
                     - dmesg | tail -n 100
-      - release:
-          clean_workspace: true
-          jobs:
-            code:
+            legacy:
               elastic_profile_id: w.c2.m2048.e10
               tasks:
+               - fetch:
+                  stage: test_pack
+                  job: docker
+                  source: imagerc
+                  destination:
+                  is_file: true
                - exec:
                   command: /bin/bash
                   arguments:
                     - -c
-                    - "./tasks.sh code_release"
+                    - "./tasks.sh liget_compat_docker"
+               - exec:
+                  run_if: failed
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - dmesg | tail -n 100
       - publish:
           clean_workspace: true
           jobs:
@@ -121,11 +137,11 @@ pipelines:
                 - docker_builder
               tasks:
                 - fetch:
-                    stage: test_pack
-                    job: docker
-                    source: imagerc
-                    destination: docker/
-                    is_file: true
+                   stage: test_pack
+                   job: docker
+                   source: imagerc
+                   destination:
+                   is_file: true
                 - exec:
                     command: /bin/bash
                     arguments:
@@ -138,11 +154,11 @@ pipelines:
                 DOCKERHUB_PASSWORD: CioRNFm+WifCZPcqU+78+A==
               tasks:
                 - fetch:
-                    stage: test_pack
-                    job: docker
-                    source: imagerc
-                    destination: docker/
-                    is_file: true
+                   stage: test_pack
+                   job: docker
+                   source: imagerc
+                   destination:
+                   is_file: true
                 - exec:
                     command: /bin/bash
                     arguments:
@@ -156,13 +172,13 @@ pipelines:
               secure_variables:
                 GITHUB_TOKEN: J2VpEh3xtuzZuU+kaHVCLM/glpKCSXKhGt3XCmZZTOLARPVLXFPKUaKiqeQ5smiT
               tasks:
-                - fetch:
-                    stage: build
-                    job: build
-                    source: src/LiGet.App/bin/Release/netcoreapp2.0/publish
-                    destination:
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ./tasks.sh github_release
+               - fetch:
+                  stage: build
+                  job: build
+                  source: src/BaGet/bin/Release/netcoreapp2.1/publish
+                  destination: src/BaGet/bin/Release/netcoreapp2.1
+               - exec:
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - ./tasks.sh github_release

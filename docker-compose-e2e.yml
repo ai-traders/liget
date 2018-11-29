@@ -2,7 +2,8 @@ version: '2'
 services:
   default:
     container_name: default
-    image: docker-registry.ai-traders.com/mono-ide:1.4.0
+    # includes mono and dotnet sdk
+    image: tomzo/dotnet-ide:2.1.0
     links:
       - liget:liget
     volumes:
@@ -13,7 +14,7 @@ services:
   liget:
     image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}
     volumes:
-      - ${IDE_WORK}/e2e/data:/data
+      - ${IDE_WORK}/e2e/data/:/var/baget
     env_file:
       - ${ENV_FILE}
     mem_limit: 550m
