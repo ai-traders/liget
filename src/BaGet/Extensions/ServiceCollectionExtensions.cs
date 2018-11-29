@@ -3,9 +3,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
-using BaGet.Azure.Configuration;
-using BaGet.Azure.Extensions;
-using BaGet.Azure.Search;
 using BaGet.Configurations;
 using BaGet.Core;
 using BaGet.Core.Configuration;
@@ -40,7 +37,6 @@ namespace BaGet.Extensions
             services.Configure<BaGetOptions>(configuration);
 
             services.AddBaGetContext();
-            services.ConfigureAzure(configuration);
 
             if (httpServices)
             {
@@ -222,9 +218,6 @@ namespace BaGet.Extensions
                     case StorageType.FileSystem:
                         return provider.GetRequiredService<FilePackageStorageService>();
 
-                    case StorageType.AzureBlobStorage:
-                        return provider.GetRequiredService<BlobPackageStorageService>();
-
                     default:
                         throw new InvalidOperationException(
                             $"Unsupported storage service: {storageOptions.Type}");
@@ -241,8 +234,6 @@ namespace BaGet.Extensions
 
                 return new FilePackageStorageService(options.Path);
             });
-
-            services.AddBlobPackageStorageService();
 
             return services;
         }
@@ -263,9 +254,6 @@ namespace BaGet.Extensions
                     case SearchType.Database:
                         return provider.GetRequiredService<DatabaseSearchService>();
 
-                    case SearchType.Azure:
-                        return provider.GetRequiredService<AzureSearchService>();
-
                     default:
                         throw new InvalidOperationException(
                             $"Unsupported search service: {searchOptions.Type}");
@@ -273,7 +261,6 @@ namespace BaGet.Extensions
             });
 
             services.AddTransient<DatabaseSearchService>();
-            services.AddAzureSearch();
 
             return services;
         }
