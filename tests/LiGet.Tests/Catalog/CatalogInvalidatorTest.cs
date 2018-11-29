@@ -52,7 +52,7 @@ namespace LiGet.Tests.Cache.Catalog
                     // ok
                 };
                 invalidator.Run();
-                store.VerifySet(s => s.LastScanEndDate = It.IsAny<DateTimeOffset>(), Times.Once());
+                store.VerifySet(s => s.LastScanEndDate = It.IsAny<DateTimeOffset>(), Times.AtLeastOnce());
             }
         }
     }
