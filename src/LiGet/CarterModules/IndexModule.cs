@@ -20,6 +20,8 @@ namespace LiGet.CarterModules
     /// </summary>
     public class IndexModule : CarterModule
     {
+        private readonly BaGetCompatibilityOptions _compat;
+
         private IEnumerable<ServiceResource> ServiceWithAliases(string name, string url, params string[] versions)
         {
             foreach (var version in versions)
@@ -29,7 +31,8 @@ namespace LiGet.CarterModules
             }
         }
 
-        public IndexModule() {
+        public IndexModule(BaGetCompatibilityOptions compat) {
+            this._compat = compat;
             Func<HttpRequest, HttpResponse, RouteData, Task> indexHandler = async (req, res, routeData) =>
             {
                 await res.AsJson(new
@@ -45,6 +48,9 @@ namespace LiGet.CarterModules
                 });
             };
             this.Get("/api/v3/index.json", indexHandler);
+            if(_compat != null && _compat.Enabled) {
+                this.Get("/v3/index.json", indexHandler);
+            }
         }
     }
 }

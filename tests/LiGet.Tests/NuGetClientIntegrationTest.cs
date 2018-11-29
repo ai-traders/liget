@@ -31,10 +31,12 @@ namespace LiGet.Tests
         private const string CacheIndex = "api/cache/v3/index.json";
         private const string CompatCacheIndex = "cache/v3/index.json";
         static readonly string MainIndex = "api/v3/index.json";
+        static readonly string CompatIndex = "v3/index.json";
         static readonly string V2Index = "api/v2";
         static readonly string CompatV2Index = "v2";
         public static IEnumerable<object[]> V3Cases = new[] {
             new object[] { MainIndex },
+            new object[] { CompatIndex },
             new object[] { CacheIndex },
             new object[] { CompatCacheIndex },
         };
