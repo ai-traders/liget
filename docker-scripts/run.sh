@@ -1,15 +1,15 @@
 #!/bin/bash
 set -e
 
-DIRECTORY="/var/liget/packages"
+DIRECTORY="/data/simple2"
 OWNER_USERNAME="liget"
 OWNER_GROUPNAME="liget"
 
 # First deployment bootstrap, we might want to change permissions of mounted volumes
-if [ ! -f /var/liget/db/sqlite.db ]; then
+if [ ! -f /data/ef.sqlite/sqlite.db ]; then
   echo "Database does not exist yet. Setting up directory access"
-  mkdir -p /var/liget/packages /var/liget/db /var/liget/cache
-  chown -R liget:liget /var/liget/
+  mkdir -p /data/simple2 /data/ef.sqlite /cache/simple2
+  chown -R liget:liget /data/ /cache/
 fi
 
 ###########################################################################

@@ -273,7 +273,7 @@ __pycache__/
 /*TestsResults.xml
 /*TestResults.html
 /e2e/.paket/paket.exe
-/e2e/data/db/sqlite.db
+/e2e/**/*/sqlite.db
 /e2e/input
 /e2e/**/*.nupkg
 /e2e/**/*.dll
@@ -298,9 +298,11 @@ __pycache__/
 /e2e/test_proxy/paket/paket.lock
 /e2e/test_proxy/paket-constraint/paket.lock
 /e2e/test_one-exact-package/paket-pinned/paket.lock
-/e2e/data/cache/
+/e2e/data/
+/e2e/cache/
 /e2e/stress/paket-*/
 /e2e/stress/paket/paket.lock
 /pkg/
 /e2e/baget-compat/data/
+/e2e/baget-compat/cache
 /e2e/baget-compat/paket/.paket/Paket.Restore.targets

@@ -12,21 +12,21 @@ RUN chmod +x /tini
 ENTRYPOINT ["/tini", "--"]
 
 RUN mkdir -p /home/liget /home/liget/.nuget/NuGet &&\
-    mkdir -p /var/liget/packages /var/liget/db /var/liget/cache &&\
+    mkdir -p /data/simple2 /data/ef.sqlite /cache/simple2 &&\
     groupadd -g 1000 liget &&\
     useradd -d /home/liget -s /bin/bash -u 1000 -g liget liget &&\
-    chown -R liget:liget /home/liget /var/liget/
+    chown -R liget:liget /home/liget /data /cache
 
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ApiKeyHash=658489D79E218D2474D049E8729198D86DB0A4AF43981686A31C7DCB02DC0900 \
     Storage__Type=FileSystem \
-    Storage__Path=/var/liget/packages \
+    Storage__Path=/data/simple2 \
     Database__RunMigrations=true \
     Database__Type=Sqlite \
-    Database__ConnectionString="Data Source=/var/liget/db/sqlite.db" \
+    Database__ConnectionString="Data Source=/data/ef.sqlite/sqlite.db" \
     Mirror__Enabled=true \
     Mirror__UpstreamIndex="https://api.nuget.org/v3/index.json" \
-    Mirror__PackagesPath="/var/liget/cache" \
+    Mirror__PackagesPath="/cache/simple2" \
     Search__Type=Database
 
 

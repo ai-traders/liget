@@ -56,12 +56,10 @@ See [releases](https://github.com/ai-traders/LiGet/releases) to get docker image
 docker run -ti -p 9011:9011 tomzo/liget:<version>
 ```
 
-*TODO: change back to liget convention /data/*
-
 For persistent data, you should mount **volumes**:
- - `/var/liget/packages` contains pushed private packages
- - `/var/liget/db` contains sqlite database
- - `/var/liget/cache` contains cached public packages
+ - `/data/simple2` contains pushed private packages
+ - `/data/ef.sqlite` contains sqlite database
+ - `/cache/simple2` contains cached public packages
 
 You should change the default api key (`NUGET-SERVER-API-KEY`) used for pushing packages,
 by setting SHA256 into `ApiKeyHash` environment variable. You can generate it with `echo -n 'my-secret' | sha256sum`.
@@ -165,8 +163,6 @@ You should unset it in later deployments to avoid uncessary scanning.*
 
 ## Docker
 
-*TODO: update paths*
-
 The simplest start command is
 
 ```bash
@@ -182,8 +178,7 @@ For best reference see the [docker](/docker) directory with Dockerfile and start
 
 ### Volume
 
-All packages, cache, and temporary data is stored in `/data`.
-By default in `/data/<backend>`.
+All packages, cache, and temporary data is stored in /data. By default in `/data/<backend>`.
 
 `/data` will be always owned by `liget`. Startup script switches uid/gid at start
 to fit with whatever was mounted from the host.
@@ -191,18 +186,10 @@ The exception to this is when `/data` is owned by `root`, then liget has to run 
 
 ### Configuration
 
-*TODO: update names*
-
 Everything can be configured with environment variables:
 
- * `LIGET_BACKEND` by default `simple`. Currently the only implementation
- * `LIGET_SIMPLE_ROOT_PATH` - root directory used by `simple` backend. By default `/data/simple`.
- * `LIGET_BACKGROUND_TASKS` - run background tasks periodically. By default `true`.
- * `LIGET_FS_MONITORING` - monitor `LIGET_SIMPLE_ROOT_PATH` for changes. By default `true`, which allows to drop packages directly to `LIGET_SIMPLE_ROOT_PATH` to be added to repo.
- * `LIGET_ALLOW_OVERWRITE`, by default `false`. When `true` allows push to replace previous package with same version.
- * `LIGET_FRAMEWORK_FILTERING`, by default `true`. Not implemented.
- * `LIGET_ENABLE_DELISTING`, by default `true`. Not implemented.
- * `LIGET_IGNORE_SYMBOLS`, by default `false`. Not implemented.
+ * `LIGET_BACKEND` by default `simple2`. In `1.0.0` introduced as the only implementation, replacing previous `simple`.
+ * `LIGET_SIMPLE2_ROOT_PATH` - root directory used by `simple` backend. By default `/data/simple2`.
 
 #### Runtime
 
@@ -222,20 +209,15 @@ Kestrel specific:
 
  * `LIGET_CACHE_PROXY_SOURCE_INDEX` - address of original V3 API to cache. By default `https://api.nuget.org/v3/index.json`.
  * `LIGET_CACHE_INVALIDATION_CHECK_PERIOD` - defines frequency at which a check with upstream server is made to see if cache is invalid. By default `60` (seconds).
- * `LIGET_NUPKG_CACHE_BACKEND` - backend of the .nupkg caching proxy. By default `dbreeze`,
- which, currently is the only implementation.
- * `LIGET_NUPKG_CACHE_DBREEZE_ROOT_PATH` - root directory where dbreeze will store cached packages.
- By default `/data/cache/dbreeze`.
- * `LIGET_NUPKG_CACHE_DBREEZE_BACKEND` - storage backend of dbreeze, can be `disk` or `memory`.
- By default `disk`.
+ * `LIGET_NUPKG_CACHE_BACKEND` - backend of the .nupkg caching proxy. By default `simple2`,
+ which in `1.0.0` was introduced as the only implementation.
+ * `LIGET_NUPKG_CACHE_SIMPLE2_ROOT_PATH` - root directory where dbreeze will store cached packages.
+ By default `/cache/simple2`.
 
 #### Logging
 
  * `LIGET_LOG_LEVEL` - by default `INFO`.
  * `LIGET_LOG_BACKEND` - by default `console`. Also can be `gelf` or `custom`.
-
-Default logging is to console. `log4net` is configured by `/etc/liget/log4net.xml`.
-If you set `LIGET_LOG_BACKEND=custom` then it is expected that you will provide `/etc/liget/log4net.xml`.
 
 ##### Gelf
 

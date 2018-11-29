@@ -65,9 +65,8 @@ case "${command}" in
   test_docker)
     source_imagerc "${image_dir}"  "${imagerc_filename}"
     ide "./tasks.sh _build_inputs"
-    rm -rf e2e/data/db/*
-    rm -rf e2e/data/packages/*
-    rm -rf e2e/data/cache/*
+    rm -rf e2e/data/*/*
+    rm -rf e2e/cache/*/*
     rm e2e/test_*/nuget*/*/ -rf
     ide --idefile Idefile.e2e-docker "./e2e/run.sh"
     ;;
@@ -78,9 +77,8 @@ case "${command}" in
   liget_compat_docker)
     source_imagerc "${image_dir}"  "${imagerc_filename}"
     ide "./tasks.sh _build_inputs"
-    rm -rf e2e/baget-compat/data/db/*
-    rm -rf e2e/baget-compat/data/packages/*
-    rm -rf e2e/baget-compat/data/cache/*
+    rm -rf e2e/baget-compat/data/*/*
+    rm -rf e2e/baget-compat/cache/*/*
     export BaGetCompat__Enabled=true
     export LIGET_IMPORT_ON_BOOT=/data/simple
     ide --idefile Idefile.baget-compat "e2e/baget-compat/run.sh"
