@@ -6,7 +6,7 @@ using LiGet.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace LiGet.Mirror
+namespace LiGet.Cache
 {
     public class DownloadsImporter
     {

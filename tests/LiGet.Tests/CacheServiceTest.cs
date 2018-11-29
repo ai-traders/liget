@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using LiGet.Configuration;
-using LiGet.Mirror;
+using LiGet.Cache;
 using LiGet.Tests.Support;
 using Moq;
 using NuGet.Packaging.Core;
@@ -16,23 +16,23 @@ using NuGet.Protocol.Core.Types;
 
 namespace LiGet.Tests
 {
-    public class MirrorServiceTest
+    public class CacheServiceTest
     {
         private Mock<INuGetClient> client;
         private Mock<ISourceRepository> sourceRepo;
-        private MirrorService mirrorService;
+        private CacheService mirrorService;
         private Mock<IPackageCacheService> localPackages;
         private Mock<IPackageDownloader> downloader;
 
         private PackageIdentity log4net = new PackageIdentity("log4net", NuGetVersion.Parse("2.0.8"));
 
-        public MirrorServiceTest(ITestOutputHelper helper) {
+        public CacheServiceTest(ITestOutputHelper helper) {
             var logger = new XunitLoggerProvider(helper);
             localPackages = new Mock<IPackageCacheService>(MockBehavior.Strict);
             localPackages.Setup(p => p.AddPackageAsync(It.IsAny<Stream>())).Returns(Task.CompletedTask);
             downloader = new Mock<IPackageDownloader>(MockBehavior.Strict);
             downloader.Setup(d => d.DownloadOrNullAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>())).ReturnsAsync(new MemoryStream());
-            MirrorOptions options = new MirrorOptions() {
+            CacheOptions options = new CacheOptions() {
                 Enabled = true,
                 PackageDownloadTimeoutSeconds = 10,
                 UpstreamIndex = new Uri("http://example.com")
@@ -42,7 +42,7 @@ namespace LiGet.Tests
             sourceRepo.Setup(s => s.GetPackageUriAsync(It.Is<string>(p => p == "log4net"), It.Is<string>(p => p == "2.0.8"), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new Uri("http://example.com/package/1"));
             client.Setup(c => c.GetRepository(options.UpstreamIndex)).Returns(sourceRepo.Object);
-            mirrorService = new MirrorService(client.Object, localPackages.Object, downloader.Object, logger.CreateLogger<MirrorService>("MirrorServiceTest"), options);
+            mirrorService = new CacheService(client.Object, localPackages.Object, downloader.Object, logger.CreateLogger<CacheService>("CacheServiceTest"), options);
         }
 
         [Fact]
@@ -54,23 +54,23 @@ namespace LiGet.Tests
         }
 
         [Fact]
-        public async Task MirrorAsyncShouldDownloadAndAddPackageWhenDoesNotExist() {
+        public async Task CacheAsyncShouldDownloadAndAddPackageWhenDoesNotExist() {
             localPackages.Setup(p => p.ExistsAsync(It.IsAny<PackageIdentity>())).ReturnsAsync(false);
-            await mirrorService.MirrorAsync(log4net, CancellationToken.None);
+            await mirrorService.CacheAsync(log4net, CancellationToken.None);
             downloader.Verify(d => d.DownloadOrNullAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>()), Times.Once());
             localPackages.Verify(p => p.AddPackageAsync(It.IsAny<Stream>()), Times.Once());
         }
 
         [Fact]
-        public async Task MirrorAsyncShouldNotDownloadAndAddPackageWhenExists() {
+        public async Task CacheAsyncShouldNotDownloadAndAddPackageWhenExists() {
             localPackages.Setup(p => p.ExistsAsync(It.IsAny<PackageIdentity>())).ReturnsAsync(true);
-            await mirrorService.MirrorAsync(log4net, CancellationToken.None);
+            await mirrorService.CacheAsync(log4net, CancellationToken.None);
             downloader.Verify(d => d.DownloadOrNullAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>()), Times.Never());
             localPackages.Verify(p => p.AddPackageAsync(It.IsAny<Stream>()), Times.Never());
         }
 
         [Fact]
-        public async Task MirrorAsyncShouldDownloadAndAddPackageOnlyOnceWhenConcurrentRequests() {
+        public async Task CacheAsyncShouldDownloadAndAddPackageOnlyOnceWhenConcurrentRequests() {
             // long download
             downloader.Setup(d => d.DownloadOrNullAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>())).Returns(
                async () => {
@@ -81,7 +81,7 @@ namespace LiGet.Tests
             localPackages.Setup(p => p.ExistsAsync(It.IsAny<PackageIdentity>())).ReturnsAsync(false);
             List<Task> tasks = new List<Task>();
             for(int i = 0; i< 10; i++) {
-                tasks.Add(mirrorService.MirrorAsync(log4net, CancellationToken.None));
+                tasks.Add(mirrorService.CacheAsync(log4net, CancellationToken.None));
             }            
             await Task.WhenAll(tasks.ToArray());
             downloader.Verify(d => d.DownloadOrNullAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>()), Times.Once());

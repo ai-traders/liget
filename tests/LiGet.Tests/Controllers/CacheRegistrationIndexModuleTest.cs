@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using LiGet.Mirror;
+using LiGet.Cache;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -32,7 +32,7 @@ namespace LiGet.Tests.Controllers
         [Fact]
         public async Task RegistrationIndexCatalogEntryShouldContainDependencyGroups()
         {
-            var pkgService = new Mock<IMirrorService>(MockBehavior.Strict);
+            var pkgService = new Mock<ICacheService>(MockBehavior.Strict);
             Mock<IPackageSearchMetadata> abcPackage = new Mock<IPackageSearchMetadata>();
             abcPackage.SetupGet(a => a.Identity).Returns(new NuGet.Packaging.Core.PackageIdentity("abc", NuGetVersion.Parse("1.2.3")));
             abcPackage.SetupGet(a => a.DependencySets).Returns(new PackageDependencyGroup[1] {
@@ -44,11 +44,11 @@ namespace LiGet.Tests.Controllers
                 });
             using (TestServer server = TestServerBuilder.Create()
                 .TraceToTestOutputHelper(Helper, LogLevel.Error)
-                .WithMock(typeof(IMirrorService), pkgService)
+                .WithMock(typeof(ICacheService), pkgService)
                 .Build())
             {
                 var services = server.Host.Services;
-                Assert.Equal(pkgService.Object, services.GetRequiredService<IMirrorService>());
+                Assert.Equal(pkgService.Object, services.GetRequiredService<ICacheService>());
                 // https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource#registration-pages-and-leaves
                 var response = await  server.CreateClient().GetAsync(string.Format(RegistrationIndexUrlFormatString, "abc"));
                 Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);

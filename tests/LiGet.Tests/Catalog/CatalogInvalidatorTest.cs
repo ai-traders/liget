@@ -14,14 +14,14 @@ namespace LiGet.Tests.Cache.Catalog
     {
         private XunitLoggerProvider logProvider;
         private ILogger<CatalogInvalidator> logger;
-        MirrorOptions config;
+        CacheOptions config;
         Mock<ICatalogScanStore> store;
         Mock<ICatalogReader> reader;
         
         public CatalogInvalidatorTest(ITestOutputHelper helper) {
             logProvider = new XunitLoggerProvider(helper);
             logger = logProvider.CreateLogger<CatalogInvalidator>("CatalogInvalidatorTest");
-            config = new MirrorOptions();
+            config = new CacheOptions();
             store = new Mock<ICatalogScanStore>(MockBehavior.Strict);
             reader = new Mock<ICatalogReader>(MockBehavior.Strict);
         }

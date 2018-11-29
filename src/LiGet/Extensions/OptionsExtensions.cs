@@ -40,11 +40,11 @@ namespace LiGet.Extensions
             if (options == null) ThrowMissingConfiguration(nameof(LiGetOptions.Search));
         }
 
-        public static void EnsureValid(this MirrorOptions options)
+        public static void EnsureValid(this CacheOptions options)
         {
             if (options == null)
             {
-                ThrowMissingConfiguration(nameof(LiGetOptions.Mirror));
+                ThrowMissingConfiguration(nameof(LiGetOptions.Cache));
             }
 
             if (!options.Enabled) return;
@@ -52,15 +52,15 @@ namespace LiGet.Extensions
             if (options.UpstreamIndex == null)
             {
                 ThrowMissingConfiguration(
-                    nameof(LiGetOptions.Mirror),
-                    nameof(MirrorOptions.UpstreamIndex));
+                    nameof(LiGetOptions.Cache),
+                    nameof(CacheOptions.UpstreamIndex));
             }
 
             if (options.PackagesPath == null)
             {
                 ThrowMissingConfiguration(
-                    nameof(LiGetOptions.Mirror),
-                    nameof(MirrorOptions.PackagesPath));
+                    nameof(LiGetOptions.Cache),
+                    nameof(CacheOptions.PackagesPath));
             }
 
             if (options.PackageDownloadTimeoutSeconds <= 0)

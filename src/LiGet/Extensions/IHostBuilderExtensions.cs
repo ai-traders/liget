@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Gelf.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,8 +19,6 @@ namespace LiGet.Extensions
                     .SetBasePath(Environment.CurrentDirectory)
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
-                config.AddEnvironmentVariables();
-
                 if (args != null)
                 {
                     config.AddCommandLine(args);
@@ -32,14 +31,18 @@ namespace LiGet.Extensions
         {
             return builder
                 .ConfigureServices((hostBuilder, services) => {
-                    services.Configure<GelfLoggerOptions>(hostBuilder.Configuration.GetSection("Graylog"));
+                    var graylogSection = hostBuilder.Configuration.GetSection("Graylog");
+                    if(graylogSection.GetChildren().Any())
+                        services.Configure<GelfLoggerOptions>(graylogSection);
                 })
                 .ConfigureLogging((context, logging) =>
                 {
                     logging.AddConfiguration(context.Configuration.GetSection("Logging"));
                     logging.AddConsole();
-                    logging.AddDebug();                        
-                    logging.AddGelf();
+                    logging.AddDebug();         
+                    var graylogSection = context.Configuration.GetSection("Graylog");
+                    if(graylogSection.GetChildren().Any())               
+                        logging.AddGelf();
                 });
         }
 

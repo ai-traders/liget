@@ -17,7 +17,7 @@
         public StorageOptions Storage { get; set; }
         public SearchOptions Search { get; set; }
 
-        public MirrorOptions Mirror { get; set; }
+        public CacheOptions Cache { get; set; }
 
         public BaGetCompatibilityOptions BaGetCompat { get; set; }
     }

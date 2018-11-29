@@ -8,7 +8,7 @@ using LiGet;
 using LiGet.Entities;
 using LiGet.Extensions;
 using LiGet.Legacy.OData;
-using LiGet.Mirror;
+using LiGet.Cache;
 using LiGet.Services;
 using LiGet.CarterModules;
 using Carter;
@@ -44,7 +44,7 @@ namespace LiGet.Extensions
             services.AddTransient<IPackageService, PackageService>();
             services.AddTransient<IIndexingService, IndexingService>();
             services.AddTransient<IPackageDeletionService, PackageDeletionService>();
-            services.AddMirrorServices();
+            services.AddCacheServices();
 
             services.ConfigureStorageProviders(configuration);
             services.ConfigureSearchProviders();
@@ -255,33 +255,33 @@ namespace LiGet.Extensions
         /// Add the services that mirror an upstream package source.
         /// </summary>
         /// <param name="services">The defined services.</param>
-        public static IServiceCollection AddMirrorServices(this IServiceCollection services)
+        public static IServiceCollection AddCacheServices(this IServiceCollection services)
         {
             services.AddTransient<IPackageCacheService>(provider => 
             {
                 var options = provider.GetRequiredService<IOptions<LiGetOptions>>().Value;
-                return new FileSystemPackageCacheService(options.Mirror.PackagesPath);
+                return new FileSystemPackageCacheService(options.Cache.PackagesPath);
             });
             services.AddTransient<INuGetClient, NuGetClient>();
-            services.AddSingleton<IMirrorService>(provider =>
+            services.AddSingleton<ICacheService>(provider =>
             {
                 var mirrorOptions = provider
                     .GetRequiredService<IOptions<LiGetOptions>>()
                     .Value
-                    .Mirror;
+                    .Cache;
 
                 mirrorOptions.EnsureValid();
 
                 if (!mirrorOptions.Enabled)
                 {
-                    return new FakeMirrorService();
+                    return new FakeCacheService();
                 }
 
-                return new MirrorService(
+                return new CacheService(
                     provider.GetRequiredService<INuGetClient>(),
                     provider.GetRequiredService<IPackageCacheService>(),
                     provider.GetRequiredService<IPackageDownloader>(),
-                    provider.GetRequiredService<ILogger<MirrorService>>(), 
+                    provider.GetRequiredService<ILogger<CacheService>>(), 
                     mirrorOptions);
             });
 
@@ -296,7 +296,7 @@ namespace LiGet.Extensions
                     AutomaticDecompression = (DecompressionMethods.GZip | DecompressionMethods.Deflate),
                 });
 
-                client.Timeout = TimeSpan.FromSeconds(options.Mirror.PackageDownloadTimeoutSeconds);
+                client.Timeout = TimeSpan.FromSeconds(options.Cache.PackageDownloadTimeoutSeconds);
 
                 return client;
             });

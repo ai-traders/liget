@@ -1,7 +1,7 @@
 FROM microsoft/dotnet:2.1.4-aspnetcore-runtime-stretch-slim
 EXPOSE 9011
 
-RUN apt-get update && apt-get install -y sudo &&\
+RUN apt-get update && apt-get install -y sudo wget moreutils &&\
   apt-get -y autoremove && apt-get -y autoclean && apt-get -y clean &&\
   rm -rf /tmp/* /var/tmp/* && rm -rf /var/lib/apt/lists/*
 
@@ -17,21 +17,30 @@ RUN mkdir -p /home/liget /home/liget/.nuget/NuGet &&\
     useradd -d /home/liget -s /bin/bash -u 1000 -g liget liget &&\
     chown -R liget:liget /home/liget /data /cache
 
-ENV ASPNETCORE_ENVIRONMENT=Production \
-    ApiKeyHash=658489D79E218D2474D049E8729198D86DB0A4AF43981686A31C7DCB02DC0900 \
-    Storage__Type=FileSystem \
-    Storage__Path=/data/simple2 \
-    Database__RunMigrations=true \
-    Database__Type=Sqlite \
-    Database__ConnectionString="Data Source=/data/ef.sqlite/sqlite.db" \
-    Mirror__Enabled=true \
-    Mirror__UpstreamIndex="https://api.nuget.org/v3/index.json" \
-    Mirror__PackagesPath="/cache/simple2" \
-    Search__Type=Database
+RUN wget --tries=3 --retry-connrefused --wait=3 --random-wait --quiet --show-progress --progress=bar:force https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 &&\
+  chmod +x ./jq-linux64 && mv -f ./jq-linux64 /usr/bin/jq
 
+ENV ASPNETCORE_ENVIRONMENT=Production \
+    LIGET_API_KEY_HASH=658489D79E218D2474D049E8729198D86DB0A4AF43981686A31C7DCB02DC0900 \
+    LIGET_EF_RUN_MIGRATIONS=true \
+    LIGET_DB_TYPE=Sqlite \
+    LIGET_DB_CONNECTION_STRING="Data Source=/data/ef.sqlite/sqlite.db" \
+    LIGET_SIMPLE2_ROOT_PATH=/data/simple2 \
+    LIGET_STORAGE_BACKEND=simple2 \
+    LIGET_SEARCH_PROVIDER=Database \
+    LIGET_CACHE_ENABLED=true \
+    LIGET_CACHE_PROXY_SOURCE_INDEX=https://api.nuget.org/v3/index.json \
+    LIGET_NUPKG_CACHE_BACKEND=simple2 \
+    LIGET_NUPKG_CACHE_SIMPLE2_ROOT_PATH=/cache/simple2 \
+    LIGET_BAGET_COMPAT_ENABLED=false \
+    LIGET_LOG_LEVEL=Information \
+    LIGET_LOG_BACKEND=console \
+    LIGET_LOG_GELF_PORT=12201 \
+    LIGET_LOG_GELF_SOURCE=liget
 
 COPY /src/LiGet/bin/Release/netcoreapp2.1/publish/ /app
 
+ADD docker-scripts/configure.sh /usr/bin/configure-liget
 ADD docker-scripts/run.sh /app/run.sh
-RUN chmod +x /app/run.sh
+RUN chmod +x /app/run.sh /usr/bin/configure-liget
 CMD /app/run.sh

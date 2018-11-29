@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LiGet.Mirror;
+using LiGet.Cache;
 using LiGet.Services;
 using Carter;
 using Carter.ModelBinding;
@@ -16,9 +16,9 @@ namespace LiGet.Controllers
 {
     public class CachePackageModule : CarterModule
     {
-        private readonly IMirrorService _mirror;
+        private readonly ICacheService _mirror;
 
-        public CachePackageModule(IMirrorService mirror)
+        public CachePackageModule(ICacheService mirror)
             :base("api/cache/v3/package")
         {
             _mirror = mirror ?? throw new ArgumentNullException(nameof(mirror));
@@ -47,7 +47,7 @@ namespace LiGet.Controllers
                 }
 
                 var identity = new PackageIdentity(id, nugetVersion);
-                await _mirror.MirrorAsync(identity, CancellationToken.None);
+                await _mirror.CacheAsync(identity, CancellationToken.None);
                 
                 var packageStream = await _mirror.GetPackageStreamAsync(identity);
 
@@ -65,7 +65,7 @@ namespace LiGet.Controllers
                 }
 
                 var identity = new PackageIdentity(id, nugetVersion);
-                await _mirror.MirrorAsync(identity, CancellationToken.None);
+                await _mirror.CacheAsync(identity, CancellationToken.None);
 
                 if (!await _mirror.ExistsAsync(new PackageIdentity(id, nugetVersion)))
                 {
@@ -86,7 +86,7 @@ namespace LiGet.Controllers
                 }
 
                 var identity = new PackageIdentity(id, nugetVersion);
-                await _mirror.MirrorAsync(identity, CancellationToken.None);
+                await _mirror.CacheAsync(identity, CancellationToken.None);
 
                 if (!await _mirror.ExistsAsync(new PackageIdentity(id, nugetVersion)))
                 {

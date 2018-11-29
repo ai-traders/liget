@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LiGet.Entities;
-using LiGet.Mirror;
+using LiGet.Cache;
 using LiGet.Services;
 using LiGet.Extensions;
 using LiGet.WebModels;
@@ -26,9 +26,9 @@ namespace LiGet.CarterModules.Registration
     public class CacheRegistrationIndexModule : CarterModule
     {
         const string prefix = "api/cache";
-        private readonly IMirrorService _mirror;
+        private readonly ICacheService _mirror;
 
-        public CacheRegistrationIndexModule(IMirrorService mirror)
+        public CacheRegistrationIndexModule(ICacheService mirror)
         {
             this._mirror = mirror ?? throw new ArgumentNullException(nameof(mirror));
             this.Get("api/cache/v3/registration/{id}/index.json", async (req, res, routeData) =>
@@ -77,7 +77,7 @@ namespace LiGet.CarterModules.Registration
                 var pid = new PackageIdentity(id, nugetVersion);
 
                 // Allow read-through caching to happen if it is confiured.
-                await _mirror.MirrorAsync(pid, CancellationToken.None);
+                await _mirror.CacheAsync(pid, CancellationToken.None);
 
                 var package = await _mirror.FindAsync(new PackageIdentity(id, nugetVersion));
 

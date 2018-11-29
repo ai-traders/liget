@@ -6,12 +6,12 @@ using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 
-namespace LiGet.Mirror
+namespace LiGet.Cache
 {
     /// <summary>
     /// Indexes packages from an external source.
     /// </summary>
-    public interface IMirrorService
+    public interface ICacheService
     {
         /// <summary>
         /// If the package is unknown, attempt to index it from an upstream source.
@@ -20,7 +20,7 @@ namespace LiGet.Mirror
         /// <param name="version">The package's version</param>
         /// <param name="cancellationToken">The token to cancel the mirroring</param>
         /// <returns>A task that completes when the package has been mirrored.</returns>
-        Task MirrorAsync(PackageIdentity pid, CancellationToken cancellationToken);
+        Task CacheAsync(PackageIdentity pid, CancellationToken cancellationToken);
 
         Task<IReadOnlyList<string>> FindUpstreamAsync(string id, CancellationToken ct);
 

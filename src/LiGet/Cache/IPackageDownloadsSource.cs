@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace LiGet.Mirror
+namespace LiGet.Cache
 {
     public interface IPackageDownloadsSource
     {

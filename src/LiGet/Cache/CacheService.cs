@@ -15,31 +15,31 @@ using NuGet.Versioning;
 using NuGet.Protocol;
 using NuGet.Common;
 
-namespace LiGet.Mirror
+namespace LiGet.Cache
 {
-    public class MirrorService : IMirrorService
+    public class CacheService : ICacheService
     {
         private readonly object _startLock;
         private readonly Dictionary<PackageIdentity, Task> _downloads;
         private readonly IPackageCacheService _localPackages;
         private readonly IPackageDownloader _downloader;
-        private readonly ILogger<MirrorService> _logger;
+        private readonly ILogger<CacheService> _logger;
         private readonly ISourceRepository _sourceRepository;
-        NuGetLoggerAdapter<MirrorService> _loggerAdapter;
+        NuGetLoggerAdapter<CacheService> _loggerAdapter;
 
-        public MirrorService(
+        public CacheService(
             INuGetClient client,
             IPackageCacheService localPackages,
             IPackageDownloader downloader,
-            ILogger<MirrorService> logger,
-            MirrorOptions options)
+            ILogger<CacheService> logger,
+            CacheOptions options)
         {
             _startLock = new object();
             _downloads = new Dictionary<PackageIdentity, Task>();
             _localPackages = localPackages ?? throw new ArgumentNullException(nameof(localPackages));
             _downloader = downloader ?? throw new ArgumentNullException(nameof(downloader));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this._loggerAdapter = new NuGetLoggerAdapter<MirrorService>(_logger);
+            this._loggerAdapter = new NuGetLoggerAdapter<CacheService>(_logger);
             _sourceRepository = client.GetRepository(options.UpstreamIndex);
         }
 
@@ -55,7 +55,7 @@ namespace LiGet.Mirror
             return versions.Select(v => v.ToNormalizedString()).ToList();
         }
 
-        public Task MirrorAsync(PackageIdentity pid, CancellationToken cancellationToken)
+        public Task CacheAsync(PackageIdentity pid, CancellationToken cancellationToken)
         {
             if (_localPackages.ExistsAsync(pid).Result)
             {

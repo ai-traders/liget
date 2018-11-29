@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LiGet;
 using LiGet.Configuration;
-using LiGet.Mirror;
+using LiGet.Cache;
 using LiGet.Tests.Support;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
@@ -13,26 +13,26 @@ using Xunit.Abstractions;
 
 namespace LiGet.Tests
 {
-    public class MirrorServiceIntegrationTest : IDisposable
+    public class CacheServiceIntegrationTest : IDisposable
     {
-        private MirrorService mirrorService;
+        private CacheService mirrorService;
         private TempDir tempDir;
 
         PackageIdentity log4netId = new PackageIdentity("log4net", NuGetVersion.Parse("2.0.8"));
 
-        public MirrorServiceIntegrationTest(ITestOutputHelper helper) {
+        public CacheServiceIntegrationTest(ITestOutputHelper helper) {
             var logger = new XunitLoggerProvider(helper);
             tempDir = new TempDir();
             IPackageCacheService localPackages = new FileSystemPackageCacheService(tempDir.UniqueTempFolder);
             IPackageDownloader downloader = new PackageDownloader(new System.Net.Http.HttpClient(), 
-                logger.CreateLogger<PackageDownloader>("MirrorServiceItest"));
-            MirrorOptions options = new MirrorOptions() {
+                logger.CreateLogger<PackageDownloader>("CacheServiceItest"));
+            CacheOptions options = new CacheOptions() {
                 Enabled = true,
                 UpstreamIndex = new System.Uri("https://api.nuget.org/v3/index.json"),
                 PackagesPath = tempDir.UniqueTempFolder,
                 PackageDownloadTimeoutSeconds = 10
             };
-            mirrorService = new MirrorService(new NuGetClient(logger.CreateLogger<NuGetClient>("MirrorServiceItest")),localPackages, downloader, logger.CreateLogger<MirrorService>("MirrorServiceItest"), options);
+            mirrorService = new CacheService(new NuGetClient(logger.CreateLogger<NuGetClient>("CacheServiceItest")),localPackages, downloader, logger.CreateLogger<CacheService>("CacheServiceItest"), options);
         }
         public void Dispose()
         {
@@ -40,14 +40,14 @@ namespace LiGet.Tests
         }
 
         [Fact]
-        public async Task MirrorAsync() {
-            await mirrorService.MirrorAsync(new PackageIdentity("log4net", NuGetVersion.Parse("2.0.8")), CancellationToken.None);
+        public async Task CacheAsync() {
+            await mirrorService.CacheAsync(new PackageIdentity("log4net", NuGetVersion.Parse("2.0.8")), CancellationToken.None);
             Assert.True(await mirrorService.ExistsAsync(log4netId));
         }
 
         [Fact]
-        public async Task MirrorAsyncThenStream() {
-            await mirrorService.MirrorAsync(new PackageIdentity("log4net", NuGetVersion.Parse("2.0.8")), CancellationToken.None);
+        public async Task CacheAsyncThenStream() {
+            await mirrorService.CacheAsync(new PackageIdentity("log4net", NuGetVersion.Parse("2.0.8")), CancellationToken.None);
             using(var stream = await mirrorService.GetPackageStreamAsync(log4netId)) {
                 
             }            

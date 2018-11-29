@@ -28,9 +28,9 @@ namespace LiGet.Tests
         private readonly string StorageTypeKey = $"{nameof(LiGetOptions.Storage)}:{nameof(StorageOptions.Type)}";
         private readonly string FileSystemStoragePathKey = $"{nameof(LiGetOptions.Storage)}:{nameof(FileSystemStorageOptions.Path)}";
         private readonly string SearchTypeKey = $"{nameof(LiGetOptions.Search)}:{nameof(SearchOptions.Type)}";
-        private readonly string MirrorEnabledKey = $"{nameof(LiGetOptions.Mirror)}:{nameof(MirrorOptions.Enabled)}";
-        private readonly string UpstreamIndexKey = $"{nameof(LiGetOptions.Mirror)}:{nameof(MirrorOptions.UpstreamIndex)}";
-        private readonly string MirrorCachedDirKey = $"{nameof(LiGetOptions.Mirror)}:{nameof(MirrorOptions.PackagesPath)}";
+        private readonly string CacheEnabledKey = $"{nameof(LiGetOptions.Cache)}:{nameof(CacheOptions.Enabled)}";
+        private readonly string UpstreamIndexKey = $"{nameof(LiGetOptions.Cache)}:{nameof(CacheOptions.UpstreamIndex)}";
+        private readonly string CacheCachedDirKey = $"{nameof(LiGetOptions.Cache)}:{nameof(CacheOptions.PackagesPath)}";
         private readonly string BaGetCompatEnabledKey = $"{nameof(LiGetOptions.BaGetCompat)}:{nameof(BaGetCompatibilityOptions.Enabled)}";
 
         private ITestOutputHelper _helper;
@@ -111,11 +111,11 @@ namespace LiGet.Tests
             Configuration.Add(StorageTypeKey, StorageType.FileSystem.ToString());
             Configuration.Add(FileSystemStoragePathKey, storageFolderPath);
             Configuration.Add(SearchTypeKey, nameof(SearchType.Database));
-            Configuration.Add(MirrorEnabledKey, true.ToString());
+            Configuration.Add(CacheEnabledKey, true.ToString());
             Configuration.Add(UpstreamIndexKey, "https://api.nuget.org/v3/index.json");
             Configuration.Add(BaGetCompatEnabledKey, true.ToString());
             string cacheDirName = Path.Combine(uniqueTempFolder, "CachedPackages");
-            Configuration.Add(MirrorCachedDirKey, cacheDirName);
+            Configuration.Add(CacheCachedDirKey, cacheDirName);
             return this;
         }
 

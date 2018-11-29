@@ -56,6 +56,8 @@ chown $NEWUID:$NEWGID -R /home/liget
 # Start server
 ###########################################################################
 
+/usr/bin/configure-liget
+
 cd /app
 if [ ! -z ${LIGET_IMPORT_ON_BOOT+x} ]; then
   if [[ $NEWGID != 0 ]]; then

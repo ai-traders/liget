@@ -6,12 +6,12 @@ using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 
-namespace LiGet.Mirror
+namespace LiGet.Cache
 {
     /// <summary>
     /// The mirror service used when mirroring has been disabled.
     /// </summary>
-    public class FakeMirrorService : IMirrorService
+    public class FakeCacheService : ICacheService
     {
         Task<IReadOnlyList<string>> emptyVersions = Task.FromResult(new List<string>() as IReadOnlyList<string>);
         Task<IEnumerable<IPackageSearchMetadata>> emptyMeta = Task.Factory.StartNew(() => new List<IPackageSearchMetadata>() as IEnumerable<IPackageSearchMetadata>);
@@ -51,7 +51,7 @@ namespace LiGet.Mirror
             throw new System.NotImplementedException();
         }
 
-        public Task MirrorAsync(
+        public Task CacheAsync(
             PackageIdentity packageIdentity,
             CancellationToken cancellationToken)
         {

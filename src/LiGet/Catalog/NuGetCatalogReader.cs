@@ -12,7 +12,7 @@ namespace LiGet.Cache.Catalog
         private CatalogReader reader;
         private readonly ILogger<NuGetCatalogReader> _log;
 
-        public NuGetCatalogReader(ILogger<NuGetCatalogReader> logger, MirrorOptions config)
+        public NuGetCatalogReader(ILogger<NuGetCatalogReader> logger, CacheOptions config)
         {
             this._log = logger;
             var indexUrl = config.UpstreamIndex;

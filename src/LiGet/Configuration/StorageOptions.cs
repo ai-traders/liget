@@ -7,7 +7,6 @@
 
     public enum StorageType
     {
-        FileSystem = 0,
-        AzureBlobStorage = 1,
+        FileSystem = 0
     }
 }

@@ -62,18 +62,7 @@ For persistent data, you should mount **volumes**:
  - `/cache/simple2` contains cached public packages
 
 You should change the default api key (`NUGET-SERVER-API-KEY`) used for pushing packages,
-by setting SHA256 into `ApiKeyHash` environment variable. You can generate it with `echo -n 'my-secret' | sha256sum`.
-
-### Logging to graylog
-
-LiGet is using [GELF provider for Microsoft.Extensions.Logging](https://github.com/mattwcole/gelf-extensions-logging)
-to optionally configure logging via GELF to graylog.
-To configure docker image for logging to your graylog, you can set following environment variables:
-```
-Graylog__Host=your-graylog.com
-Graylog__Port=12201
-Graylog__AdditionalFields__environment=development
-```
+by setting SHA256 into `LIGET_API_KEY_HASH` environment variable. You can generate it with `echo -n 'my-secret' | sha256sum`.
 
 ## On client side
 
@@ -139,7 +128,7 @@ LiGet has different endpoints (with `/api` before endpoints).
 If you want to deploy LiGet in place of BaGet and (at least temporarily) keep above endpoints,
 you can enable BaGet compatibity mode in LiGet.
 ```
-BaGetCompat__Enabled=true
+LIGET_BAGET_COMPAT_ENABLED=true
 ```
 This will enable following behavior:
  - `/cache/v3/index.json` returns same content as our fork's BaGet's `/api/cache/v3/index.json`. Upstream BaGet does not have separate endpoint for public packages anyway.
@@ -186,14 +175,23 @@ The exception to this is when `/data` is owned by `root`, then liget has to run 
 
 ### Configuration
 
+Internally .NET Core application is configured by `/app/appsettings.json` file.
+But we are generating this file from environment variables to make it more user friendly.
+
 Everything can be configured with environment variables:
 
- * `LIGET_BACKEND` by default `simple2`. In `1.0.0` introduced as the only implementation, replacing previous `simple`.
- * `LIGET_SIMPLE2_ROOT_PATH` - root directory used by `simple` backend. By default `/data/simple2`.
+ * `LIGET_API_KEY_HASH` - hash of api key used for pushing packages.
+ * `LIGET_EF_RUN_MIGRATIONS` - runs entity framework database migrations on container start. Default is `true`.
+ * `LIGET_DB_TYPE=Sqlite` - the type of database to use. Currently only `Sqlite`.
+ * `LIGET_DB_CONNECTION_STRING` - for sqlite, that is the path to db file. Default is `"Data Source=/data/ef.sqlite/sqlite.db"`
+ * `LIGET_STORAGE_BACKEND` by default `simple2`. In `1.0.0` introduced as the only implementation, replacing previous `simple`.
+ * `LIGET_SIMPLE2_ROOT_PATH` - root directory used by `simple2` backend. By default `/data/simple2`.
+ * `LIGET_SEARCH_PROVIDER` - how to execute searches. By default `Database`.
+ * `LIGET_BAGET_COMPAT_ENABLED` - should [BaGet compatibity mode](#migrating-from-baget) be enabled. Default is `false`.
 
 #### Runtime
 
-*TODO: implement as was in liget*
+*TODO: implement as was in liget v0*
 
 Every dotnet Core application has `.runtimeconfig.json`, which can configure garbage collector.
 You may want to set following:
@@ -207,6 +205,7 @@ Kestrel specific:
 
 #### Cache
 
+ * `LIGET_CACHE_ENABLED` - default is true.
  * `LIGET_CACHE_PROXY_SOURCE_INDEX` - address of original V3 API to cache. By default `https://api.nuget.org/v3/index.json`.
  * `LIGET_CACHE_INVALIDATION_CHECK_PERIOD` - defines frequency at which a check with upstream server is made to see if cache is invalid. By default `60` (seconds).
  * `LIGET_NUPKG_CACHE_BACKEND` - backend of the .nupkg caching proxy. By default `simple2`,
@@ -216,15 +215,18 @@ Kestrel specific:
 
 #### Logging
 
- * `LIGET_LOG_LEVEL` - by default `INFO`.
- * `LIGET_LOG_BACKEND` - by default `console`. Also can be `gelf` or `custom`.
+ * `LIGET_LOG_LEVEL` - by default `Information`. Can be `Debug`, `Information`, `Warning`, `Error`.
+ * `LIGET_LOG_BACKEND` - by default `console`. Also can be `gelf`.
 
 ##### Gelf
 
-Logging to graylog.
+LiGet is using [GELF provider for Microsoft.Extensions.Logging](https://github.com/mattwcole/gelf-extensions-logging)
+to optionally configure logging via GELF to graylog.
+To configure docker image for logging to your graylog, you can set following environment variables:
 
  * `LIGET_LOG_GELF_HOST` - no default. But should be configured when `LIGET_LOG_BACKEND=gelf`
  * `LIGET_LOG_GELF_PORT` - by default `12201`.
+ * `LIGET_LOG_GELF_SOURCE` - by default `liget`.
 
 # Development
 

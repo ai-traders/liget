@@ -1,7 +1,7 @@
 using System;
 using LiGet.Configuration;
 using LiGet.Entities;
-using LiGet.Mirror;
+using LiGet.Cache;
 using LiGet.Services;
 using LiGet.Extensions;
 using Gelf.Extensions.Logging;
@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Linq;
 
 namespace LiGet
 {
@@ -86,14 +87,17 @@ namespace LiGet
                 .UseStartup<Startup>()
                 .ConfigureLogging((context, builder) =>
                 {
+                    var graylogSection = context.Configuration.GetSection("Graylog");
                     // Read GelfLoggerOptions from appsettings.json
-                    builder.Services.Configure<GelfLoggerOptions>(context.Configuration.GetSection("Graylog"));
+                    if(graylogSection.GetChildren().Any())
+                        builder.Services.Configure<GelfLoggerOptions>(graylogSection);
 
                     // Read Logging settings from appsettings.json and add providers.
-                    builder.AddConfiguration(context.Configuration.GetSection("Logging"))
+                    var cfg = builder.AddConfiguration(context.Configuration.GetSection("Logging"))
                         .AddConsole()
-                        .AddDebug()
-                        .AddGelf();
+                        .AddDebug();
+                    if(graylogSection.GetChildren().Any())
+                        cfg.AddGelf();
                 })
                 .UseUrls("http://0.0.0.0:9011")
                 .UseKestrel(options =>

@@ -18,7 +18,7 @@ namespace LiGet.Cache.Catalog
         private readonly Microsoft.Extensions.Logging.ILogger<CatalogInvalidator> _log;
 
         public CatalogInvalidator(Microsoft.Extensions.Logging.ILogger<CatalogInvalidator> logger,
-            MirrorOptions config, ICatalogScanStore store, ICatalogReader reader)
+            CacheOptions config, ICatalogScanStore store, ICatalogReader reader)
         {
             this._log = logger;
             this.store = store;

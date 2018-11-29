@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace LiGet.Mirror
+namespace LiGet.Cache
 {
     // See: https://github.com/NuGet/NuGet.Jobs/blob/master/src/Validation.Common.Job/PackageDownloader.cs
     public class PackageDownloader : IPackageDownloader

@@ -4,7 +4,7 @@ using NuGet.Protocol.Core.Types;
 using NuGet.Configuration;
 using NuGet.Versioning;
 using NuGet.Protocol;
-using LiGet.Mirror;
+using LiGet.Cache;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Packaging.Core;

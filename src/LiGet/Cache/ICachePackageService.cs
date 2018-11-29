@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 
-namespace LiGet.Mirror
+namespace LiGet.Cache
 {
     public interface IPackageCacheService
     {

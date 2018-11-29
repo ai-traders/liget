@@ -14,7 +14,7 @@ using NuGet.Protocol.Core.Types;
 using NuGet.Repositories;
 using NuGet.Versioning;
 
-namespace LiGet.Mirror
+namespace LiGet.Cache
 {
     public class FileSystemPackageCacheService : IPackageCacheService
     {

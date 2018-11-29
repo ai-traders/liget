@@ -79,7 +79,7 @@ case "${command}" in
     ide "./tasks.sh _build_inputs"
     rm -rf e2e/baget-compat/data/*/*
     rm -rf e2e/baget-compat/cache/*/*
-    export BaGetCompat__Enabled=true
+    export LIGET_BAGET_COMPAT_ENABLED=true
     export LIGET_IMPORT_ON_BOOT=/data/simple
     ide --idefile Idefile.baget-compat "e2e/baget-compat/run.sh"
     ;;

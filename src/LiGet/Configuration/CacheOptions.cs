@@ -2,7 +2,7 @@
 
 namespace LiGet.Configuration
 {
-    public class MirrorOptions
+    public class CacheOptions
     {
         /// <summary>
         /// If true, packages that aren't found locally will be indexed
