@@ -41,7 +41,7 @@ do
 <configuration>
   <packageSources>
     <add key="cache" value="http://liget:9011/cache/v3/index.json" protocolVersion="3" />
-    <add key="baget" value="http://liget:9011/v3/index.json" protocolVersion="3" />
+    <add key="liget" value="http://liget:9011/v3/index.json" protocolVersion="3" />
   </packageSources>
 </configuration>
 EOF

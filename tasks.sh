@@ -82,7 +82,7 @@ case "${command}" in
     rm -rf e2e/liget-compat/data/packages/*
     rm -rf e2e/liget-compat/data/cache/*
     export LiGetCompat__Enabled=true
-    export BAGET_IMPORT_ON_BOOT=/data/simple
+    export LIGET_IMPORT_ON_BOOT=/data/simple
     ide --idefile Idefile.liget-compat "e2e/liget-compat/run.sh"
     ;;
   all)

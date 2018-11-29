@@ -11,7 +11,7 @@ cat << EOF > /home/ide/.nuget/NuGet/NuGet.Config
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
-    <add key="baget" value="http://nuget:9090/v3/index.json" protocolVersion="3" />
+    <add key="liget" value="http://nuget:9011/v3/index.json" protocolVersion="3" />
   </packageSources>
 </configuration>
 EOF
@@ -37,7 +37,7 @@ EOF
 
 mono $E2E_DIR/.paket/paket.bootstrapper.exe
 
-# BaGet running with BAGET_IMPORT_ON_BOOT should have all private packages imported already
+# LiGet running with LIGET_IMPORT_ON_BOOT should have all private packages imported already
 cd $E2E_DIR/input
 
 cd $COMPAT_DIR/paket

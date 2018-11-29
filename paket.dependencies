@@ -3,6 +3,7 @@ framework netcoreapp2.1, netstandard2.0
 storage: none
 
 nuget McMaster.Extensions.CommandLineUtils
+nuget Microsoft.NETCore.App 2.1.4
 nuget Microsoft.AspNetCore.App 2.1.4
 nuget Microsoft.AspNetCore.TestHost
 nuget Microsoft.Azure.Search
@@ -16,12 +17,14 @@ nuget Microsoft.Extensions.Logging.Abstractions
 nuget Microsoft.Extensions.Logging.Configuration
 nuget Microsoft.Extensions.Logging.Console
 nuget Microsoft.Extensions.Options.ConfigurationExtensions
+nuget Microsoft.AspNetCore.Cors
 nuget Gelf.Extensions.Logging
 nuget morelinq
 nuget NuGet.Client
 nuget NuGet.Packaging
 nuget NuGet.Packaging.Core
 nuget NuGet.Protocol
+nuget NuGet.CatalogReader
 nuget WindowsAzure.Storage
 nuget carter
 nuget Microsoft.AspNetCore.OData.vNext 6.0.2-alpha-rtm
@@ -54,10 +57,12 @@ group Test
   nuget xunit.runner.visualstudio
   nuget xunit.runner.console
   nuget Microsoft.NET.Test.Sdk
+  nuget Microsoft.NETCore.App 2.1.4
   nuget Microsoft.AspNetCore.App 2.1.4
   nuget Microsoft.AspNetCore.TestHost
   nuget Microsoft.Extensions.Logging
   nuget Microsoft.Extensions.Logging.Abstractions
   nuget Microsoft.Extensions.Logging.Configuration
   nuget NuGet.Protocol
+  nuget NuGet.CatalogReader
   nuget carter

@@ -6,9 +6,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/BaGet/bin/Debug/netcoreapp2.1/BaGet.dll",
+            "program": "${workspaceFolder}/src/LiGet/bin/Debug/netcoreapp2.1/LiGet.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/BaGet",
+            "cwd": "${workspaceFolder}/src/LiGet",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart",
             "launchBrowser": {

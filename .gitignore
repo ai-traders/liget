@@ -287,11 +287,11 @@ __pycache__/
 **/Baget.UI/dist/
 
 # Ignore database file
-**/baget.db
-/src/BaGet.UI/dist/
-/src/BaGet.UI/.cache/
+**/liget.db
+/src/LiGet.UI/dist/
+/src/LiGet.UI/.cache/
 
-/src/BaGet/Packages/
+/src/LiGet/Packages/
 /e2e/.paket/paket.bootstrapper.exe.config
 /e2e/test_update-package/paket-constraint/paket.lock
 /e2e/test_update-package/paket/paket.lock

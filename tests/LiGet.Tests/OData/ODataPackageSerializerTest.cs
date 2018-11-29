@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using LiGet.Models;
-using LiGet.OData;
+using LiGet.Legacy.OData;
 using NuGet.Versioning;
 using Xunit;
 

@@ -59,8 +59,8 @@ pipelines:
                - fetch:
                   stage: build
                   job: build
-                  source: src/BaGet/bin/Release/netcoreapp2.1/publish
-                  destination: src/BaGet/bin/Release/netcoreapp2.1
+                  source: src/LiGet/bin/Release/netcoreapp2.1/publish
+                  destination: src/LiGet/bin/Release/netcoreapp2.1
                - exec:
                   command: /bin/bash
                   arguments:
@@ -175,8 +175,8 @@ pipelines:
                - fetch:
                   stage: build
                   job: build
-                  source: src/BaGet/bin/Release/netcoreapp2.1/publish
-                  destination: src/BaGet/bin/Release/netcoreapp2.1
+                  source: src/LiGet/bin/Release/netcoreapp2.1/publish
+                  destination: src/LiGet/bin/Release/netcoreapp2.1
                - exec:
                   command: /bin/bash
                   arguments:

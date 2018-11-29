@@ -16,7 +16,7 @@ open Fake.DotNet.Testing.XUnit2
 open Fake.Testing.Common
 open System.Linq
 
-let project = "BaGet"
+let project = "LiGet"
 let gitOwner = "ai-traders"
 // Pattern specifying assemblies to be tested using XUnit
 let testAssemblies = !! "tests/*.Tests/bin/Release/*/publish/*.Tests.dll"
@@ -47,8 +47,8 @@ Target.create "Build" (fun _ ->
 )
 
 // Build SPA
-let spaRoot = "src" </> "BaGet.UI"
-let spaPublishDir = "src" </> "BaGet" </> "bin" </> "Release" </> "netcoreapp2.1" </> "publish" </> "wwwroot"
+let spaRoot = "src" </> "LiGet.UI"
+let spaPublishDir = "src" </> "LiGet" </> "bin" </> "Release" </> "netcoreapp2.1" </> "publish" </> "wwwroot"
 
 let runSpaProcess exe args timeout =
     let result =
@@ -74,7 +74,7 @@ Target.create "SpaBuild" (fun _ ->
 Target.create "SpaPublish" (fun _ ->
     Directory.delete spaPublishDir
     Directory.create spaPublishDir
-    !! "src/BaGet.UI/dist/**/*" |> Shell.copy spaPublishDir
+    !! "src/LiGet.UI/dist/**/*" |> Shell.copy spaPublishDir
 )
 
 // --------------------------------------------------------------------------------------
@@ -198,12 +198,12 @@ let isCurrentCommitTagged =
         Trace.tracefn "Current SHA %s is not tagged" currentSha
     ok
 
-let zipFile = sprintf @"pkg/baget-%s.zip" tagVersion
+let zipFile = sprintf @"pkg/liget-%s.zip" tagVersion
 
 Target.create "Zip" (fun _ ->
     Directory.create "pkg"
-    !! "src/BaGet/bin/Release/netcoreapp2.1/publish/**/*"
-    |> Zip.zip "src/BaGet/bin/Release/netcoreapp2.1/publish" zipFile
+    !! "src/LiGet/bin/Release/netcoreapp2.1/publish/**/*"
+    |> Zip.zip "src/LiGet/bin/Release/netcoreapp2.1/publish" zipFile
 )
 
 Target.create "GitTag" (fun _ ->

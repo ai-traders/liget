@@ -59,9 +59,9 @@ docker run -ti -p 9011:9011 tomzo/liget:<version>
 *TODO: change back to liget convention /data/*
 
 For persistent data, you should mount **volumes**:
- - `/var/baget/packages` contains pushed private packages
- - `/var/baget/db` contains sqlite database
- - `/var/baget/cache` contains cached public packages
+ - `/var/liget/packages` contains pushed private packages
+ - `/var/liget/db` contains sqlite database
+ - `/var/liget/cache` contains cached public packages
 
 You should change the default api key (`NUGET-SERVER-API-KEY`) used for pushing packages,
 by setting SHA256 into `ApiKeyHash` environment variable. You can generate it with `echo -n 'my-secret' | sha256sum`.
@@ -87,7 +87,7 @@ For **dotnet CLI and nuget** you need to configure nuget config `~/.nuget/NuGet/
 <configuration>
   <packageSources>
     <add key="nuget" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
-    <add key="baget" value="http://liget:9011/v3/index.json" protocolVersion="3" />
+    <add key="liget" value="http://liget:9011/v3/index.json" protocolVersion="3" />
   </packageSources>
 </configuration>
 ```
@@ -110,8 +110,8 @@ For **dotnet CLI and nuget** you need to configure nuget config `~/.nuget/NuGet/
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
-    <add key="baget" value="http://liget:9011/cache/v3/index.json" protocolVersion="3" />
-    <add key="baget" value="http://liget:9011/v3/index.json" protocolVersion="3" />
+    <add key="liget" value="http://liget:9011/cache/v3/index.json" protocolVersion="3" />
+    <add key="liget" value="http://liget:9011/v3/index.json" protocolVersion="3" />
   </packageSources>
 </configuration>
 ```
@@ -154,12 +154,12 @@ This will enable following behavior:
 To make transition from LiGet or any other server which keeps `.nupkg` files in a directory,
 there is an `import` command:
 ```
-dotnet BaGet.dll import --path dir
+dotnet LiGet.dll import --path dir
 ```
-In the docker image you can setup environment variable - `BAGET_IMPORT_ON_BOOT=/data/simple`
-which will cause baget to first search for `nupkg` files in `$BAGET_IMPORT_ON_BOOT`, before starting server.
+In the docker image you can setup environment variable - `LIGET_IMPORT_ON_BOOT=/data/simple`
+which will cause liget to first search for `nupkg` files in `$LIGET_IMPORT_ON_BOOT`, before starting server.
 Packages which were already added are skipped.
-Setting `BAGET_IMPORT_ON_BOOT=/data/simple` is sufficient for migration from LiGet.
+Setting `LIGET_IMPORT_ON_BOOT=/data/simple` is sufficient for migration from LiGet.
 
 *Note: you only need to set this variable once to perform initial migration.
 You should unset it in later deployments to avoid uncessary scanning.*

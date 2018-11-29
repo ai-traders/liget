@@ -1,15 +1,15 @@
 #!/bin/bash
 set -e
 
-DIRECTORY="/var/baget/packages"
-OWNER_USERNAME="baget"
-OWNER_GROUPNAME="baget"
+DIRECTORY="/var/liget/packages"
+OWNER_USERNAME="liget"
+OWNER_GROUPNAME="liget"
 
 # First deployment bootstrap, we might want to change permissions of mounted volumes
-if [ ! -f /var/baget/db/sqlite.db ]; then
+if [ ! -f /var/liget/db/sqlite.db ]; then
   echo "Database does not exist yet. Setting up directory access"
-  mkdir -p /var/baget/packages /var/baget/db /var/baget/cache
-  chown -R baget:baget /var/baget/
+  mkdir -p /var/liget/packages /var/liget/db /var/liget/cache
+  chown -R liget:liget /var/liget/
 fi
 
 ###########################################################################
@@ -41,8 +41,8 @@ fi
 
 NEWUID=$(ls --numeric-uid-gid -d $DIRECTORY | awk '{ print $3 }')
 NEWGID=$(ls --numeric-uid-gid -d $DIRECTORY | awk '{ print $4 }')
-OLDUID=$(id -u baget)
-OLDGID=$(id -g baget)
+OLDUID=$(id -u liget)
+OLDGID=$(id -g liget)
 
 if [[ $NEWUID != $OLDUID && $NEWUID != 0 ]]; then
   usermod -u $NEWUID $OWNER_USERNAME
@@ -50,25 +50,25 @@ fi
 if [[ $NEWGID != $OLDGID && $NEWGID != 0 ]]; then
   groupmod -g $NEWGID $OWNER_GROUPNAME
 fi
-chown $NEWUID:$NEWGID -R /home/baget
+chown $NEWUID:$NEWGID -R /home/liget
 
 ###########################################################################
 # Start server
 ###########################################################################
 
 cd /app
-if [ ! -z ${BAGET_IMPORT_ON_BOOT+x} ]; then
+if [ ! -z ${LIGET_IMPORT_ON_BOOT+x} ]; then
   if [[ $NEWGID != 0 ]]; then
-    sudo -u baget -E -H dotnet /app/BaGet.dll import --path ${BAGET_IMPORT_ON_BOOT}
+    sudo -u liget -E -H dotnet /app/LiGet.dll import --path ${LIGET_IMPORT_ON_BOOT}
   else
-    echo "WARNING: running baget as root"
-    dotnet /app/BaGet.dll import --path ${BAGET_IMPORT_ON_BOOT}
+    echo "WARNING: running liget as root"
+    dotnet /app/LiGet.dll import --path ${LIGET_IMPORT_ON_BOOT}
   fi
 fi
 
 if [[ $NEWGID != 0 ]]; then
-  exec sudo -u baget -E -H dotnet /app/BaGet.dll
+  exec sudo -u liget -E -H dotnet /app/LiGet.dll
 else
-  echo "WARNING: running baget as root"
-  exec dotnet /app/BaGet.dll
+  echo "WARNING: running liget as root"
+  exec dotnet /app/LiGet.dll
 fi

@@ -1,5 +1,5 @@
 FROM microsoft/dotnet:2.1.4-aspnetcore-runtime-stretch-slim
-EXPOSE 9090
+EXPOSE 9011
 
 RUN apt-get update && apt-get install -y sudo &&\
   apt-get -y autoremove && apt-get -y autoclean && apt-get -y clean &&\
@@ -11,26 +11,26 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 ENTRYPOINT ["/tini", "--"]
 
-RUN mkdir -p /home/baget /home/baget/.nuget/NuGet &&\
-    mkdir -p /var/baget/packages /var/baget/db /var/baget/cache &&\
-    groupadd -g 1000 baget &&\
-    useradd -d /home/baget -s /bin/bash -u 1000 -g baget baget &&\
-    chown -R baget:baget /home/baget /var/baget/
+RUN mkdir -p /home/liget /home/liget/.nuget/NuGet &&\
+    mkdir -p /var/liget/packages /var/liget/db /var/liget/cache &&\
+    groupadd -g 1000 liget &&\
+    useradd -d /home/liget -s /bin/bash -u 1000 -g liget liget &&\
+    chown -R liget:liget /home/liget /var/liget/
 
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ApiKeyHash=658489D79E218D2474D049E8729198D86DB0A4AF43981686A31C7DCB02DC0900 \
     Storage__Type=FileSystem \
-    Storage__Path=/var/baget/packages \
+    Storage__Path=/var/liget/packages \
     Database__RunMigrations=true \
     Database__Type=Sqlite \
-    Database__ConnectionString="Data Source=/var/baget/db/sqlite.db" \
+    Database__ConnectionString="Data Source=/var/liget/db/sqlite.db" \
     Mirror__Enabled=true \
     Mirror__UpstreamIndex="https://api.nuget.org/v3/index.json" \
-    Mirror__PackagesPath="/var/baget/cache" \
+    Mirror__PackagesPath="/var/liget/cache" \
     Search__Type=Database
 
 
-COPY /src/BaGet/bin/Release/netcoreapp2.1/publish/ /app
+COPY /src/LiGet/bin/Release/netcoreapp2.1/publish/ /app
 
 ADD docker-scripts/run.sh /app/run.sh
 RUN chmod +x /app/run.sh

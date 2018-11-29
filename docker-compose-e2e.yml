@@ -14,7 +14,7 @@ services:
   liget:
     image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}
     volumes:
-      - ${IDE_WORK}/e2e/data/:/var/baget
+      - ${IDE_WORK}/e2e/data/:/var/liget
     env_file:
       - ${ENV_FILE}
     mem_limit: 550m
