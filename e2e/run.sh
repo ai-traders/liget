@@ -11,7 +11,7 @@ cat << EOF > /home/ide/.nuget/NuGet/NuGet.Config
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
-    <add key="liget" value="http://liget:9011/v3/index.json" protocolVersion="3" />
+    <add key="liget" value="http://liget:9011/api/v3/index.json" protocolVersion="3" />
   </packageSources>
 </configuration>
 EOF

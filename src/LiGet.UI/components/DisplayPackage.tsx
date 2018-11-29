@@ -52,7 +52,7 @@ export default class DisplayPackage extends React.Component<DisplayPackageProps,
   }
 
   componentDidMount() {
-    let url = `/v3/registration/${this.props.id}/index.json`;
+    let url = `/api/v3/registration/${this.props.id}/index.json`;
 
     fetch(url).then(response => {
       return response.json();
@@ -109,7 +109,7 @@ export default class DisplayPackage extends React.Component<DisplayPackageProps,
         });
 
         if (latestCatalogEntry["hasReadme"]) {
-          let readmeUrl = `/v3/package/${this.props.id}/${latestVersion}/readme`;
+          let readmeUrl = `/api/v3/package/${this.props.id}/${latestVersion}/readme`;
 
           fetch(readmeUrl).then(response => {
             return response.text();

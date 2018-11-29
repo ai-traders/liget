@@ -19,6 +19,6 @@
 
         public MirrorOptions Mirror { get; set; }
 
-        public LiGetCompatibilityOptions LiGetCompat { get; set; }
+        public BaGetCompatibilityOptions BaGetCompat { get; set; }
     }
 }

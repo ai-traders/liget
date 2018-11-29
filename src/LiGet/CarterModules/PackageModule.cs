@@ -19,7 +19,7 @@ namespace LiGet.Controllers
         private readonly IPackageStorageService _storage;
 
         public PackageModule(IPackageService packageService, IPackageStorageService storage)
-            :base("v3/package")
+            :base("api/v3/package")
         {
             _packages = packageService ?? throw new ArgumentNullException(nameof(packageService));
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));

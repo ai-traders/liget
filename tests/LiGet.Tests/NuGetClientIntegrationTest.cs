@@ -28,11 +28,11 @@ namespace LiGet.Tests
     /// </summary>
     public class NuGetClientIntegrationTest : IDisposable
     {
-        private const string CacheIndex = "cache/v3/index.json";
-        private const string CompatCacheIndex = "api/cache/v3/index.json";
-        static readonly string MainIndex = "v3/index.json";
-        static readonly string V2Index = "v2";
-        static readonly string CompatV2Index = "api/v2";
+        private const string CacheIndex = "api/cache/v3/index.json";
+        private const string CompatCacheIndex = "cache/v3/index.json";
+        static readonly string MainIndex = "api/v3/index.json";
+        static readonly string V2Index = "api/v2";
+        static readonly string CompatV2Index = "v2";
         public static IEnumerable<object[]> V3Cases = new[] {
             new object[] { MainIndex },
             new object[] { CacheIndex },
@@ -178,7 +178,7 @@ namespace LiGet.Tests
             var packageResource = await _sourceRepository.GetResourceAsync<PackageUpdateResource>();
             await packageResource.Push(TestResources.GetNupkgBagetTest1(),
                 null, 5, false, GetApiKey, GetApiKey, false, logger);
-            var response = await _httpClient.GetAsync("/v2/FindPackagesById()?id=liget-test1");
+            var response = await _httpClient.GetAsync("/api/v2/FindPackagesById()?id=liget-test1");
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             var responseText = await response.Content.ReadAsStringAsync();               
             var entries = XmlFeedHelper.ParsePage(XDocument.Parse(responseText));

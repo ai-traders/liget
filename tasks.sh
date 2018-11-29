@@ -78,12 +78,12 @@ case "${command}" in
   liget_compat_docker)
     source_imagerc "${image_dir}"  "${imagerc_filename}"
     ide "./tasks.sh _build_inputs"
-    rm -rf e2e/liget-compat/data/db/*
-    rm -rf e2e/liget-compat/data/packages/*
-    rm -rf e2e/liget-compat/data/cache/*
-    export LiGetCompat__Enabled=true
+    rm -rf e2e/baget-compat/data/db/*
+    rm -rf e2e/baget-compat/data/packages/*
+    rm -rf e2e/baget-compat/data/cache/*
+    export BaGetCompat__Enabled=true
     export LIGET_IMPORT_ON_BOOT=/data/simple
-    ide --idefile Idefile.liget-compat "e2e/liget-compat/run.sh"
+    ide --idefile Idefile.baget-compat "e2e/baget-compat/run.sh"
     ;;
   all)
     ide "./build.sh --target All"

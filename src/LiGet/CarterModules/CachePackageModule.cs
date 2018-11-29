@@ -19,7 +19,7 @@ namespace LiGet.Controllers
         private readonly IMirrorService _mirror;
 
         public CachePackageModule(IMirrorService mirror)
-            :base("cache/v3/package")
+            :base("api/cache/v3/package")
         {
             _mirror = mirror ?? throw new ArgumentNullException(nameof(mirror));
 

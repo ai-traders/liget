@@ -2,14 +2,14 @@ load '/opt/bats-support/load.bash'
 load '/opt/bats-assert/load.bash'
 
 @test "push private package liget-test1" {
-  run /bin/bash -c "cd ../input/liget-test1/bin/Debug/ && dotnet nuget push liget-test1.1.0.0.nupkg --source http://liget:9011/v3/index.json --api-key NUGET-SERVER-API-KEY"
+  run /bin/bash -c "cd ../input/liget-test1/bin/Debug/ && dotnet nuget push liget-test1.1.0.0.nupkg --source http://liget:9011/api/v3/index.json --api-key NUGET-SERVER-API-KEY"
   assert_output --partial "Your package was pushed"
   assert_equal "$status" 0
 }
 
 @test "nuget install exact package version via V3" {
-  run /bin/bash -c "cd nuget && nuget install liget-test1 -Version 1.0.0 -DisableParallelProcessing -NoCache -Source http://liget:9011/v3/index.json"
-  assert_output --partial "http://liget:9011/v3/index.json"
+  run /bin/bash -c "cd nuget && nuget install liget-test1 -Version 1.0.0 -DisableParallelProcessing -NoCache -Source http://liget:9011/api/v3/index.json"
+  assert_output --partial "http://liget:9011/api/v3/index.json"
   assert_equal "$status" 0
 }
 

@@ -1,5 +1,5 @@
 NUGET
-  remote: http://liget:9011/cache/v3/index.json
+  remote: http://liget:9011/api/cache/v3/index.json
     fsharp.core (4.5.3)
       System.Collections (>= 4.0.11) - restriction: && (< net45) (>= netstandard1.6) (< netstandard2.0)
       System.Console (>= 4.0) - restriction: && (< net45) (>= netstandard1.6) (< netstandard2.0)

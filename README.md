@@ -87,20 +87,20 @@ For **dotnet CLI and nuget** you need to configure nuget config `~/.nuget/NuGet/
 <configuration>
   <packageSources>
     <add key="nuget" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
-    <add key="liget" value="http://liget:9011/v3/index.json" protocolVersion="3" />
+    <add key="liget" value="http://liget:9011/api/v3/index.json" protocolVersion="3" />
   </packageSources>
 </configuration>
 ```
 
 For paket, in `paket.dependencies`, just specify another source:
 ```
-source http://liget:9011/v3/index.json
+source http://liget:9011/api/v3/index.json
 ```
 
 ### Pushing packages
 
 ```
-dotnet nuget push mypackage.1.0.0.nupkg --source http://liget:9011/v3/index.json --api-key NUGET-SERVER-API-KEY
+dotnet nuget push mypackage.1.0.0.nupkg --source http://liget:9011/api/v3/index.json --api-key NUGET-SERVER-API-KEY
 ```
 
 ### Usage as caching proxy
@@ -110,48 +110,46 @@ For **dotnet CLI and nuget** you need to configure nuget config `~/.nuget/NuGet/
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
-    <add key="liget" value="http://liget:9011/cache/v3/index.json" protocolVersion="3" />
-    <add key="liget" value="http://liget:9011/v3/index.json" protocolVersion="3" />
+    <add key="liget" value="http://liget:9011/api/cache/v3/index.json" protocolVersion="3" />
+    <add key="liget" value="http://liget:9011/api/v3/index.json" protocolVersion="3" />
   </packageSources>
 </configuration>
 ```
 
 For paket, in `paket.dependencies`, just specify liget as the 2 only sources
 ```
-source http://liget:9011/cache/v3/index.json
+source http://liget:9011/api/cache/v3/index.json
 # public packages...
 
-source http://liget:9011/v3/index.json
+source http://liget:9011/api/v3/index.json
 # private packages...
 ```
 
-## Migrating from LiGet
+## Migrating from BaGet
 
-*TODO: this will be inversed to migration from BaGet*
-
-If you have been using LiGet before, then many of your nuget sources in projects,
+If you have been using BaGet before, then many of your nuget sources in projects,
  could look like this, e.g. in paket:
 ```
-source http://my-nuget.com/api/cache/v3/index.json
-# public packages
+source http://my-nuget.com/cache/v3/index.json
+# public packages (only in ai-traders fork)
 
-source http://my-nuget.com/api/v2
+source http://my-nuget.com/v3
 # private packages
 ```
 Above endpoints end up in `paket.lock` too.
-BaGet has different endpoints (no `/api` before endpoints).
-If you want to deploy BaGet in place of LiGet and (at least temporarily) keep above endpoints,
-you can enable LiGet compatibity mode in BaGet.
+LiGet has different endpoints (with `/api` before endpoints).
+If you want to deploy LiGet in place of BaGet and (at least temporarily) keep above endpoints,
+you can enable BaGet compatibity mode in LiGet.
 ```
-LiGetCompat__Enabled=true
+BaGetCompat__Enabled=true
 ```
 This will enable following behavior:
- - `/api/cache/v3/index.json` returns same content as original BaGet's `/cache/v3/index.json`.
- - `/api/v2/*` returns **V2** resources, same as `/v2/*`
+ - `/cache/v3/index.json` returns same content as our fork's BaGet's `/api/cache/v3/index.json`. Upstream BaGet does not have separate endpoint for public packages anyway.
+ - `/v2/*` returns **V2** resources, same as `/api/v2/*`
 
 ### Importing packages
 
-To make transition from LiGet or any other server which keeps `.nupkg` files in a directory,
+To make transition from old (<1.0.0) LiGet or any other server which keeps `.nupkg` files in a directory,
 there is an `import` command:
 ```
 dotnet LiGet.dll import --path dir
@@ -159,7 +157,7 @@ dotnet LiGet.dll import --path dir
 In the docker image you can setup environment variable - `LIGET_IMPORT_ON_BOOT=/data/simple`
 which will cause liget to first search for `nupkg` files in `$LIGET_IMPORT_ON_BOOT`, before starting server.
 Packages which were already added are skipped.
-Setting `LIGET_IMPORT_ON_BOOT=/data/simple` is sufficient for migration from LiGet.
+Setting `LIGET_IMPORT_ON_BOOT=/data/simple` is sufficient for migration from (<1.0.0) LiGet.
 
 *Note: you only need to set this variable once to perform initial migration.
 You should unset it in later deployments to avoid uncessary scanning.*

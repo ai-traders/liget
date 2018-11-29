@@ -36,7 +36,7 @@ namespace LiGet.Controllers
             _packages = packages ?? throw new ArgumentNullException(nameof(packages));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            this.Put("/v2/package", async (req, res, routeData) =>
+            this.Put("/api/v2/package", async (req, res, routeData) =>
             {
                 CancellationToken ct = CancellationToken.None;
                 Stream uploadStream;
@@ -97,7 +97,7 @@ namespace LiGet.Controllers
                 }
             });
 
-            this.Delete("/v2/package/{id}/{version}", async (req, res, routeData) => {
+            this.Delete("/api/v2/package/{id}/{version}", async (req, res, routeData) => {
                 string id = routeData.As<string>("id");
                 string version = routeData.As<string>("version");
                 if (!NuGetVersion.TryParse(version, out var nugetVersion))
@@ -123,7 +123,7 @@ namespace LiGet.Controllers
                 }
             });
 
-            this.Post("/v2/package/{id}/{version}", async (req, res, routeData) => {
+            this.Post("/api/v2/package/{id}/{version}", async (req, res, routeData) => {
                 string id = routeData.As<string>("id");
                 string version = routeData.As<string>("version");
                 if (!NuGetVersion.TryParse(version, out var nugetVersion))

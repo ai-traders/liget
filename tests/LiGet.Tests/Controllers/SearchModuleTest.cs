@@ -9,7 +9,7 @@ namespace LiGet.Tests
     {
         protected readonly ITestOutputHelper Helper;
 
-        readonly string EntryUrl = "/v3/search"; 
+        readonly string EntryUrl = "/api/v3/search"; 
 
         public SearchControllerTest(ITestOutputHelper helper)
         {

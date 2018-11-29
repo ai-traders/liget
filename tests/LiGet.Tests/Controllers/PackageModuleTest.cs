@@ -21,7 +21,7 @@ namespace LiGet.Tests
     {
         protected readonly ITestOutputHelper Helper;
 
-        readonly string IndexUrlFormatString = "v3/package/{0}/index.json";
+        readonly string IndexUrlFormatString = "api/v3/package/{0}/index.json";
         private string exampleNuSpec = "<?xml version=\"1.0\"?>";
 
         public PackageControllerTest(ITestOutputHelper helper)
@@ -88,7 +88,7 @@ namespace LiGet.Tests
                 var services = server.Host.Services;
                 Assert.Equal(pkgStorageService.Object, services.GetRequiredService<IPackageStorageService>());
                 // https://docs.microsoft.com/en-us/nuget/api/package-base-address-resource#download-package-content-nupkg
-                var response = await server.CreateClient().GetAsync(string.Format("v3/package/{0}/{1}/{0}.{1}.nupkg", "abc","1.2.3"));
+                var response = await server.CreateClient().GetAsync(string.Format("api/v3/package/{0}/{1}/{0}.{1}.nupkg", "abc","1.2.3"));
                 Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
                 Assert.Equal("application/octet-stream", response.Content.Headers.ContentType.MediaType);
                 var byteArray = await response.Content.ReadAsByteArrayAsync();
@@ -110,7 +110,7 @@ namespace LiGet.Tests
                 .WithMock(typeof(IPackageService), pkgService)
                 .Build())
             {
-                var response = await server.CreateClient().GetAsync(string.Format("v3/package/{0}/{1}/{0}.{1}.nupkg", "abc","1.2.3"));
+                var response = await server.CreateClient().GetAsync(string.Format("api/v3/package/{0}/{1}/{0}.{1}.nupkg", "abc","1.2.3"));
                 Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
             }
         }
@@ -132,7 +132,7 @@ namespace LiGet.Tests
                 var services = server.Host.Services;
                 Assert.Equal(pkgStorageService.Object, services.GetRequiredService<IPackageStorageService>());
                 // https://docs.microsoft.com/en-us/nuget/api/package-base-address-resource#download-package-manifest-nuspec
-                var response = await server.CreateClient().GetAsync(string.Format("v3/package/{0}/{1}/{0}.nuspec", "abc","1.2.3"));
+                var response = await server.CreateClient().GetAsync(string.Format("api/v3/package/{0}/{1}/{0}.nuspec", "abc","1.2.3"));
                 Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
                 Assert.Equal("text/xml", response.Content.Headers.ContentType.MediaType);
                 var nuspecContent = await response.Content.ReadAsStringAsync();
@@ -161,7 +161,7 @@ namespace LiGet.Tests
                 var services = server.Host.Services;
                 Assert.Equal(pkgStorageService.Object, services.GetRequiredService<IPackageStorageService>());
                 //no docs for this.
-                var response = await server.CreateClient().GetAsync(string.Format("v3/package/{0}/{1}/readme", "abc","1.2.3"));
+                var response = await server.CreateClient().GetAsync(string.Format("api/v3/package/{0}/{1}/readme", "abc","1.2.3"));
                 Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
                 Assert.Equal("text/markdown", response.Content.Headers.ContentType.MediaType);
                 var readmeContent = await response.Content.ReadAsStringAsync();

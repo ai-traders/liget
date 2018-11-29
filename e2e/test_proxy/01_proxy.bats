@@ -2,8 +2,8 @@ load '/opt/bats-support/load.bash'
 load '/opt/bats-assert/load.bash'
 
 @test "nuget install latest log4net" {
-  run /bin/bash -c "cd nuget && nuget install log4net -DisableParallelProcessing -NoCache -Source http://liget:9011/cache/v3/index.json"
-  assert_output --partial "OK http://liget:9011/cache/v3/registration/log4net/index.json"
+  run /bin/bash -c "cd nuget && nuget install log4net -DisableParallelProcessing -NoCache -Source http://liget:9011/api/cache/v3/index.json"
+  assert_output --partial "OK http://liget:9011/api/cache/v3/registration/log4net/index.json"
   assert_equal "$status" 0
 }
 

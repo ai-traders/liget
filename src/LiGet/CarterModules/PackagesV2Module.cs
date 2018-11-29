@@ -28,21 +28,20 @@ namespace LiGet.CarterModules
     public class PackagesV2Module : CarterModule
     {
         static readonly string atomXmlContentType = "application/atom+xml";
-        static readonly string basePath = "/v2";
-        private readonly LiGetCompatibilityOptions _compat;
+        private readonly BaGetCompatibilityOptions _compat;
         private readonly IPackageService _packageService;
         private readonly IPackageStorageService _storage;
         private readonly ILogger<PackagesV2Module> _log;
 
         public PackagesV2Module(IODataPackageSerializer serializer, IPackageService packageService,
             IPackageStorageService storage, IEdmModel odataModel,
-            ILogger<PackagesV2Module> logger, LiGetCompatibilityOptions compat)
+            ILogger<PackagesV2Module> logger, BaGetCompatibilityOptions compat)
         {
             this._compat = compat;
             this._packageService = packageService;
             this._storage = storage;
             this._log = logger;
-            this.GetCompat("/v2/contents/{id}/{version}", async (req, res, routeData) => {
+            this.GetCompat("/api/v2/contents/{id}/{version}", async (req, res, routeData) => {
                 string id = routeData.As<string>("id");
                 string version = routeData.As<string>("version");
 
@@ -74,9 +73,9 @@ namespace LiGet.CarterModules
                 res.ContentType = "application/xml; charset=utf-8";
                 await res.WriteAsync(text, new UTF8Encoding(false));
             };
-            this.GetCompat("/v2/", indexHandler);
+            this.GetCompat("/api/v2/", indexHandler);
 
-            this.GetCompat(@"/v2/FindPackagesById{query}", async (req, res, routeData) => {
+            this.GetCompat(@"/api/v2/FindPackagesById{query}", async (req, res, routeData) => {
                 CancellationToken ct = CancellationToken.None;
                 try {
                     var serviceUrl = GetServiceUrl(req);
@@ -103,7 +102,7 @@ namespace LiGet.CarterModules
                 }
             });
 
-            this.GetCompat(@"/v2/Packages{query}", async (req, res, routeData) => {
+            this.GetCompat(@"/api/v2/Packages{query}", async (req, res, routeData) => {
                 try {
                     var serviceUrl = GetServiceUrl(req);
                     var uriParser = new ODataUriParser(odataModel,new Uri(serviceUrl), req.GetUri());
@@ -145,7 +144,7 @@ namespace LiGet.CarterModules
         private void GetCompat(string path, Func<HttpRequest, HttpResponse, RouteData, Task> handler) {
             base.Get(path, handler);
             if(_compat != null && _compat.Enabled) {
-                base.Get("/api" + path, handler);
+                base.Get(path.Replace("/api/v2", "/v2"), handler);
             }
         }
 
@@ -162,11 +161,11 @@ namespace LiGet.CarterModules
         public string GetServiceUrl(HttpRequest req)
         {
             if(_compat != null && _compat.Enabled) {
-                if(req.Path.StartsWithSegments(new PathString("/api"))) {
-                    return req.AbsoluteUrl("/api" + basePath);
+                if(req.Path.StartsWithSegments(new PathString("/v2"))) {
+                    return req.AbsoluteUrl("/v2");
                 }
             }
-            return req.AbsoluteUrl(basePath);
+            return req.AbsoluteUrl("/api/v2");
         }
     }
 }

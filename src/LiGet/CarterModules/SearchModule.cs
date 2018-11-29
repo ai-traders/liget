@@ -21,7 +21,7 @@ namespace LiGet.CarterModules
         {
             _searchService = searchService ?? throw new ArgumentNullException(nameof(searchService));
 
-            this.Get("/v3/search", async (req, res, routeData) => {
+            this.Get("/api/v3/search", async (req, res, routeData) => {
                 var query = req.Query.As<string>("q");
                 query = query ?? string.Empty;
 
@@ -33,7 +33,7 @@ namespace LiGet.CarterModules
                 });
             });
 
-            this.Get("/v3/autocomplete", async (req, res, routeData) => {
+            this.Get("/api/v3/autocomplete", async (req, res, routeData) => {
                 var query = req.Query.As<string>("q");
                 query = query ?? string.Empty;
 

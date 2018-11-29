@@ -36,15 +36,15 @@ namespace LiGet.CarterModules
                 {
                     Version = "3.0.0",
                     Resources =
-                        ServiceWithAliases("PackagePublish", req.PackagePublish(""), "2.0.0") // api.nuget.org returns this too.
-                        .Concat(ServiceWithAliases("SearchQueryService", req.PackageSearch(""), "", "3.0.0-beta", "3.0.0-rc")) // each version is an alias of others
-                        .Concat(ServiceWithAliases("RegistrationsBaseUrl", req.RegistrationsBase(""), "", "3.0.0-rc", "3.0.0-beta"))
-                        .Concat(ServiceWithAliases("PackageBaseAddress", req.PackageBase(""), "3.0.0"))
-                        .Concat(ServiceWithAliases("SearchAutocompleteService", req.PackageAutocomplete(""), "", "3.0.0-rc", "3.0.0-beta"))
+                        ServiceWithAliases("PackagePublish", req.PackagePublish("api"), "2.0.0") // api.nuget.org returns this too.
+                        .Concat(ServiceWithAliases("SearchQueryService", req.PackageSearch("api"), "", "3.0.0-beta", "3.0.0-rc")) // each version is an alias of others
+                        .Concat(ServiceWithAliases("RegistrationsBaseUrl", req.RegistrationsBase("api"), "", "3.0.0-rc", "3.0.0-beta"))
+                        .Concat(ServiceWithAliases("PackageBaseAddress", req.PackageBase("api"), "3.0.0"))
+                        .Concat(ServiceWithAliases("SearchAutocompleteService", req.PackageAutocomplete("api"), "", "3.0.0-rc", "3.0.0-beta"))
                         .ToList()
                 });
             };
-            this.Get("/v3/index.json", indexHandler);
+            this.Get("/api/v3/index.json", indexHandler);
         }
     }
 }

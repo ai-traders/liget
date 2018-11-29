@@ -31,7 +31,7 @@ namespace LiGet.Tests
         private readonly string MirrorEnabledKey = $"{nameof(LiGetOptions.Mirror)}:{nameof(MirrorOptions.Enabled)}";
         private readonly string UpstreamIndexKey = $"{nameof(LiGetOptions.Mirror)}:{nameof(MirrorOptions.UpstreamIndex)}";
         private readonly string MirrorCachedDirKey = $"{nameof(LiGetOptions.Mirror)}:{nameof(MirrorOptions.PackagesPath)}";
-        private readonly string LiGetCompatEnabledKey = $"{nameof(LiGetOptions.LiGetCompat)}:{nameof(LiGetCompatibilityOptions.Enabled)}";
+        private readonly string BaGetCompatEnabledKey = $"{nameof(LiGetOptions.BaGetCompat)}:{nameof(BaGetCompatibilityOptions.Enabled)}";
 
         private ITestOutputHelper _helper;
         private LogLevel _minimumLevel = LogLevel.None;
@@ -113,7 +113,7 @@ namespace LiGet.Tests
             Configuration.Add(SearchTypeKey, nameof(SearchType.Database));
             Configuration.Add(MirrorEnabledKey, true.ToString());
             Configuration.Add(UpstreamIndexKey, "https://api.nuget.org/v3/index.json");
-            Configuration.Add(LiGetCompatEnabledKey, true.ToString());
+            Configuration.Add(BaGetCompatEnabledKey, true.ToString());
             string cacheDirName = Path.Combine(uniqueTempFolder, "CachedPackages");
             Configuration.Add(MirrorCachedDirKey, cacheDirName);
             return this;

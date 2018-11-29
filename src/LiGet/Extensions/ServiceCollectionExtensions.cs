@@ -154,11 +154,11 @@ namespace LiGet.Extensions
 
         public static IServiceCollection ConfigureHttpServices(this IServiceCollection services)
         {
-            services.AddTransient<LiGetCompatibilityOptions, LiGetCompatibilityOptions>(provider =>
+            services.AddTransient<BaGetCompatibilityOptions, BaGetCompatibilityOptions>(provider =>
                 provider
                     .GetRequiredService<IOptions<LiGetOptions>>()
                     .Value
-                    .LiGetCompat
+                    .BaGetCompat
             );
 
             services.AddSingleton<IEdmModel>(provider => {

@@ -14,7 +14,7 @@ services:
   nuget:
     image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}
     volumes:
-      - ${IDE_WORK}/e2e/liget-compat/data/:/var/liget
+      - ${IDE_WORK}/e2e/baget-compat/data/:/var/liget
       - ${IDE_WORK}/e2e/input:/data/simple #simulates LiGet's storage
     env_file:
       - ${ENV_FILE}

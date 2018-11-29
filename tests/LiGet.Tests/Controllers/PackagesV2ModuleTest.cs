@@ -23,11 +23,11 @@ namespace LiGet.Tests
 {
     public class PackagesV2ModuleTest
     {
-        static readonly string V2Index = "/v2";
-        static readonly string CompatV2Index = "/api/v2";
+        static readonly string LiGetV2Index = "/api/v2";
+        static readonly string BaGetV2Index = "/v2";
         public static IEnumerable<object[]> V2Cases = new[] {
-            new object[] { V2Index },
-            new object[] { CompatV2Index }
+            new object[] { LiGetV2Index },
+            new object[] { BaGetV2Index }
         };
         private ITestOutputHelper _helper;
         Mock<IPackageService> packageRepo;
@@ -74,14 +74,14 @@ namespace LiGet.Tests
             using (TestServer server = serverBuilder.Build())
             {
                 var httpClient = server.CreateClient();
-                var response = await httpClient.GetAsync("/v2/FindPackagesById()foo=bar");
+                var response = await httpClient.GetAsync("/api/v2/FindPackagesById()foo=bar");
                 Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             }
         }
 
         [Theory]
-        [InlineData("/v2")]
-        [InlineData("/v2/")]
+        [InlineData("/api/v2")]
+        [InlineData("/api/v2/")]
         public async Task GetRootPath(string path) {
             using (TestServer server = serverBuilder.Build())
             {
@@ -91,15 +91,15 @@ namespace LiGet.Tests
                 Assert.Equal("application/xml", result.Content.Headers.ContentType.MediaType);
                 string response = await result.Content.ReadAsStringAsync();
                 Assert.Equal(@"<?xml version=""1.0"" encoding=""utf-8""?>
-<service xml:base=""http://localhost/v2"" xmlns=""http://www.w3.org/2007/app"" xmlns:atom=""http://www.w3.org/2005/Atom""><workspace>
+<service xml:base=""http://localhost/api/v2"" xmlns=""http://www.w3.org/2007/app"" xmlns:atom=""http://www.w3.org/2005/Atom""><workspace>
 <atom:title type=""text"">Default</atom:title><collection href=""Packages""><atom:title type=""text"">Packages</atom:title></collection></workspace>
 </service>", response);
             }
         }
 
         [Theory]
-        [InlineData("/api/v2")] // compat for liget
-        [InlineData("/api/v2/")] // compat for liget
+        [InlineData("/v2")] // compat for baget
+        [InlineData("/v2/")]
         public async Task GetCompatRootPath(string path) {
             using (TestServer server = serverBuilder.Build())
             {
@@ -109,7 +109,7 @@ namespace LiGet.Tests
                 Assert.Equal("application/xml", result.Content.Headers.ContentType.MediaType);
                 string response = await result.Content.ReadAsStringAsync();
                 Assert.Equal(@"<?xml version=""1.0"" encoding=""utf-8""?>
-<service xml:base=""http://localhost/api/v2"" xmlns=""http://www.w3.org/2007/app"" xmlns:atom=""http://www.w3.org/2005/Atom""><workspace>
+<service xml:base=""http://localhost/v2"" xmlns=""http://www.w3.org/2007/app"" xmlns:atom=""http://www.w3.org/2005/Atom""><workspace>
 <atom:title type=""text"">Default</atom:title><collection href=""Packages""><atom:title type=""text"">Packages</atom:title></collection></workspace>
 </service>", response);
             }
@@ -180,14 +180,14 @@ namespace LiGet.Tests
             using (TestServer server = serverBuilder.Build())
             {
                 var httpClient = server.CreateClient(); 
-                var result = await httpClient.GetAsync("/v2/FindPackagesById()?id=" + queryName);
+                var result = await httpClient.GetAsync("/api/v2/FindPackagesById()?id=" + queryName);
                 Assert.Equal(HttpStatusCode.OK, result.StatusCode);
                 packageRepo.Verify(r => r.FindAsync("aaabbb", false, true), Times.Exactly(1));
                 Assert.Equal("application/atom+xml", result.Content.Headers.ContentType.MediaType);
                 var responseText = await result.Content.ReadAsStringAsync();      
                 var entries = XmlFeedHelper.ParsePage(XDocument.Parse(responseText));
                 Assert.Empty(entries);
-                Assert.Contains("http://localhost/v2", responseText);
+                Assert.Contains("http://localhost/api/v2", responseText);
             }
         }
 

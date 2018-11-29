@@ -20,7 +20,7 @@ namespace LiGet.CarterModules
     /// </summary>
     public class CacheIndexModule : CarterModule
     {
-        string prefix = "cache";
+        string prefix = "api/cache";
 
         private IEnumerable<ServiceResource> ServiceWithAliases(string name, string url, params string[] versions)
         {
@@ -31,7 +31,7 @@ namespace LiGet.CarterModules
             }
         }
 
-        public CacheIndexModule(LiGetCompatibilityOptions compat) {
+        public CacheIndexModule(BaGetCompatibilityOptions compat) {
             Func<HttpRequest, HttpResponse, RouteData, Task> indexHandler = async (req, res, routeData) =>           
             {
                 await res.AsJson(new
@@ -48,7 +48,7 @@ namespace LiGet.CarterModules
             };
             this.Get(prefix + "/v3/index.json", indexHandler);
             if(compat != null && compat.Enabled) {
-                this.Get("/api/" + prefix + "/v3/index.json", indexHandler);
+                this.Get("/cache/v3/index.json", indexHandler);
             }
         }
     }

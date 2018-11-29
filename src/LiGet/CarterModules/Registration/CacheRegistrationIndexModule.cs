@@ -25,12 +25,13 @@ namespace LiGet.CarterModules.Registration
     /// </summary>
     public class CacheRegistrationIndexModule : CarterModule
     {
+        const string prefix = "api/cache";
         private readonly IMirrorService _mirror;
 
         public CacheRegistrationIndexModule(IMirrorService mirror)
         {
             this._mirror = mirror ?? throw new ArgumentNullException(nameof(mirror));
-            this.Get("cache/v3/registration/{id}/index.json", async (req, res, routeData) =>
+            this.Get("api/cache/v3/registration/{id}/index.json", async (req, res, routeData) =>
             {
                 string id = routeData.As<string>("id");
                 // Documentation: https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource
@@ -62,7 +63,7 @@ namespace LiGet.CarterModules.Registration
                 });
             });
 
-            this.Get("cache/v3/registration/{id}/{version}.json", async (req, res, routeData) =>
+            this.Get("api/cache/v3/registration/{id}/{version}.json", async (req, res, routeData) =>
             {
                 string id = routeData.As<string>("id");
                 string version = routeData.As<string>("version");
@@ -88,12 +89,12 @@ namespace LiGet.CarterModules.Registration
 
                 // Documentation: https://docs.microsoft.com/en-us/nuget/api/registration-base-url-resource
                 var result = new RegistrationLeaf(
-                    registrationUri: req.PackageRegistration(pid.Id, "cache"),
+                    registrationUri: req.PackageRegistration(pid.Id, prefix),
                     listed: package.IsListed,
                     downloads: package.DownloadCount.GetValueOrDefault(),
-                    packageContentUri: req.PackageDownload(pid, "cache"),
+                    packageContentUri: req.PackageDownload(pid, prefix),
                     published: package.Published.GetValueOrDefault(),
-                    registrationIndexUri: req.PackageRegistration(id, "cache"));
+                    registrationIndexUri: req.PackageRegistration(id, prefix));
 
                 await res.AsJson(result);
             });
@@ -105,9 +106,9 @@ namespace LiGet.CarterModules.Registration
                 catalogEntry: new CatalogEntry(
                     package: package,
                     catalogUri: $"https://api.nuget.org/v3/catalog0/data/2015.02.01.06.24.15/{package.Identity.Id}.{package.Identity.Version}.json",
-                    packageContent: request.PackageDownload(package.Identity, "cache"),
-                    getRegistrationUrl: id => new System.Uri(request.PackageRegistration(id, "cache"))),
-                packageContent: request.PackageDownload(package.Identity, "cache"));
+                    packageContent: request.PackageDownload(package.Identity, prefix),
+                    getRegistrationUrl: id => new System.Uri(request.PackageRegistration(id, prefix))),
+                packageContent: request.PackageDownload(package.Identity, prefix));
 
     }
 }

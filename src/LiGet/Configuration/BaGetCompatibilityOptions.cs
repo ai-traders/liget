@@ -1,6 +1,6 @@
 namespace LiGet.Configuration
 {
-    public class LiGetCompatibilityOptions
+    public class BaGetCompatibilityOptions
     {
         public bool Enabled { get; set; } 
     }

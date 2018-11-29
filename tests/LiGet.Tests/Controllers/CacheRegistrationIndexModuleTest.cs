@@ -22,7 +22,7 @@ namespace LiGet.Tests.Controllers
     {
         protected readonly ITestOutputHelper Helper;
 
-        readonly string RegistrationIndexUrlFormatString = "cache/v3/registration/{0}/index.json";
+        readonly string RegistrationIndexUrlFormatString = "api/cache/v3/registration/{0}/index.json";
 
         public CacheRegistrationIndexModuleTest(ITestOutputHelper helper)
         {

@@ -302,5 +302,5 @@ __pycache__/
 /e2e/stress/paket-*/
 /e2e/stress/paket/paket.lock
 /pkg/
-/e2e/liget-compat/data/
-/e2e/liget-compat/paket/.paket/Paket.Restore.targets
+/e2e/baget-compat/data/
+/e2e/baget-compat/paket/.paket/Paket.Restore.targets

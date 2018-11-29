@@ -18,7 +18,7 @@ namespace LiGet.Tests.Controllers
     {
         protected readonly ITestOutputHelper Helper;
 
-        readonly string RegistrationIndexUrlFormatString = "v3/registration/{0}/index.json";
+        readonly string RegistrationIndexUrlFormatString = "api/v3/registration/{0}/index.json";
 
         public RegistrationIndexModuleTest(ITestOutputHelper helper)
         {
@@ -92,7 +92,7 @@ namespace LiGet.Tests.Controllers
                             { "@type", "PackageDependency" },
                             { "id", "dep1" },
                             { "range", null },
-                            { "registration", "http://localhost/v3/registration/dep1/index.json" }
+                            { "registration", "http://localhost/api/v3/registration/dep1/index.json" }
                         }) }
                     }
                 );
