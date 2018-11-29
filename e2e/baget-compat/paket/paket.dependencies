@@ -6,5 +6,5 @@ nuget Fake.DotNet.MSBuild
 nuget Fake.Core.Target
 nuget Fake.Core.ReleaseNotes
 
-source http://nuget:9011/v2
+source http://nuget:9011/v3/index.json
 nuget liget-two

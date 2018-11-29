@@ -1,6 +1,6 @@
 STORAGE: NONE
 NUGET
-  remote: http://nuget:9011/v2
+  remote: http://nuget:9011/v3/index.json
     liget-two (2.1.0)
   remote: http://nuget:9011/cache/v3/index.json
     BlackFox.VsWhere (0.3.1) - restriction: || (>= net462) (>= netstandard2.0)
