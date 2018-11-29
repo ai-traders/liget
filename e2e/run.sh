@@ -16,8 +16,6 @@ cat << EOF > /home/ide/.nuget/NuGet/NuGet.Config
 </configuration>
 EOF
 
-mono /ide/work/.paket/paket.bootstrapper.exe
-
 echo "Sleeping 4s to wait for server to be ready"
 sleep 4
 
