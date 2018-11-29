@@ -306,3 +306,5 @@ __pycache__/
 /e2e/baget-compat/data/
 /e2e/baget-compat/cache
 /e2e/baget-compat/paket/.paket/Paket.Restore.targets
+/e2e/liget0-compat/data/
+/e2e/liget0-compat/cache/simple2/

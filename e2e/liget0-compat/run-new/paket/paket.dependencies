@@ -1,0 +1,10 @@
+source http://nuget:9011/api/cache/v3/index.json
+storage: none
+
+nuget Fake.IO.FileSystem
+nuget Fake.DotNet.MSBuild
+nuget Fake.Core.Target
+nuget Fake.Core.ReleaseNotes
+
+source http://nuget:9011/api/v2
+nuget liget-two

@@ -109,7 +109,7 @@ pipelines:
                   arguments:
                     - -c
                     - dmesg | tail -n 100
-            legacy:
+            legacy_baget:
               elastic_profile_id: w.c2.m2048.e10
               tasks:
                - fetch:
@@ -122,7 +122,27 @@ pipelines:
                   command: /bin/bash
                   arguments:
                     - -c
-                    - "./tasks.sh liget_compat_docker"
+                    - "./tasks.sh baget_compat_docker"
+               - exec:
+                  run_if: failed
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - dmesg | tail -n 100
+            legacy_liget0:
+              elastic_profile_id: w.c2.m2048.e10
+              tasks:
+               - fetch:
+                  stage: test_pack
+                  job: docker
+                  source: imagerc
+                  destination:
+                  is_file: true
+               - exec:
+                  command: /bin/bash
+                  arguments:
+                    - -c
+                    - "./tasks.sh liget0_compat_docker"
                - exec:
                   run_if: failed
                   command: /bin/bash

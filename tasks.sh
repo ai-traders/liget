@@ -74,7 +74,7 @@ case "${command}" in
     source_imagerc "${image_dir}"  "${imagerc_filename}"
     ide --idefile Idefile.e2e-docker "e2e/stress/run.sh"
     ;;
-  liget_compat_docker)
+  baget_compat_docker)
     source_imagerc "${image_dir}"  "${imagerc_filename}"
     ide "./tasks.sh _build_inputs"
     rm -rf e2e/baget-compat/data/*/*
@@ -83,11 +83,23 @@ case "${command}" in
     export LIGET_IMPORT_ON_BOOT=/data/simple
     ide --idefile Idefile.baget-compat "e2e/baget-compat/run.sh"
     ;;
+  liget0_compat_docker)
+    source_imagerc "${image_dir}"  "${imagerc_filename}"
+    ide "./tasks.sh _build_inputs"
+    rm -rf e2e/liget0-compat/data/*/*
+    rm -rf e2e/liget0-compat/cache/*/*
+    export LIGET_IMPORT_ON_BOOT=/data/simple
+    # This will push a package in old liget
+    ide --idefile Idefile.liget0-compat "e2e/liget0-compat/run-v0.sh"
+    # This will get the package in new liget
+    ide --idefile Idefile.liget1-compat "e2e/liget0-compat/run-v1.sh"
+    ;;
   all)
     ide "./build.sh --target All"
     ./tasks.sh build_docker
     ./tasks.sh test_docker
-    ./tasks.sh liget_compat_docker
+    ./tasks.sh liget0_compat_docker
+    ./tasks.sh baget_compat_docker
     ./tasks.sh stress_docker
     ;;
   prepare_code_release)
