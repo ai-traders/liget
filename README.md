@@ -48,6 +48,20 @@ How is this fork different from upstream BaGet:
 - adds V2 implementation from old LiGet
 - caching proxy has different endpoint `/api/cache/v3/index.json` than private packages `/api/v3/index.json`
 
+## Features and limitations
+
+ * Implements light-weight [nuget V3 API](https://docs.microsoft.com/en-us/nuget/api/overview) for hosting private packages.
+ * Supports V3 search.
+ * Limited **NuGet V2 API for hosting private packages**. Includes endpoints `FindPackagesById()`, `Packages()` and `PUT /api/v2`.
+ Which is sufficient for clients to download, push, find or restore packages.
+ * **Caching proxy of with NuGet V3 API**.
+   - Allows to cache `.nupkg` packages on server, rather than downloading them from the Internet each time.
+
+Not implemented:
+
+ * Cache package metadata and invalidates when upstream changes are detected using [NuGet.CatalogReader](https://github.com/emgarten/NuGet.CatalogReader). *This will be ported from older liget < 1.0.0.*
+ * V2 search, filter and alike queries. *This is not planned.*
+
 # Usage
 
 See [releases](https://github.com/ai-traders/LiGet/releases) to get docker image version.
@@ -207,11 +221,11 @@ Kestrel specific:
 
  * `LIGET_CACHE_ENABLED` - default is true.
  * `LIGET_CACHE_PROXY_SOURCE_INDEX` - address of original V3 API to cache. By default `https://api.nuget.org/v3/index.json`.
- * `LIGET_CACHE_INVALIDATION_CHECK_PERIOD` - defines frequency at which a check with upstream server is made to see if cache is invalid. By default `60` (seconds).
  * `LIGET_NUPKG_CACHE_BACKEND` - backend of the .nupkg caching proxy. By default `simple2`,
  which in `1.0.0` was introduced as the only implementation.
  * `LIGET_NUPKG_CACHE_SIMPLE2_ROOT_PATH` - root directory where dbreeze will store cached packages.
  By default `/cache/simple2`.
+ * `LIGET_CACHE_INVALIDATION_CHECK_PERIOD` - defines frequency at which a check with upstream server is made to see if cache is invalid. By default `60` (seconds). *Not Implemented yet in 1.0.0*
 
 #### Logging
 
