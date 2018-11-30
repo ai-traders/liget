@@ -59,6 +59,7 @@ How is this fork different from upstream BaGet:
 
 Not implemented:
 
+ * Does not work with older paket versions
  * Cache package metadata and invalidates when upstream changes are detected using [NuGet.CatalogReader](https://github.com/emgarten/NuGet.CatalogReader). *This will be ported from older liget < 1.0.0.*
  * V2 search, filter and alike queries. *This is not planned.*
 

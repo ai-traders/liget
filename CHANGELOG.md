@@ -1,6 +1,10 @@
-### 1.0.0 - Unreleased
+### 1.0.0 (2018-Nov-30)
 
 Merge BaGet fork into LiGet.
+ * Adds V3 implementation
+ * Added simple SPA UI
+ * Now using sqlite for indexing private packages
+ * Provides easy migration from pre-1.0 and baget
 
 ### 0.3.0 (2018-Nov-29) - BaGet fork
 
