@@ -40,3 +40,13 @@ fi
 
 echo "LiGet configuration generated:"
 cat $config_json
+
+runtime_config=/app/LiGet.runtimeconfig.json
+
+cat $runtime_config | jq --arg cfg ${LIGET_GC_CONCURRENT} '. | .configProperties."System.GC.Concurrent" = ($cfg == "true")' | sponge $runtime_config
+cat $runtime_config | jq --arg cfg ${LIGET_GC_SERVER} '. | .configProperties."System.GC.Server" = ($cfg == "true")' | sponge $runtime_config
+cat $runtime_config | jq --arg cfg ${LIGET_THREAD_POOL_MIN} '. | .configProperties."System.Threading.ThreadPool.MinThreads" = ($cfg | tonumber)' | sponge $runtime_config
+cat $runtime_config | jq --arg cfg ${LIGET_THREAD_POOL_MAX} '. | .configProperties."System.Threading.ThreadPool.MaxThreads" = ($cfg | tonumber)' | sponge $runtime_config
+
+echo "LiGet runtime configuration generated:"
+cat $runtime_config

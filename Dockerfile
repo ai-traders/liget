@@ -36,7 +36,11 @@ ENV ASPNETCORE_ENVIRONMENT=Production \
     LIGET_LOG_LEVEL=Information \
     LIGET_LOG_BACKEND=console \
     LIGET_LOG_GELF_PORT=12201 \
-    LIGET_LOG_GELF_SOURCE=liget
+    LIGET_LOG_GELF_SOURCE=liget \
+    LIGET_GC_CONCURRENT=true \
+    LIGET_GC_SERVER=true \
+    LIGET_THREAD_POOL_MIN=16 \
+    LIGET_THREAD_POOL_MAX=32
 
 COPY /src/LiGet/bin/Release/netcoreapp2.1/publish/ /app
 

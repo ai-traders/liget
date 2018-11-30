@@ -191,8 +191,6 @@ Everything can be configured with environment variables:
 
 #### Runtime
 
-*TODO: implement as was in liget v0*
-
 Every dotnet Core application has `.runtimeconfig.json`, which can configure garbage collector.
 You may want to set following:
  * `LIGET_GC_CONCURRENT` - by default `true`
