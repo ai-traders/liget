@@ -6,6 +6,8 @@ nuget McMaster.Extensions.CommandLineUtils
 nuget Microsoft.NETCore.App 2.1.4
 nuget Microsoft.AspNetCore.App 2.1.4
 nuget Microsoft.AspNetCore.TestHost
+nuget Microsoft.AspNetCore.Server.Kestrel
+nuget Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv
 nuget Microsoft.Azure.Search
 nuget Microsoft.Data.SQLite
 nuget Microsoft.EntityFrameworkCore.Design

@@ -1,5 +1,7 @@
 Microsoft.AspNetCore.App
 Microsoft.AspNetCore.Cors
+Microsoft.AspNetCore.Server.Kestrel
+Microsoft.AspNetCore.Server.Kestrel.Transport.Libuv
 McMaster.Extensions.CommandLineUtils
 Microsoft.Data.SQLite
 Microsoft.EntityFrameworkCore.Relational

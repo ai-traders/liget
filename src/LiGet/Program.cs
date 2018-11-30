@@ -82,9 +82,13 @@ namespace LiGet
             app.Execute(args);
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args) {
+            var b = WebHost.CreateDefaultBuilder(args);
+            string threadCount = Environment.GetEnvironmentVariable("LIGET_LIBUV_THREAD_COUNT");
+            if(!string.IsNullOrEmpty(threadCount))
+                b.UseLibuv(opts => opts.ThreadCount = int.Parse(threadCount));
+
+            b.UseStartup<Startup>()
                 .ConfigureLogging((context, builder) =>
                 {
                     var graylogSection = context.Configuration.GetSection("Graylog");
@@ -106,6 +110,8 @@ namespace LiGet
                     // be enforced by a reverse proxy server, like IIS.
                     options.Limits.MaxRequestBodySize = null;
                 });
+            return b;
+        }
 
         public static IHostBuilder CreateHostBuilder(string[] args)
         {
