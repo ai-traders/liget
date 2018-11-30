@@ -241,6 +241,7 @@ To configure docker image for logging to your graylog, you can set following env
  * `LIGET_LOG_GELF_HOST` - no default. But should be configured when `LIGET_LOG_BACKEND=gelf`
  * `LIGET_LOG_GELF_PORT` - by default `12201`.
  * `LIGET_LOG_GELF_SOURCE` - by default `liget`.
+ * `LIGET_LOG_GELF_ENVIRONMENT` - allows to set additional field in logged messages. By default not set.
 
 # Development
 

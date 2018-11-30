@@ -38,6 +38,9 @@ else
     cat $config_json | jq --arg cfg ${LIGET_LOG_GELF_HOST} '. | .Graylog.Host = $cfg' | sponge $config_json
     cat $config_json | jq --arg cfg ${LIGET_LOG_GELF_SOURCE} '. | .Graylog.LogSource = $cfg' | sponge $config_json
     cat $config_json | jq --arg cfg ${LIGET_LOG_GELF_PORT} '. | .Graylog.Port = ($cfg | tonumber)' | sponge $config_json
+    if [ -n "${LIGET_LOG_GELF_ENVIRONMENT}" ]; then
+      cat $config_json | jq --arg cfg ${LIGET_LOG_GELF_ENVIRONMENT} '. | .Graylog.AdditionalFields.environment = $cfg' | sponge $config_json
+    fi
   else
     echo "Unknown logging backend: ${LIGET_LOG_BACKEND}"
   fi
