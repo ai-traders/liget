@@ -21,6 +21,8 @@ RUN wget --tries=3 --retry-connrefused --wait=3 --random-wait --quiet --show-pro
   chmod +x ./jq-linux64 && mv -f ./jq-linux64 /usr/bin/jq
 
 ENV ASPNETCORE_ENVIRONMENT=Production \
+    LIGET_SKIP_APPCONFIG_GEN=false \
+    LIGET_SKIP_RUNTIMECONFIG_GEN=false \
     LIGET_API_KEY_HASH=658489D79E218D2474D049E8729198D86DB0A4AF43981686A31C7DCB02DC0900 \
     LIGET_EF_RUN_MIGRATIONS=true \
     LIGET_DB_TYPE=Sqlite \

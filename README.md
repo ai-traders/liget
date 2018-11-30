@@ -180,6 +180,8 @@ But we are generating this file from environment variables to make it more user 
 
 Everything can be configured with environment variables:
 
+ * `LIGET_SKIP_APPCONFIG_GEN` - if true then `/app/appsettings.json` will not be generated on container start and you should mount your own. Default is `false`.
+ * `LIGET_SKIP_RUNTIMECONFIG_GEN` - if true then `/app/LiGet.runtimeconfig.json` will not be generated on container start and you should mount your own. Default is `false`.
  * `LIGET_API_KEY_HASH` - hash of api key used for pushing packages.
  * `LIGET_EF_RUN_MIGRATIONS` - runs entity framework database migrations on container start. Default is `true`.
  * `LIGET_DB_TYPE=Sqlite` - the type of database to use. Currently only `Sqlite`.
