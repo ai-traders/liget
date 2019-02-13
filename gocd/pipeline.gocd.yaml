@@ -171,7 +171,7 @@ pipelines:
               resources:
                 - docker_builder
               secure_variables:
-                DOCKERHUB_PASSWORD: CioRNFm+WifCZPcqU+78+A==
+                DOCKERHUB_PASSWORD: "AES:Q/TQoBrYjWDf43TbbUzSUQ==:2w9UDmYJPgEU2bmuzuehjw=="
               tasks:
                 - fetch:
                    stage: test_pack
@@ -190,7 +190,7 @@ pipelines:
             github:
               elastic_profile_id: w.c2.m2048.e10
               secure_variables:
-                GITHUB_TOKEN: J2VpEh3xtuzZuU+kaHVCLM/glpKCSXKhGt3XCmZZTOLARPVLXFPKUaKiqeQ5smiT
+                GITHUB_TOKEN: "AES:bD+8hBS35yskrLrjrYaZYA==:n+D6YpKWUKNqDAEgYlITqSRvHgyYuvbzjrFxKSQBgsiDIq5Ort02liYadfzpvi0v"
               tasks:
                - fetch:
                   stage: build
