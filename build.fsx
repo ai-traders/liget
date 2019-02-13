@@ -126,6 +126,17 @@ let runXunit setParams assemblies =
     failBuildIfXUnitReportedError parameters.ErrorLevel result
     __.MarkSuccess()
 
+let runProcess file args workDir =
+    let result =
+        Process.execSimple ((fun info ->
+        { info with
+            FileName = file
+            WorkingDirectory = workDir
+            Arguments = args})) (System.TimeSpan.FromMinutes(2.0))
+    match result with
+    | error when result <> 0 -> failwithf "Process exited with non-zero"
+    | _ -> ()
+
 let runDotnet options command args =
     let result = DotNet.exec options command args
     if result.ExitCode <> 0 then
@@ -153,8 +164,10 @@ let createNuPkg name versions =
         runDotnet (fun o -> {o with WorkingDirectory = projectDir }) "pack" <| sprintf "/p:Version=%s" version)
 
 Target.create "ExampleNuGets" (fun _ ->
+    let packFile = "e2e" </> "input" </> "example3" </> "pack.sh"
     createNuPkg "liget-test1" ["1.0.0"]
     createNuPkg "liget-two" ["1.0.0"; "2.1.0"]
+    runProcess packFile "" ("e2e" </> "input" </> "example3")
 )
 
 Target.create "RunIntegrationTests" (fun _ ->

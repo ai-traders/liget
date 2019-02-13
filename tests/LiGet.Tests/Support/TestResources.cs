@@ -58,5 +58,15 @@ namespace LiGet.Tests.Support
                 "/ide/work/e2e/input/liget-two/bin/Debug/" + filename
             );
         }
+
+        public static string GetNupkgExample3()
+        {
+            string filename = "example3.1.0.0.nupkg";
+            return GetFile(
+                filename,                
+                "e2e/input/example3/" + filename,
+                "/ide/work/e2e/input/example3/" + filename
+            );
+        }
     }
 }

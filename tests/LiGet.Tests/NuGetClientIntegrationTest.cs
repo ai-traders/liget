@@ -214,6 +214,28 @@ namespace LiGet.Tests
 
         [Fact]
         [Trait("Category", "integration")] // because it uses external nupkg files
+        public async Task PushAndDownloadPackageWithNoDependencies()
+        {
+            InitializeClient(MainIndex);
+            var packageResource = await _sourceRepository.GetResourceAsync<PackageUpdateResource>();
+            await packageResource.Push(TestResources.GetNupkgExample3(),
+                null, 5, false, GetApiKey, GetApiKey, false, logger);
+            PackageMetadataResourceV3 packageMetadataRes = GetPackageMetadataResource();
+            var meta = await packageMetadataRes.GetMetadataAsync("example3", true, true, _cacheContext, logger, CancellationToken.None);
+            Assert.NotEmpty(meta);
+            var one = meta.First();
+            Assert.Equal(new PackageIdentity("example3", NuGetVersion.Parse("1.0.0")), one.Identity);
+
+            var findByIdRes = new RemoteV3FindPackageByIdResource(_sourceRepository, _httpSource.HttpSource);
+            var downloader = await findByIdRes.GetPackageDownloaderAsync(
+                new PackageIdentity("example3", NuGetVersion.Parse("1.0.0")),
+                _cacheContext, logger, CancellationToken.None);
+            string tempPath = Path.Combine(tempDir.UniqueTempFolder, "test.nupkg");
+            await downloader.CopyNupkgFileToAsync(tempPath, CancellationToken.None);
+        }
+
+        [Fact]
+        [Trait("Category", "integration")] // because it uses external nupkg files
         public async Task PushedPackageShouldExistWithPackageDependenciesInPackageService()
         {
             InitializeClient(MainIndex);

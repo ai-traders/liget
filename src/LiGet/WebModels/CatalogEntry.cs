@@ -44,7 +44,7 @@ namespace LiGet.WebModels
             string catalogUri, Func<string, Uri> getRegistrationUrl)
         {
             if(dependencies == null || !dependencies.Any())
-                return null;
+                return new DependencyGroup[0];
 
             var groups = new List<DependencyGroup>();
             var frameworkDeps = dependencies.Where(d => d.IsFrameworkDependency()).Select(d => d.TargetFramework).Distinct();
