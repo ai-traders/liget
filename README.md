@@ -62,6 +62,7 @@ Not implemented:
  * Does not work with older paket versions
  * Cache package metadata and invalidates when upstream changes are detected using [NuGet.CatalogReader](https://github.com/emgarten/NuGet.CatalogReader). *This will be ported from older liget < 1.0.0.*
  * V2 search, filter and alike queries. *This is not planned.*
+ * search and autocomplete endpoints for cached packages. Basically, you need to query nuget.org to *search* for public packages.
 
 # Usage
 
