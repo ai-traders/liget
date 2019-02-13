@@ -148,5 +148,10 @@ namespace LiGet.Cache
             //TODO: possibly cache and stream from in-memory cache
             return _sourceRepository.GetMetadataAsync(identity, CancellationToken.None);
         }
+
+        public Task<IEnumerable<IPackageSearchMetadata>> SearchAsync(string searchTerm, SearchFilter filter, int skip, int take, CancellationToken ct)
+        {
+            return _sourceRepository.SearchAsync(searchTerm, filter, skip, take, ct);
+        }
     }
 }

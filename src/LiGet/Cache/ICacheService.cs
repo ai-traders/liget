@@ -30,5 +30,7 @@ namespace LiGet.Cache
         Task<Stream> GetNuspecStreamAsync(PackageIdentity identity);
         Task<Stream> GetReadmeStreamAsync(PackageIdentity identity);
         Task<IPackageSearchMetadata> FindAsync(PackageIdentity identity);
+
+        Task<IEnumerable<IPackageSearchMetadata>> SearchAsync(string searchTerm, SearchFilter filter, int skip, int take, CancellationToken ct);
     }
 }

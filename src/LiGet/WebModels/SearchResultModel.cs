@@ -4,6 +4,7 @@ using System.Linq;
 using LiGet.Services;
 using LiGet.Extensions;
 using Microsoft.AspNetCore.Http;
+using NuGet.Protocol.Core.Types;
 
 namespace LiGet.WebModels
 {
@@ -25,6 +26,18 @@ namespace LiGet.WebModels
                     v.Downloads));
 
             Versions = versions.ToList().AsReadOnly();
+        }
+
+        public SearchResultModel(IPackageSearchMetadata result, IEnumerable<VersionInfo> versions, HttpRequest url, string prefix)
+        {
+            _result = new SearchResult(result, versions);
+            _url = url ?? throw new ArgumentNullException(nameof(url));
+            this._prefix = prefix;
+            Versions = _result.Versions.Select(
+                v => new SearchResultVersionModel(
+                    url.PackageRegistration(_result.Id, v.Version.ToNormalizedString()),
+                    v.Version.ToNormalizedString(),
+                    v.Downloads)).ToList();
         }
 
         public string Id => _result.Id;

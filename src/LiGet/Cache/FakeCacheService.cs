@@ -57,5 +57,10 @@ namespace LiGet.Cache
         {
             return Task.CompletedTask;
         }
+
+        public Task<IEnumerable<IPackageSearchMetadata>> SearchAsync(string searchTerm, SearchFilter filter, int skip, int take, CancellationToken ct)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

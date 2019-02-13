@@ -141,7 +141,7 @@ namespace LiGet.Tests
         }
 
         [Theory]
-        [MemberData(nameof(V3CasesExcludingCache))]
+        [MemberData(nameof(V3Cases))]
         public async Task IndexIncludesAtLeastOneSearchQueryEntry(string indexEndpoint)
         {
             InitializeClient(indexEndpoint);
@@ -333,6 +333,19 @@ namespace LiGet.Tests
             Assert.NotEmpty(found);
             var one = found.First();
             Assert.Equal(new PackageIdentity("liget-test1", NuGetVersion.Parse("1.0.0")), one.Identity);
+        }
+
+        [Fact]
+        [Trait("Category", "integration")] // because it queries nuget.org
+        public async Task CacheSearchPackage()
+        {
+            InitializeClient(CacheIndex);
+            var packageResource = await _sourceRepository.GetResourceAsync<PackageUpdateResource>();
+            PackageSearchResourceV3 search = GetSearch();
+            var found = await search.SearchAsync("log4net", new SearchFilter(true), 0, 10, logger, CancellationToken.None);
+            Assert.NotEmpty(found);
+            var one = found.First();
+            Assert.Equal("log4net", one.Identity.Id);
         }
 
         private PackageSearchResourceV3 GetSearch()
