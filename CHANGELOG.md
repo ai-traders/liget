@@ -1,3 +1,7 @@
+### 1.0.1 - Unreleased
+
+ - fix returning metadata of packages with no dependencies \#8
+
 ### 1.0.0 (2018-Nov-30)
 
 Merge BaGet fork into LiGet.
