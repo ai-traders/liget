@@ -40,6 +40,10 @@ namespace LiGet.Tests
             new object[] { CacheIndex },
             new object[] { CompatCacheIndex },
         };
+        public static IEnumerable<object[]> V3CasesExcludingCache = new[] {
+            new object[] { MainIndex },
+            new object[] { CompatIndex },
+        };
         public static IEnumerable<object[]> V2Cases = new[] {
             new object[] { V2Index },
             new object[] { CompatV2Index }
@@ -137,7 +141,7 @@ namespace LiGet.Tests
         }
 
         [Theory]
-        [MemberData(nameof(V3Cases))]
+        [MemberData(nameof(V3CasesExcludingCache))]
         public async Task IndexIncludesAtLeastOneSearchQueryEntry(string indexEndpoint)
         {
             InitializeClient(indexEndpoint);
@@ -164,7 +168,7 @@ namespace LiGet.Tests
         }
 
         [Theory]
-        [MemberData(nameof(V3Cases))]
+        [MemberData(nameof(V3CasesExcludingCache))]
         public async Task IndexIncludesAtLeastOneSearchAutocompleteServiceEntry(string indexEndpoint)
         {
             InitializeClient(indexEndpoint);
