@@ -1,6 +1,7 @@
-### 1.0.1 - Unreleased
+### 1.0.1 (2019-Feb-13)
 
  - fix returning metadata of packages with no dependencies \#8
+ - remove not supported cache endpoints from index \#9
 
 ### 1.0.0 (2018-Nov-30)
 
