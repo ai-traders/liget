@@ -1,3 +1,7 @@
+### 1.1.0 - Unreleased
+
+ - Initial support for proxied search query \#9
+
 ### 1.0.1 (2019-Feb-13)
 
  - fix returning metadata of packages with no dependencies \#8

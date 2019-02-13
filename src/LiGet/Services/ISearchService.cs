@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using LiGet.Entities;
+using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 
 namespace LiGet.Services
@@ -17,6 +18,31 @@ namespace LiGet.Services
 
     public class SearchResult
     {
+        public SearchResult()
+        {
+        }
+
+        public SearchResult(IPackageSearchMetadata result, IEnumerable<VersionInfo> versions)
+        {
+            this.Id = result.Identity.Id;
+            this.Version = result.Identity.Version;
+            this.Description = result.Description;
+            this.Authors = result.Authors;
+            this.IconUrl = result.IconUrl?.AbsoluteUri;
+            this.LicenseUrl = result.LicenseUrl?.AbsoluteUri;
+            this.ProjectUrl = result.ProjectUrl?.AbsoluteUri;
+            this.Summary = result.Summary;
+            if(result.Tags != null)
+                this.Tags = result.Tags.Split(',');
+            this.Title = result.Title;
+            this.TotalDownloads = result.DownloadCount ?? 0;
+            var list  = new List<SearchResultVersion>();
+            foreach(var v in versions) {
+                list.Add(new SearchResultVersion(v));
+            }
+            this.Versions = list;
+        }
+
         public string Id { get; set; }
 
         public NuGetVersion Version { get; set; }
@@ -36,6 +62,13 @@ namespace LiGet.Services
 
     public class SearchResultVersion
     {
+
+        public SearchResultVersion(VersionInfo v)
+        {
+            this.Version = v.Version;
+            this.Downloads = v.DownloadCount ?? 0;
+        }
+
         public SearchResultVersion(NuGetVersion version, long downloads)
         {
             Version = version ?? throw new ArgumentNullException(nameof(version));

@@ -40,6 +40,7 @@ namespace LiGet
             private RegistrationResourceV3 _regResource;
             private PackageMetadataResourceV3 _metadataSearch;
             private RemoteV3FindPackageByIdResource _versionSearch;
+            private PackageSearchResourceV3 _search;
             private NuGetLoggerAdapter<NuGetClient> _loggerAdapter;
 
             public NuRepository(List<Lazy<INuGetResourceProvider>> providers, Uri repositoryUrl, Microsoft.Extensions.Logging.ILogger<NuGetClient> logger)
@@ -55,6 +56,8 @@ namespace LiGet
                 ReportAbuseResourceV3 reportAbuseResource = _sourceRepository.GetResource<ReportAbuseResourceV3>();
                 _metadataSearch = new PackageMetadataResourceV3(httpSource.HttpSource, _regResource, reportAbuseResource);
                 _versionSearch = new RemoteV3FindPackageByIdResource(_sourceRepository, httpSource.HttpSource);
+                RawSearchResourceV3 rawSearchResource = _sourceRepository.GetResource<RawSearchResourceV3>();
+                _search = new PackageSearchResourceV3(rawSearchResource, _metadataSearch);
                 this._loggerAdapter = new NuGetLoggerAdapter<NuGetClient>(logger);
             }
 
@@ -99,6 +102,11 @@ namespace LiGet
             public Task<IPackageSearchMetadata> GetMetadataAsync(PackageIdentity identity, CancellationToken ct)
             {
                 return _metadataSearch.GetMetadataAsync(identity, _cacheContext, _loggerAdapter, ct);
+            }
+
+            public Task<IEnumerable<IPackageSearchMetadata>> SearchAsync(string searchTerm, SearchFilter filter, int skip, int take, CancellationToken ct)
+            {
+                return _search.SearchAsync(searchTerm, filter, skip, take, _loggerAdapter, ct);
             }
         }
     }
