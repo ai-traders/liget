@@ -1,3 +1,7 @@
+### 1.0.2 (2019-Mar-15)
+
+ - added option to change default listen port
+
 ### 1.0.1 (2019-Feb-13)
 
  - fix returning metadata of packages with no dependencies \#8

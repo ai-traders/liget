@@ -206,6 +206,7 @@ Everything can be configured with environment variables:
  * `LIGET_SIMPLE2_ROOT_PATH` - root directory used by `simple2` backend. By default `/data/simple2`.
  * `LIGET_SEARCH_PROVIDER` - how to execute searches. By default `Database`.
  * `LIGET_BAGET_COMPAT_ENABLED` - should [BaGet compatibity mode](#migrating-from-baget) be enabled. Default is `false`.
+ * `LIGET_LISTEN_PORT` - port where HTTP server will listen. By default `9011`.
 
 #### Runtime
 
