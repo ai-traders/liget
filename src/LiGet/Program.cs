@@ -87,7 +87,11 @@ namespace LiGet
             string threadCount = Environment.GetEnvironmentVariable("LIGET_LIBUV_THREAD_COUNT");
             if(!string.IsNullOrEmpty(threadCount))
                 b.UseLibuv(opts => opts.ThreadCount = int.Parse(threadCount));
-
+            
+            var port = Environment.GetEnvironmentVariable("LIGET_LISTEN_PORT");
+            if (string.IsNullOrEmpty(port))
+                port = "9011";
+            
             b.UseStartup<Startup>()
                 .ConfigureLogging((context, builder) =>
                 {
@@ -103,7 +107,7 @@ namespace LiGet
                     if(graylogSection.GetChildren().Any())
                         cfg.AddGelf();
                 })
-                .UseUrls("http://0.0.0.0:9011")
+                .UseUrls($"http://0.0.0.0:{port}")
                 .UseKestrel(options =>
                 {
                     // Remove the upload limit from Kestrel. If needed, an upload limit can
