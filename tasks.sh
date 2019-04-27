@@ -49,7 +49,7 @@ function make_clean_dir {
   rm -rf $dir && mkdir -p $dir && cd $dir
 }
 
-export E2E_PAKET_VERSION="5.181.1"
+export E2E_PAKET_VERSION="5.198.0"
 
 function get_version_tag {
   changelog_first_line=$(cat ${changelog_file} | head -1)
