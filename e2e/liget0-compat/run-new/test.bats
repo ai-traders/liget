@@ -18,7 +18,7 @@ load '/opt/bats-assert/load.bash'
 }
 
 @test "paket restore packages locked with old liget" {
-  run /bin/bash -c "cd paket && mono /ide/work/e2e/.paket/paket.exe restore"
+  run /bin/bash -c "cd paket && mono /dojo/work/e2e/.paket/paket.exe restore"
   refute_output --partial 'Could not download'
   refute_output --partial 'went wrong'
   assert_equal "$status" 0

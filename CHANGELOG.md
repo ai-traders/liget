@@ -1,3 +1,9 @@
+### 1.0.3 (2019-Apr-27)
+
+Updates in build system only:
+ * move from IDE to Dojo
+ * use ops scripts from kudulab
+
 ### 1.0.2 (2019-Mar-15)
 
  - added option to change default listen port

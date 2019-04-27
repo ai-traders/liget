@@ -1,2 +1,0 @@
-IDE_DRIVER=docker-compose
-IDE_DOCKER_COMPOSE_FILE="docker-compose-liget1-compat.yml"

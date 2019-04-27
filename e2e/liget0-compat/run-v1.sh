@@ -6,8 +6,8 @@ if [ -z "${E2E_PAKET_VERSION}" ]; then
   exit 2;
 fi
 
-echo "Overriding nuget configuration in /home/ide/.nuget/NuGet/NuGet.Config"
-cat << EOF > /home/ide/.nuget/NuGet/NuGet.Config
+echo "Overriding nuget configuration in /home/dojo/.nuget/NuGet/NuGet.Config"
+cat << EOF > /home/dojo/.nuget/NuGet/NuGet.Config
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>

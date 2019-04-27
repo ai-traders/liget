@@ -1,0 +1,3 @@
+DOJO_DRIVER=docker-compose
+DOJO_DOCKER_IMAGE="kudulab/dotnet-dojo:3.1.0"
+DOJO_DOCKER_COMPOSE_FILE="docker-compose-liget1-compat.yml"

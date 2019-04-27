@@ -1,3 +1,0 @@
-IDE_DRIVER=docker
-IDE_DOCKER_IMAGE="docker-registry.ai-traders.com/mono-gide:1.1.1_2.1.1"
-IDE_DOCKER_OPTIONS="--net host"

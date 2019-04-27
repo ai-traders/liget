@@ -1,2 +1,0 @@
-IDE_DRIVER=docker
-IDE_DOCKER_IMAGE="tomzo/dotnet-ide:stretch-2.1.0"

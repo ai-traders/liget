@@ -1,20 +1,10 @@
 version: '2'
 services:
   default:
-    container_name: default
-    # includes mono and dotnet sdk
-    image: tomzo/dotnet-ide:2.1.0
     links:
       - liget:nuget
-    volumes:
-      - ${IDE_IDENTITY}:/ide/identity:ro
-      - ${IDE_WORK}:/ide/work
-    env_file:
-      - ${ENV_FILE}
   liget:
     image: tomzo/liget:0.2.2
     volumes:
-      - ${IDE_WORK}/e2e/liget0-compat/data:/data
-    env_file:
-      - ${ENV_FILE}
+      - ${DOJO_WORK_OUTER}/e2e/liget0-compat/data:/data
     mem_limit: 550m

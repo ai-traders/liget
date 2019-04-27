@@ -6,6 +6,8 @@ pipelines:
     materials:
       git:
         type: configrepo
+    secure_variables:
+      VAULT_TOKEN: "AES:5F3wPW2c/oKu2asT2GPvcQ==:68AEvtq09Pae5xWI3kxcxAYisk4FvQzgEn8imnm0uloYLc+tCqD9kHqsiDLuAcu9"
     stages:
       - build:
           clean_workspace: true
@@ -21,7 +23,7 @@ pipelines:
                     destination: tests
               tasks:
                - exec:
-                  command: ide
+                  command: dojo
                   arguments:
                     - "./build.sh --target Build"
       - test_pack:
@@ -45,7 +47,7 @@ pipelines:
                   source: tests
                   destination:
                - exec:
-                  command: ide
+                  command: dojo
                   arguments:
                     - "./build.sh --target ExampleNuGets && ./build.sh --target RunTests --single-target"
             docker:
@@ -152,26 +154,9 @@ pipelines:
       - publish:
           clean_workspace: true
           jobs:
-            docker_private:
-              resources:
-                - docker_builder
-              tasks:
-                - fetch:
-                   stage: test_pack
-                   job: docker
-                   source: imagerc
-                   destination:
-                   is_file: true
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ./tasks.sh publish_docker_private
             docker_public:
               resources:
                 - docker_builder
-              secure_variables:
-                DOCKERHUB_PASSWORD: "AES:Q/TQoBrYjWDf43TbbUzSUQ==:2w9UDmYJPgEU2bmuzuehjw=="
               tasks:
                 - fetch:
                    stage: test_pack
@@ -183,14 +168,12 @@ pipelines:
                     command: /bin/bash
                     arguments:
                       - -c
-                      - ./tasks.sh publish_docker_public
+                      - ./tasks.sh publish
       - github_release:
           clean_workspace: true
           jobs:
             github:
               elastic_profile_id: w.c2.m2048.e10
-              secure_variables:
-                GITHUB_TOKEN: "AES:bD+8hBS35yskrLrjrYaZYA==:n+D6YpKWUKNqDAEgYlITqSRvHgyYuvbzjrFxKSQBgsiDIq5Ort02liYadfzpvi0v"
               tasks:
                - fetch:
                   stage: build

@@ -26,7 +26,7 @@ namespace LiGet.Tests.Support
         public static string GetE2eInputDirectory() {
             return GetDirectory(
                 "e2e/input",
-                "/ide/work/e2e/input"
+                "/dojo/work/e2e/input"
             );            
         }
 
@@ -35,7 +35,7 @@ namespace LiGet.Tests.Support
             return GetFile(
                 "liget-test1.1.0.0.nupkg",
                 "e2e/input/liget-test1/bin/Debug/liget-test1.1.0.0.nupkg",
-                "/ide/work/e2e/input/liget-test1/bin/Debug/liget-test1.1.0.0.nupkg"
+                "/dojo/work/e2e/input/liget-test1/bin/Debug/liget-test1.1.0.0.nupkg"
             );
         }
 
@@ -45,7 +45,7 @@ namespace LiGet.Tests.Support
             return GetFile(
                 filename,                
                 "e2e/input/liget-two/bin/Debug/" + filename,
-                "/ide/work/e2e/input/liget-two/bin/Debug/" + filename
+                "/dojo/work/e2e/input/liget-two/bin/Debug/" + filename
             );
         }
 
@@ -55,7 +55,7 @@ namespace LiGet.Tests.Support
             return GetFile(
                 filename,                
                 "e2e/input/liget-two/bin/Debug/" + filename,
-                "/ide/work/e2e/input/liget-two/bin/Debug/" + filename
+                "/dojo/work/e2e/input/liget-two/bin/Debug/" + filename
             );
         }
 
@@ -65,7 +65,7 @@ namespace LiGet.Tests.Support
             return GetFile(
                 filename,                
                 "e2e/input/example3/" + filename,
-                "/ide/work/e2e/input/example3/" + filename
+                "/dojo/work/e2e/input/example3/" + filename
             );
         }
     }

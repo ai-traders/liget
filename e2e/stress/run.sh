@@ -33,10 +33,10 @@ cd ..
 
 for i in `seq 1 6`;
 do
-        echo "Generating specialized HOME for paket load in /home/ide/$i"
-        mkdir -p paket-$i /home/ide/$i/.nuget/NuGet
+        echo "Generating specialized HOME for paket load in /home/dojo/$i"
+        mkdir -p paket-$i /home/dojo/$i/.nuget/NuGet
         cp paket/paket.dependencies paket-$i
-        cat << EOF > /home/ide/$i/.nuget/NuGet/NuGet.Config
+        cat << EOF > /home/dojo/$i/.nuget/NuGet/NuGet.Config
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
@@ -45,7 +45,7 @@ do
   </packageSources>
 </configuration>
 EOF
-        bash -c "cd paket-$i && HOME=/home/ide/$i mono $PAKET_EXE install -f" &
+        bash -c "cd paket-$i && HOME=/home/dojo/$i mono $PAKET_EXE install -f" &
 done
 
 time wait

@@ -39,9 +39,9 @@ However, following was deal-breaker:
 How is this fork different from upstream BaGet:
 - using FAKE for build system, rather than scripting in MsBuild.
 - added unit, integration tests and e2e tests with paket and nuget cli.
-- we use docker and [CLI tool IDE](https://github.com/ai-traders/ide) to create reproducible [development](#Development) environment for LiGet.
+- we use docker and [Dojo](https://github.com/ai-traders/dojo) to create consistent, reproducible [development](#Development) environment for LiGet.
 - added release cycle and testing of docker image using continuous delivery practices.
-- implements read-through cache as separate endpoint. Which at the time [does not work upstream](https://github.com/loic-sharma/BaGet/issues/93).
+- implements read-through cache as a separate endpoint. Which at the time [does not work upstream](https://github.com/loic-sharma/BaGet/issues/93).
 - uses paket and FAKE for build system.
 - uses [Carter](https://github.com/CarterCommunity/Carter) for routing rather than bare Asp routing.
 - adds ability to log to graylog
@@ -252,16 +252,18 @@ We rely heavily on docker to create reproducible development environment.
 This allows to execute entire build process on any machine which has:
  - local docker daemon
  - docker-compose
- - `ide` script on path. It is a [CLI tool](https://github.com/ai-traders/ide)
+ - `dojo` executable on path. It is a [CLI tool](https://github.com/ai-traders/dojo)
   wrapper around docker and docker-compose which deals with issues such as ownership of files,
   mounting proper volumes, cleanup, etc.
 
 You can execute entire build from scratch to e2e tests (like [travis](.travis.yml)).
  - Install docker daemon if you haven't already
  - Install docker-compose
- - Install IDE
+ - Install [Dojo](https://github.com/ai-traders/dojo)
 ```
-sudo bash -c "`curl -L https://raw.githubusercontent.com/ai-traders/ide/master/install.sh`"
+DOJO_VERSION=0.4.0
+sudo wget -O=/usr/bin/dojo https://github.com/ai-traders/dojo/releases/download/${DOJO_VERSION}/dojo_linux_amd64
+sudo chmod +x /usr/bin/dojo
 ```
 
 Then to execute entire build:
@@ -269,10 +271,10 @@ Then to execute entire build:
 ./tasks.sh all
 ```
 
-This will pull `dotnet-ide` [docker image](https://github.com/ai-traders/docker-dotnet-ide) which
+This will pull `dotnet-dojo` [docker image](https://github.com/kudulab/docker-dotnet-dojo) which
 has all build and test dependencies: dotnet SDK, mono, paket CLI, FAKE, Node.js.
 
-Usage of IDE is optional and you can easily contribute if you have above tools installed on your machine.
+**Usage of Dojo is optional** and you can easily contribute if you have above tools installed on your machine.
 
 ## Release cycle
 

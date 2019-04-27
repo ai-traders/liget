@@ -2,17 +2,45 @@
 
 set -e
 
-source .build/docker-ops
-source .build/releaser
+RELEASER_VERSION="2.1.0"
+DOCKER_OPS_VERSION="2.0.0"
+SECRET_OPS_VERSION="0.6.1"
 
-releaser_init
+SECRET_OPS_FILE="ops/secret-ops"
+SECRET_OPS_TAR_FILE="ops/secret-ops-${SECRET_OPS_VERSION}.tar.gz"
+RELEASER_FILE="ops/releaser-${RELEASER_VERSION}"
+DOCKER_OPS_FILE="ops/docker-ops-${DOCKER_OPS_VERSION}"
+
+mkdir -p ops
+if [[ ! -f $RELEASER_FILE ]];then
+  wget --quiet -O $RELEASER_FILE https://github.com/kudulab/releaser/releases/download/${RELEASER_VERSION}/releaser
+fi
+source $RELEASER_FILE
+if [[ ! -f $DOCKER_OPS_FILE ]];then
+  wget --quiet -O $DOCKER_OPS_FILE https://github.com/kudulab/docker-ops/releases/download/${DOCKER_OPS_VERSION}/docker-ops
+fi
+source $DOCKER_OPS_FILE
+if [[ ! -f $SECRET_OPS_TAR_FILE ]];then
+  wget --quiet -O $SECRET_OPS_TAR_FILE https://github.com/kudulab/secret-ops/releases/download/${SECRET_OPS_VERSION}/secret-ops.tar.gz
+  tar -xf $SECRET_OPS_TAR_FILE -C ops
+fi
+source $SECRET_OPS_FILE
+
+image_name="tomzo/liget"
+image_registry="dockerhub"
+image_dir="./image"
+imagerc_filename="imagerc"
+
+function docker_login {
+  dockerhub_user=tomzo
+  vault read -field=password secret/tomzo/dockerhub | docker login --username $dockerhub_user --password-stdin
+}
 
 # Fix for multi-line environment variables not working in docker envs
 unset TRAVIS_COMMIT_MESSAGE
 
-image_name_no_registry="liget"
-private_image_name="docker-registry.ai-traders.com/${image_name_no_registry}"
-public_image_name="tomzo/${image_name_no_registry}"
+image_name="tomzo/liget"
+image_registry="dockerhub"
 image_dir="./"
 imagerc_filename="imagerc"
 
@@ -45,57 +73,58 @@ case "${command}" in
       ./build.sh --target Build --single-target
       ;;
   build)
-    ide "./tasks.sh _build"
+    dojo "./tasks.sh _build"
     ;;
   unit_test)
-    ide "./tasks.sh _unit_test"
+    dojo "./tasks.sh _unit_test"
     ;;
   _build_inputs)
     ./build.sh --target ExampleNuGets --single-target
     ;;
   itest)
-    ide "./tasks.sh build_inputs"
-    ide --idefile Idefile.e2e "./e2e/run.sh"
+    dojo "./tasks.sh build_inputs"
+    dojo -c Dojofile.e2e "./e2e/run.sh"
     ;;
   build_docker)
+    set +u
     image_tag=$2
-    docker_build "${image_dir}" "${imagerc_filename}" "${private_image_name}" "$image_tag"
-    exit $?
+    docker_ops::docker_build "${image_dir}" "${imagerc_filename}" "${image_name}" "${image_tag}" "${image_registry}"
+    docker_ops::push "${image_dir}" "${imagerc_filename}"
     ;;
   test_docker)
-    source_imagerc "${image_dir}"  "${imagerc_filename}"
-    ide "./tasks.sh _build_inputs"
+    docker_ops::source_imagerc "${image_dir}"  "${imagerc_filename}"
+    dojo "./tasks.sh _build_inputs"
     rm -rf e2e/data/*/*
     rm -rf e2e/cache/*/*
     rm e2e/test_*/nuget*/*/ -rf
-    ide --idefile Idefile.e2e-docker "./e2e/run.sh"
+    dojo -c Dojofile.e2e-docker "./e2e/run.sh"
     ;;
   stress_docker)
-    source_imagerc "${image_dir}"  "${imagerc_filename}"
-    ide --idefile Idefile.e2e-docker "e2e/stress/run.sh"
+    docker_ops::source_imagerc "${image_dir}"  "${imagerc_filename}"
+    dojo -c Dojofile.e2e-docker "e2e/stress/run.sh"
     ;;
   baget_compat_docker)
-    source_imagerc "${image_dir}"  "${imagerc_filename}"
-    ide "./tasks.sh _build_inputs"
+    docker_ops::source_imagerc "${image_dir}"  "${imagerc_filename}"
+    dojo "./tasks.sh _build_inputs"
     rm -rf e2e/baget-compat/data/*/*
     rm -rf e2e/baget-compat/cache/*/*
     export LIGET_BAGET_COMPAT_ENABLED=true
     export LIGET_IMPORT_ON_BOOT=/data/simple
-    ide --idefile Idefile.baget-compat "e2e/baget-compat/run.sh"
+    dojo -c Dojofile.baget-compat "e2e/baget-compat/run.sh"
     ;;
   liget0_compat_docker)
-    source_imagerc "${image_dir}"  "${imagerc_filename}"
-    ide "./tasks.sh _build_inputs"
+    docker_ops::source_imagerc "${image_dir}"  "${imagerc_filename}"
+    dojo "./tasks.sh _build_inputs"
     rm -rf e2e/liget0-compat/data/*/*
     rm -rf e2e/liget0-compat/cache/*/*
     export LIGET_IMPORT_ON_BOOT=/data/simple
     # This will push a package in old liget
-    ide --idefile Idefile.liget0-compat "e2e/liget0-compat/run-v0.sh"
+    dojo -c Dojofile.liget0-compat "e2e/liget0-compat/run-v0.sh"
     # This will get the package in new liget
-    ide --idefile Idefile.liget1-compat "e2e/liget0-compat/run-v1.sh"
+    dojo -c Dojofile.liget1-compat "e2e/liget0-compat/run-v1.sh"
     ;;
   all)
-    ide "./build.sh --target All"
+    dojo "./build.sh --target All"
     ./tasks.sh build_docker
     ./tasks.sh test_docker
     ./tasks.sh liget0_compat_docker
@@ -103,52 +132,33 @@ case "${command}" in
     ./tasks.sh stress_docker
     ;;
   prepare_code_release)
+    set +u
     version=$2
     if [[ -z "$version" ]]; then
-      version=$(get_last_version_from_changelog "${changelog_file}")
+      version=$(releaser::get_last_version_from_changelog "${changelog_file}")
     fi
-    set_version_in_changelog "${changelog_file}" "${version}"
-    exit $?
+    releaser::set_version_in_changelog "${changelog_file}" "${version}"
     ;;
-  publish_docker_private)
-    source_imagerc "${image_dir}"  "${imagerc_filename}"
+  publish)
+    docker_login
+    version=$(releaser::get_last_version_from_whole_changelog "${changelog_file}")
+    docker_ops::ensure_pulled_image "${image_dir}" "${imagerc_filename}"
     production_image_tag=$(get_version_tag)
-    docker_push "${AIT_DOCKER_IMAGE_NAME}" "${AIT_DOCKER_IMAGE_TAG}" "${production_image_tag}"
-    exit $?
-    ;;
-  publish_docker_public)
-    source_imagerc "${image_dir}"  "${imagerc_filename}"
-    production_image_tag=$(get_version_tag)
-    docker login --username tomzo --password ${DOCKERHUB_PASSWORD}
-    testing_image_tag="${AIT_DOCKER_IMAGE_TAG}"
-
-    log_info "testing_image_tag set to: ${testing_image_tag}"
-    log_info "production_image_tag set to: ${production_image_tag}"
-    if ! docker images ${AIT_DOCKER_IMAGE_NAME} | awk '{print $2}' | grep ${testing_image_tag} 1>/dev/null ; then
-      # if docker image does not exist locally, then "docker tag" will fail,
-      # so pull it. However, do not always pull it, the image may be not pushed
-      # and only available locally.
-      set -x -e
-      docker pull "${AIT_DOCKER_IMAGE_NAME}:${testing_image_tag}"
-    fi
-    set -x -e
-    # When tagging a docker image using docker 1.8.3, we can use `docker tag -f`.
-    # When using docker 1.12, there is no `-f` option, but `docker tag`
-    # always works as if force was used.
-    docker tag -f "${AIT_DOCKER_IMAGE_NAME}:${testing_image_tag}" "${public_image_name}:${production_image_tag}" || docker tag "${AIT_DOCKER_IMAGE_NAME}:${testing_image_tag}" "${public_image_name}:${production_image_tag}"
-    docker tag -f "${AIT_DOCKER_IMAGE_NAME}:${testing_image_tag}" "${public_image_name}:latest" || docker tag "${AIT_DOCKER_IMAGE_NAME}:${testing_image_tag}" "${public_image_name}:latest"
-    if [[ "${dryrun}" != "true" ]];then
-      docker push "${public_image_name}:${production_image_tag}"
-      docker push "${public_image_name}:latest"
-    fi
-    set +x +e
-    exit $?
+    docker_ops::retag_push "${image_dir}"  "${imagerc_filename}" "${image_name}" "${production_image_tag}" "${image_registry}"
     ;;
   github_release)
-    ide "./build.sh --target GitHubRelease"
+    GITHUB_TOKEN=$(vault read -field=token secret/gocd/github_releases)
+    export GITHUB_TOKEN
+    dojo "./build.sh --target GitHubRelease"
     ;;
-    *)
-      echo "Invalid command: '${command}'"
-      exit 1
+  generate_vault_token)
+    vault_token=$(vault token create -ttl=48h -policy=gocd -policy=dockerhub-tomzo -field token -metadata gocd_renew=true)
+    secured_token_gocd=$(secret_ops::encrypt_with_gocd_top "${vault_token}")
+    echo "Generated token: ${vault_token} and encrypted by GoCD server"
+    secret_ops::insert_vault_token_gocd_yaml "${secured_token_gocd}"
+    ;;
+  *)
+    echo "Invalid command: '${command}'"
+    exit 1
     ;;
 esac

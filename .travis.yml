@@ -5,10 +5,14 @@ services:
 
 env:
   - DOCKER_COMPOSE_VERSION=1.22.0
+  - DOJO_VERSION=0.4.0
 
 before_install:
-  - sudo bash -c "`curl -L https://raw.githubusercontent.com/ai-traders/ide/master/install.sh`"
-  - sudo rm /usr/local/bin/docker-compose
+  - sudo rm -f /usr/bin/dojo
+  - wget -O dojo https://github.com/ai-traders/dojo/releases/download/${DOJO_VERSION}/dojo_linux_amd64
+  - sudo mv dojo /usr/local/bin
+  - sudo chmod +x /usr/local/bin/dojo
+  - sudo rm -f /usr/local/bin/docker-compose
   - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
