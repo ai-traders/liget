@@ -232,7 +232,7 @@ Kestrel specific:
 
 #### Logging
 
- * `LIGET_LOG_LEVEL` - by default `Information`. Can be `Debug`, `Information`, `Warning`, `Error`.
+ * `LIGET_LOG_LEVEL` - by default `Warning`. Can be `Debug`, `Information`, `Warning`, `Error`.
  * `LIGET_LOG_BACKEND` - by default `console`. Also can be `gelf`.
 
 ##### Gelf
