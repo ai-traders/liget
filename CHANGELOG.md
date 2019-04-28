@@ -4,6 +4,8 @@ Updates in build system only:
  * move from IDE to Dojo
  * use ops scripts from kudulab
 
+Changed default log level to `Warning`.
+
 ### 1.0.2 (2019-Mar-15)
 
  - added option to change default listen port
