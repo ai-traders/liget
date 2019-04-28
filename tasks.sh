@@ -85,10 +85,15 @@ case "${command}" in
     dojo "./tasks.sh build_inputs"
     dojo -c Dojofile.e2e "./e2e/run.sh"
     ;;
-  build_docker)
+  build_docker_local)
     set +u
     image_tag=$2
     docker_ops::docker_build "${image_dir}" "${imagerc_filename}" "${image_name}" "${image_tag}" "${image_registry}"
+    ;;
+  build_docker)
+    set +u
+    docker_login
+    ./tasks.sh build_docker_local $2
     docker_ops::push "${image_dir}" "${imagerc_filename}"
     ;;
   test_docker)
@@ -125,7 +130,7 @@ case "${command}" in
     ;;
   all)
     dojo "./build.sh --target All"
-    ./tasks.sh build_docker
+    ./tasks.sh build_docker_local
     ./tasks.sh test_docker
     ./tasks.sh liget0_compat_docker
     ./tasks.sh baget_compat_docker

@@ -4,8 +4,9 @@ services:
   - docker
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.22.0
-  - DOJO_VERSION=0.4.0
+  global:
+    - DOCKER_COMPOSE_VERSION=1.22.0
+    - DOJO_VERSION=0.4.0
 
 before_install:
   - sudo rm -f /usr/bin/dojo

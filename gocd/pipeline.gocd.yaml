@@ -7,7 +7,7 @@ pipelines:
       git:
         type: configrepo
     secure_variables:
-      VAULT_TOKEN: "AES:5F3wPW2c/oKu2asT2GPvcQ==:68AEvtq09Pae5xWI3kxcxAYisk4FvQzgEn8imnm0uloYLc+tCqD9kHqsiDLuAcu9"
+      VAULT_TOKEN: "AES:bk3QEelDVz4B//iy2wimSA==:0a2WGNzZRIw5vJ00DkNmHPoI622Ncx+mXA8ASjipx3yMWFpGz9qQOne1FbiHqfxO"
     stages:
       - build:
           clean_workspace: true
@@ -67,7 +67,7 @@ pipelines:
                   command: /bin/bash
                   arguments:
                     - -c
-                    - "ops_docker_push=true ./tasks.sh build_docker ${GO_PIPELINE_LABEL}"
+                    - "./tasks.sh build_docker ${GO_PIPELINE_LABEL}"
       - e2e:
           clean_workspace: true
           jobs:
