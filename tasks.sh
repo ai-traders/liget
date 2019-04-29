@@ -157,7 +157,7 @@ case "${command}" in
     dojo "./build.sh --target GitHubRelease"
     ;;
   generate_vault_token)
-    vault_token=$(vault token create -ttl=48h -policy=gocd -policy=dockerhub-tomzo -field token -metadata gocd_renew=true)
+    vault_token=$(vault token create -orphan -ttl=48h -policy=gocd -policy=dockerhub-tomzo -field token -metadata gocd_renew=true)
     secured_token_gocd=$(secret_ops::encrypt_with_gocd_top "${vault_token}")
     echo "Generated token: ${vault_token} and encrypted by GoCD server"
     secret_ops::insert_vault_token_gocd_yaml "${secured_token_gocd}"
