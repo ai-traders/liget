@@ -53,7 +53,7 @@ export E2E_PAKET_VERSION="5.198.0"
 
 function get_version_tag {
   changelog_first_line=$(cat ${changelog_file} | head -1)
-  changelog_version=$(get_last_version_from_changelog "${changelog_file}")
+  changelog_version=$(releaser::get_last_version_from_changelog "${changelog_file}")
   short_sha=$(git rev-parse --short=8 HEAD)
   if [[ "${changelog_first_line}" == "#"*"Unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"unreleased"* ]] || [[ "${changelog_first_line}" == "#"*"UNRELEASED"* ]];then
     log_info "Top of changelog has 'Unreleased' flag"
