@@ -103,7 +103,7 @@ source http://liget:9011/api/v3/index.json
 ### Pushing packages
 
 ```
-dotnet nuget push mypackage.1.0.0.nupkg --source http://liget:9011/api/v3/index.json --api-key NUGET-SERVER-API-KEY
+dotnet nuget push mypackage.1.0.0.nupkg --source http://liget:9011/api/v2/package --api-key NUGET-SERVER-API-KEY
 ```
 
 ### Usage as caching proxy
