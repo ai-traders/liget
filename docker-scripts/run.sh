@@ -1,14 +1,21 @@
 #!/bin/bash
 set -e
 
-DIRECTORY="/data/simple2"
-OWNER_USERNAME="liget"
-OWNER_GROUPNAME="liget"
+#-> Comments with '->' can be deleted, if you want it.
+
+#-> It's bad pratice upper case variables. It can accidentaly replace a system variable.
+#-> CamelCase is the best choice in my opinion
+#-> declare -x = exportable variables (subshells can recognise it)
+#-> declare -r = readonly variable (I call it constant)
+declare -xr Directory="/data/simple2"
+declare -xr OwnerUserName="liget"
+declare -xr OwnerGroupName="liget"
+declare -x  ErrorMsg=""
 
 # First deployment bootstrap, we might want to change permissions of mounted volumes
-if [ ! -f /data/ef.sqlite/sqlite.db ]; then
+if [[ ! -f /data/ef.sqlite/sqlite.db ]]; then
   echo "Database does not exist yet. Setting up directory access"
-  mkdir -p /data/simple2 /data/ef.sqlite /cache/simple2
+  mkdir -p "$Directory" /data/ef.sqlite /cache/simple2
   chown -R liget:liget /data/ /cache/
 fi
 
@@ -20,37 +27,30 @@ fi
 # This is the directory we expect to be mounted as docker volume.
 # From that directory we know uid and gid.
 
-if [ ! -d "$DIRECTORY" ]; then
-  echo "$DIRECTORY does not exist, expected to be mounted as docker volume"
-  exit 1;
+#-> A fancy way to report an error
+[[ ! -d "$Directory" ]] \
+  && ErrorMsg="* $Directory does not exist, expected to be mounted as docker volume\n"
+
+getent passwd $OwnerUserName >/dev/null 2>&1 \
+  || ErrorMsg="${ErrorMsg}* User $OwnerUserName does not exist\n"
+
+getent passwd $OwnerGroupName >/dev/null 2>&1 \
+  || ErrorMsg="${ErrorMsg}* Group $OwnerGroupName does not exist\n"
+
+if [[ -n "$ErrorMsg" ]]; then
+  echo -e "$ErrorMsg"
+  exit 1
 fi
 
-ret=false
-getent passwd $OWNER_USERNAME >/dev/null 2>&1 && ret=true
+#-> < <(command) = process substitution:
+# https://www.gnu.org/software/bash/manual/html_node/Process-Substitution.html
+read s s NewUID NewGID s < <(ls --numeric-uid-gid -d $Directory)
+declare -r OldUID=$(id -u liget)
+declare -r OldGID=$(id -g liget)
 
-if ! $ret; then
-    echo "User $OWNER_USERNAME does not exist"
-    exit 1;
-fi
-ret=false
-getent passwd $OWNER_GROUPNAME >/dev/null 2>&1 && ret=true
-if ! $ret; then
-    echo "Group $OWNER_GROUPNAME does not exist"
-    exit 1;
-fi
-
-NEWUID=$(ls --numeric-uid-gid -d $DIRECTORY | awk '{ print $3 }')
-NEWGID=$(ls --numeric-uid-gid -d $DIRECTORY | awk '{ print $4 }')
-OLDUID=$(id -u liget)
-OLDGID=$(id -g liget)
-
-if [[ $NEWUID != $OLDUID && $NEWUID != 0 ]]; then
-  usermod -u $NEWUID $OWNER_USERNAME
-fi
-if [[ $NEWGID != $OLDGID && $NEWGID != 0 ]]; then
-  groupmod -g $NEWGID $OWNER_GROUPNAME
-fi
-chown $NEWUID:$NEWGID -R /home/liget
+[[ "$NewUID" != "$OldUID" && "$NewUID" != 0 ]] && usermod  -u "$NewUID" "$OwnerUserName"
+[[ "$NewGID" != "$OldGID" && "$NewGID" != 0 ]] && groupmod -g "$NewGID" "$OwnerGroupName"
+chown "$NewUID":"$NewGID" -R /home/liget
 
 ###########################################################################
 # Start server
@@ -59,16 +59,17 @@ chown $NEWUID:$NEWGID -R /home/liget
 /usr/bin/configure-liget
 
 cd /app
-if [ ! -z ${LIGET_IMPORT_ON_BOOT+x} ]; then
-  if [[ $NEWGID != 0 ]]; then
-    sudo -u liget -E -H dotnet /app/LiGet.dll import --path ${LIGET_IMPORT_ON_BOOT}
+#->I have no ideia why this '+x' are here. Because of it, this 'if' statement will be aways true
+if [[ -n "${LIGET_IMPORT_ON_BOOT+x}" ]]; then 
+  if [[ "$NewGID" != 0 ]]; then
+    sudo -u liget -E -H dotnet /app/LiGet.dll import --path "${LIGET_IMPORT_ON_BOOT}"
   else
     echo "WARNING: running liget as root"
-    dotnet /app/LiGet.dll import --path ${LIGET_IMPORT_ON_BOOT}
+    dotnet /app/LiGet.dll import --path "${LIGET_IMPORT_ON_BOOT}"
   fi
 fi
 
-if [[ $NEWGID != 0 ]]; then
+if [[ "$NewGID" != 0 ]]; then
   exec sudo -u liget -E -H dotnet /app/LiGet.dll
 else
   echo "WARNING: running liget as root"
